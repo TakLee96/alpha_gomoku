@@ -14,10 +14,13 @@ table {
 }
 
 body {
-    width: 670px;
-    margin: auto;
+    text-align: center;
 }
 
 h1 {
     text-align: center;
+}
+
+#board {
+    display: inline-block;
 }

@@ -1,6 +1,4 @@
 (function () {
-    var GRID_SIZE = 13;
-
     var player = 1; // 0 for empty, 1 for blue and 2 for green
     var other = function (player) { return 3 - player };
     var name = function (player) { return (player == 1) ? 'blue' : 'green';  }
@@ -46,12 +44,12 @@
     for (var k = 0; k < crosses.length; k++) {
         crosses[k].addEventListener("click", function () {
             var location = this.id.split("-");
-            var i = location[0], j = location[1];
+            var i = parseInt(location[0]), j = parseInt(location[1]);
             if (grid.empty) {
                 history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
-                    alert(name(player) + " wins!");
+                    alert(name(other(player)) + " wins!");
                 }
             }
         });
