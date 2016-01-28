@@ -5,19 +5,20 @@
 
     var Grid = function () {
         this.player = 0;
-        this.empty = true;
     };
     Grid.prototype.image = function () {
         switch (this.player) {
-            case 1: return "img/grid-blue.jpg";
-            case 2: return "img/grid-green.jpg";
-            default: return "img/grid-empty.jpg";
+            case 1: return "./img/grid-blue.jpg";
+            case 2: return "./img/grid-green.jpg";
+            default: return "./img/grid-empty.jpg";
         };
     };
     Grid.prototype.play = function (player) {
         this.player = player;
-        this.empty = player == 0;
     }
+    Grid.prototype.isEmpty = function () {
+        return this.player == 0;
+    };
 
     var state = [], history = [], row = null, grid = null;
     var board = "<table>";
@@ -45,7 +46,8 @@
         crosses[k].addEventListener("click", function () {
             var location = this.id.split("-");
             var i = parseInt(location[0]), j = parseInt(location[1]);
-            if (grid.empty) {
+            grid = state[i][j];
+            if (grid.isEmpty()) {
                 history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
