@@ -1,5 +1,5 @@
 from bottle import route, run, request, static_file
-from os import getcwd, path
+from os import getcwd, path, environ
 from brain import GameData
 
 root = '/'.join(path.abspath(__file__).split('/')[:-1]) + '/public'
@@ -29,4 +29,4 @@ def callback():
         gamedata[ip] = gamedata[ip].update(nx, ny, 1)
         return {'x': nx, 'y': ny}
  
-run(host='0.0.0.0', port='80', debug=True)
+run(host=environ['host'], port=environ['port'], debug=True)

@@ -2,10 +2,10 @@ from random import random
 
 GRID_SIZE = 15
 
-DEATH     = 10000.0
-URGENT    = 1000.0
-IMPORTANT = 100.0
-GOOD      = 10.0
+DEATH     = 100000000.0
+URGENT    = 1000000.0
+IMPORTANT = 10000.0
+GOOD      = 100.0
 OKAY      = 1.0
 USELESS   = 0.0
 
@@ -153,7 +153,7 @@ class ReflexAgent(Agent):
             temp += self.score(self.normalize(x, y, 0, 1, 0, -1, who, state))
             temp += self.score(self.normalize(x, y, 1, 1, -1, -1, who, state))
             temp += self.score(self.normalize(x, y, 1, -1, -1, 1, who, state))
-            multiplier = 1.0 if who == AI else -2.1
+            multiplier = 1.0 if who == AI else -10.0
             score += multiplier * temp
         return score + random()
 
