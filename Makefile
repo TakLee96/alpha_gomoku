@@ -1,2 +1,2 @@
 all:
-	env localhost=0.0.0.0 port=80 nohup pypy main.py > output.txt
+	env host=0.0.0.0 port=80 nohup pypy main.py > output.txt
