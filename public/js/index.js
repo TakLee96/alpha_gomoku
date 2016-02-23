@@ -85,14 +85,6 @@
         });
     }
 
-    document.getElementById("rewind").addEventListener("click", function () {
-        // if (history.length > 0) {
-        //     var location = history.pop();
-        //     play(location[0], location[1], true);
-        // }
-        alert("not supported");
-    });
-
     request('POST', '/api?new=1&first=1', function (err) {
         if (err) console.log(err);
         var i = Math.floor(GRID_SIZE/2), j = Math.floor(GRID_SIZE/2);

@@ -19,7 +19,7 @@ def callback():
     ip = request.environ.get('REMOTE_ADDR')
     if request.query.new:
         gamedata[ip] = GameData(int(request.query.first))
-    elif request.query.end and ip in gamedata:
+    elif request.query.end:
         del gamedata[ip]
     else:
         x = int(request.query.x)
