@@ -2,6 +2,23 @@
     var player = 1; // 0 for empty, 1 for blue and 2 for green
     var other = function (player) { return 3 - player };
     var name = function (player) { return (player == 1) ? 'blue' : 'green';  }
+    var request = function (method, url, cb) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    return cb && cb(null, xhr.responseText && JSON.parse(xhr.responseText));
+                } else {
+                    return cb && cb(new Error(method + " " + url + " failed with " + xhr.status));
+                }
+            }
+        };
+        xhr.ontimeout = function () {
+            return cb && cb(new Error(method + " " + url + " timed out"));
+        };
+        xhr.open(method, url, true);
+        xhr.send();
+    }
 
     var Grid = function () {
         this.player = 0;
@@ -47,20 +64,43 @@
             var location = this.id.split("-");
             var i = parseInt(location[0]), j = parseInt(location[1]);
             grid = state[i][j];
-            if (grid.isEmpty()) {
+            if (player == 2 && grid.isEmpty()) {
                 history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
                     alert(name(other(player)) + " wins!");
+                } else {
+                    request('POST', '/api?x='+i+'&y='+j, function (err, data) {
+                        if (err) console.log(err);
+                        console.log(data)
+                        var i = data['x'], j = data['y'];
+                        history.push([i, j]);
+                        play(i, j);
+                        if (rules.win(i, j, state)) {
+                            alert(name(other(player)) + " wins!");
+                        }
+                    });
                 }
             }
         });
     }
 
     document.getElementById("rewind").addEventListener("click", function () {
-        if (history.length > 0) {
-            var location = history.pop();
-            play(location[0], location[1], true);
-        }
+        // if (history.length > 0) {
+        //     var location = history.pop();
+        //     play(location[0], location[1], true);
+        // }
+        alert("not supported");
     });
+
+    request('POST', '/api?new=1&first=1', function (err) {
+        if (err) console.log(err);
+        var i = Math.floor(GRID_SIZE/2), j = Math.floor(GRID_SIZE/2);
+        history.push([i, j]);
+        play(i, j);
+    });
+
+    window.onbeforeunload = function () {
+        request('POST', 'api?end=1', console.log);
+    };
 })();

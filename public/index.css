@@ -6,6 +6,8 @@ tr, td, img {
 
 img {
     display: block;
+    width: 40px;
+    height: auto;
 }
 
 table {
