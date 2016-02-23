@@ -29,4 +29,4 @@ def callback():
         gamedata[ip] = gamedata[ip].update(nx, ny, 1)
         return {'x': nx, 'y': ny}
  
-run(host='localhost', port='8000', debug=True)
+run(host='localhost', port='80', debug=True)
