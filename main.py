@@ -28,5 +28,5 @@ def callback():
         (nx, ny) = gamedata[ip].think()
         gamedata[ip] = gamedata[ip].update(nx, ny, 1)
         return {'x': nx, 'y': ny}
- 
+
 run(host=environ['host'], port=environ['port'], debug=True)
