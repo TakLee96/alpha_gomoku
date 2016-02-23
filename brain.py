@@ -153,7 +153,7 @@ class ReflexAgent(Agent):
             temp += self.score(self.normalize(x, y, 0, 1, 0, -1, who, state))
             temp += self.score(self.normalize(x, y, 1, 1, -1, -1, who, state))
             temp += self.score(self.normalize(x, y, 1, -1, -1, 1, who, state))
-            multiplier = 1.0 if who == AI else -1.0
+            multiplier = 1.0 if who == AI else -2.1
             score += multiplier * temp
         return score + random()
 
