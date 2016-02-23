@@ -10,8 +10,8 @@ NEIGHBORS += [( i, -i) for i in range(1, 5)]
 NEIGHBORS += [(-i,  i) for i in range(1, 5)]
 NEIGHBORS += [(-i, -i) for i in range(1, 5)]
 
-INFINITY = 100000.0
-DEPTH = 4
+INFINITY = 1000000.0
+DEPTH = 2
 
 
 class Agent():
@@ -41,16 +41,20 @@ class AlphaBetaAgent(ReflexAgent):
     def value(self, state, depth, who, alpha, beta):
         if who == state.AI:
             depth += 1
-        if depth == DEPTH or state.isWin(who) or state.isLose(who):
-            return (evaluate(state), None)
+        if depth == DEPTH:
+            return evaluate(state)
+        if state.isWin(who):
+            return INFINITY
+        if state.isLose(who):
+            return -INFINITY
         if who == state.AI:
-            return self.max_value(state, depth, who, alpha, beta)
+            return self.max_value(state, depth, who, alpha, beta)[0]
         return self.min_value(state, depth, who, alpha, beta)
 
     def max_value(self, state, depth, who, alpha, beta):
         v, chosen = -INFINITY, None
         for action in self.generateActions(state):
-            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)[0]
+            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)
             if val > v:
                 v, chosen = val, action
             if v > beta:
@@ -59,19 +63,19 @@ class AlphaBetaAgent(ReflexAgent):
         return (v, chosen)
 
     def min_value(self, state, depth, who, alpha, beta):
-        v, chosen = INFINITY, None
+        v = INFINITY
         for action in self.generateActions(state):
-            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)[0]
+            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)
             if val < v:
-                v, chosen = val, action
+                v = val
             if v < alpha:
-                return (v, chosen)
+                return v
             beta = min(beta, v)
-        return (v, chosen)
+        return v
 
     def getAction(self, state):
         val, action = self.max_value(state, 0, state.AI, -INFINITY, INFINITY)
-        assert action is not None 
+        assert action is not None
         return action
 
 
@@ -100,17 +104,17 @@ class GameData():
         x, y, w = self.hist[len(self.hist)-1]
         if w != who:
             return False
-        a = normalize(x, y, 1, 0, -1, 0, who, self)
-        if length(a, self) > 4:
+        _, _, a = length(normalize(x, y, 1, 0, -1, 0, who, self), self)
+        if a > 4:
             return True
-        b = normalize(x, y, 0, 1, 0, -1, who, self)
-        if length(b, self) > 4:
+        _, _, b = length(normalize(x, y, 0, 1, 0, -1, who, self), self)
+        if b > 4:
             return True
-        c = normalize(x, y, 1, 1, -1, -1, who, self)
-        if length(c, self) > 4:
+        _, _, c = length(normalize(x, y, 1, 1, -1, -1, who, self), self)
+        if c > 4:
             return True
-        d = normalize(x, y, 1, -1, -1, 1, who, self)
-        if length(d, self) > 4:
+        _, _, d = length(normalize(x, y, 1, -1, -1, 1, who, self), self)
+        if d > 4:
             return True
         return False
 
@@ -118,6 +122,7 @@ class GameData():
         return self.isWin(self.other(who))
 
     def update(self, x, y, who):
+        assert self.isEmpty(x, y)
         copy = [col[:] for col in self.moves]
         copy[x][y] = who
         hist = self.hist + [ (x, y, who) ]

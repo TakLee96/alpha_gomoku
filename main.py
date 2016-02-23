@@ -20,7 +20,8 @@ def callback():
     if request.query.new:
         gamedata[ip] = GameData(int(request.query.first))
     elif request.query.end:
-        del gamedata[ip]
+        if ip in gamedata:
+            del gamedata[ip]
     else:
         x = int(request.query.x)
         y = int(request.query.y)
