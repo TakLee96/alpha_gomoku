@@ -32,9 +32,9 @@ class AlphaBetaAgent(ReflexAgent):
         if who == state.first:
             depth += 1
         if state.isWin(state.AI):
-            return INFINITY
+            return INFINITY - depth / 4
         if state.isLose(state.AI):
-            return -INFINITY
+            return -INFINITY + depth / 4
         if depth == DEPTH:
             return evaluate(state)
         if who == state.AI:
