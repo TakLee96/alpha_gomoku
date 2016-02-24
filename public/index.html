@@ -7,7 +7,18 @@
     </head>
     <body>
         <h1>Gomoku</h1>
-        <div id="board"></div>
+        <h6>by TakLee96</h6>
+        
+        <div id="options">
+            <select id="first">
+                <option value="2">I go First</option>
+                <option value="1" selected>AI goes First</option>
+            </select>
+            <button id="go">Go</button>
+        </div>
+
+        <div id="board" class="hidden"></div>
+
         <script> var GRID_SIZE = 15; </script>
         <script src="js/rules.js"></script>
         <script src="js/index.js"></script>

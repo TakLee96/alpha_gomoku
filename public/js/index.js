@@ -1,6 +1,7 @@
 (function () {
     var player = 1; // 0 for empty, 1 for blue and 2 for green
     var other = function (player) { return 3 - player };
+    var human  = other(parseInt(document.getElementById("first").value));
     var name = function (player) { return (player == 1) ? 'blue' : 'green';  }
     var request = function (method, url, cb) {
         var xhr = new XMLHttpRequest();
@@ -64,7 +65,7 @@
             var location = this.id.split("-");
             var i = parseInt(location[0]), j = parseInt(location[1]);
             grid = state[i][j];
-            if (player == 2 && grid.isEmpty()) {
+            if (player == human && grid.isEmpty()) {
                 history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
@@ -84,11 +85,18 @@
         });
     }
 
-    request('POST', '/api?new=1&first=1', function (err, data) {
-        if (err) console.log(err);
-        var i = data['x'], j = data['y'];
-        history.push([i, j]);
-        play(i, j);
+    document.getElementById("go").addEventListener("click", function () {
+        request('POST', '/api?new=1&first=' + document.getElementById("first").value, function (err, data) {
+            if (err) console.log(err);
+            human = other(parseInt(document.getElementById("first").value));
+            var i = data['x'], j = data['y'];
+            if (i != undefined && j != undefined) {
+                history.push([i, j]);
+                play(i, j);    
+            }
+            document.getElementById("board").className = "";
+            document.getElementById("options").className = "hidden";
+        });
     });
 
     window.onbeforeunload = function () {

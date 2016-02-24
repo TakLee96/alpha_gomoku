@@ -26,3 +26,7 @@ h1 {
 #board {
     display: inline-block;
 }
+
+.hidden {
+    visibility: hidden;
+}

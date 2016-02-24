@@ -18,8 +18,8 @@ gamedata = dict()
 def callback():
     ip = request.environ.get('REMOTE_ADDR')
     if request.query.new:
-        gamedata[ip] = GameData() 
-        if int(request.query.first) == GameData.AI:
+        gamedata[ip] = GameData(int(request.query.first)) 
+        if gamedata[ip].first == GameData.AI:
             nx, ny = GameData.GRID_SIZE/2, GameData.GRID_SIZE/2
             gamedata[ip] = gamedata[ip].generateSuccessor(nx, ny)
             return {'x': nx, 'y': ny}

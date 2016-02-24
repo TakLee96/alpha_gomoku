@@ -29,7 +29,7 @@ class ReflexAgent(Agent):
 class AlphaBetaAgent(ReflexAgent):
     def value(self, state, depth, alpha, beta):
         who = state.next()
-        if who == state.AI:
+        if who == state.first:
             depth += 1
         if state.isWin(state.AI):
             return INFINITY
@@ -74,7 +74,7 @@ class GameData():
     AI        = 1
     HUMAN     = 2
 
-    def __init__(self, first=AI, prev=None, hist=[], agent=AlphaBetaAgent()):
+    def __init__(self, first, prev=None, hist=[], agent=AlphaBetaAgent()):
         self.moves = prev or [[self.EMPTY for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         self.first = first
         self.hist  = hist
