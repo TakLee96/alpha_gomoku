@@ -72,7 +72,6 @@
                 } else {
                     request('POST', '/api?x='+i+'&y='+j, function (err, data) {
                         if (err) console.log(err);
-                        console.log(data)
                         var i = data['x'], j = data['y'];
                         history.push([i, j]);
                         play(i, j);
@@ -85,9 +84,9 @@
         });
     }
 
-    request('POST', '/api?new=1&first=1', function (err) {
+    request('POST', '/api?new=1&first=1', function (err, data) {
         if (err) console.log(err);
-        var i = Math.floor(GRID_SIZE/2), j = Math.floor(GRID_SIZE/2);
+        var i = data['x'], j = data['y'];
         history.push([i, j]);
         play(i, j);
     });

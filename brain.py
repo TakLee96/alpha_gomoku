@@ -1,18 +1,7 @@
 from evaluate import evaluate, normalize, length
 
-
-NEIGHBORS  = [( i,  0) for i in range(1, 5)]
-NEIGHBORS += [(-i,  0) for i in range(1, 5)]
-NEIGHBORS += [( 0,  i) for i in range(1, 5)]
-NEIGHBORS += [( 0, -i) for i in range(1, 5)]
-NEIGHBORS += [( i,  i) for i in range(1, 5)]
-NEIGHBORS += [( i, -i) for i in range(1, 5)]
-NEIGHBORS += [(-i,  i) for i in range(1, 5)]
-NEIGHBORS += [(-i, -i) for i in range(1, 5)]
-
-INFINITY = 1000000.0
+INFINITY = 10000000000.0
 DEPTH = 2
-
 
 class Agent():
     def value(self, state):
@@ -25,12 +14,12 @@ class Agent():
 class ReflexAgent(Agent):
     def getAction(self, state):
         return max([a for a in self.generateActions(state)],
-            key=lambda a: self.value(state.update(a[0], a[1], state.AI)))
+            key=lambda a: self.value(state.generateSuccessor(a[0], a[1], state.AI)))
     
     def generateActions(self, state):
         actions = set()
-        for x, y, _ in state.hist:
-            for dx, dy in NEIGHBORS:
+        for x, y in state.hist:
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, 1)]:
                 nx, ny = x + dx, y + dy
                 if state.inBound(nx, ny) and state.isEmpty(nx, ny):
                     actions.add((nx, ny))
@@ -38,23 +27,24 @@ class ReflexAgent(Agent):
 
 
 class AlphaBetaAgent(ReflexAgent):
-    def value(self, state, depth, who, alpha, beta):
+    def value(self, state, depth, alpha, beta):
+        who = state.next()
         if who == state.AI:
             depth += 1
+        if state.isWin(state.AI):
+            return INFINITY
+        if state.isLose(state.AI):
+            return -INFINITY
         if depth == DEPTH:
             return evaluate(state)
-        if state.isWin(who):
-            return INFINITY
-        if state.isLose(who):
-            return -INFINITY
         if who == state.AI:
-            return self.max_value(state, depth, who, alpha, beta)[0]
-        return self.min_value(state, depth, who, alpha, beta)
+            return self.max_value(state, depth, alpha, beta)[0]
+        return self.min_value(state, depth, alpha, beta)
 
-    def max_value(self, state, depth, who, alpha, beta):
+    def max_value(self, state, depth, alpha, beta):
         v, chosen = -INFINITY, None
         for action in self.generateActions(state):
-            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)
+            val = self.value(state.generateSuccessor(action[0], action[1]), depth, alpha, beta)
             if val > v:
                 v, chosen = val, action
             if v > beta:
@@ -62,10 +52,10 @@ class AlphaBetaAgent(ReflexAgent):
             alpha = max(alpha, v)
         return (v, chosen)
 
-    def min_value(self, state, depth, who, alpha, beta):
+    def min_value(self, state, depth, alpha, beta):
         v = INFINITY
         for action in self.generateActions(state):
-            val = self.value(state.update(action[0], action[1], who), depth, state.other(who), alpha, beta)
+            val = self.value(state.generateSuccessor(action[0], action[1]), depth, alpha, beta)
             if val < v:
                 v = val
             if v < alpha:
@@ -74,8 +64,7 @@ class AlphaBetaAgent(ReflexAgent):
         return v
 
     def getAction(self, state):
-        val, action = self.max_value(state, 0, state.AI, -INFINITY, INFINITY)
-        assert action is not None
+        val, action = self.max_value(state, 0, -INFINITY, INFINITY)
         return action
 
 
@@ -85,14 +74,11 @@ class GameData():
     AI        = 1
     HUMAN     = 2
 
-    def __init__(self, first, prev=None, hist=[], agent=AlphaBetaAgent()):
+    def __init__(self, first=AI, prev=None, hist=[], agent=AlphaBetaAgent()):
         self.moves = prev or [[self.EMPTY for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         self.first = first
         self.hist  = hist
         self.agent = agent
-        if first == 1:
-            self.moves[self.GRID_SIZE/2][self.GRID_SIZE/2] = self.AI
-            self.hist.append((self.GRID_SIZE/2, self.GRID_SIZE/2, first))
 
     def inBound(self, x, y):
         return 0 <= x < self.GRID_SIZE and 0 <= y < self.GRID_SIZE
@@ -101,7 +87,8 @@ class GameData():
         return self.moves[x][y] == self.EMPTY
 
     def isWin(self, who):
-        x, y, w = self.hist[len(self.hist)-1]
+        x, y = self.hist[len(self.hist)-1]
+        w = self.moves[x][y]
         if w != who:
             return False
         _, _, a = length(normalize(x, y, 1, 0, -1, 0, who, self), self)
@@ -121,11 +108,16 @@ class GameData():
     def isLose(self, who):
         return self.isWin(self.other(who))
 
-    def update(self, x, y, who):
-        assert self.isEmpty(x, y)
+    def next(self):
+        if len(self.hist) % 2 == 0:
+            return self.first
+        return self.other(self.first)
+
+    def generateSuccessor(self, x, y):
+        who = self.next()
         copy = [col[:] for col in self.moves]
         copy[x][y] = who
-        hist = self.hist + [ (x, y, who) ]
+        hist = self.hist + [ (x, y) ]
         return GameData(self.first, copy, hist, self.agent)
     
     def think(self):

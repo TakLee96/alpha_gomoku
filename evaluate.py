@@ -1,9 +1,9 @@
 from random import random
 
-DEATH     = 10000.0
-URGENT    = 1000.0
-IMPORTANT = 100.0
-GOOD      = 10.0
+DEATH     = 100000000.0
+URGENT    = 1000000.0
+IMPORTANT = 10000.0
+GOOD      = 100.0
 OKAY      = 1.0
 USELESS   = 0.0
 
@@ -85,9 +85,9 @@ def checktwo(seq, left, right, state):
     who = seq[4]
     # TODO: will 2 jump 2 or 1 jump 2 jump 1 ever occur
     if (seq[left-1] == state.EMPTY and seq[left-2] == who):
-        return checkthree([ state.other(who) ] + seq[:left-1] + seq[left:], left-1, right, state)
+        return checkthree([ state.other(who) ] + seq[:left-1] + seq[left:], left-1, right, state)*2/3
     if (seq[right+1] == state.EMPTY and seq[right+2] == who):
-        return checkthree(seq[:right+1] + seq[right+2:] + [ state.other(who) ], left, right+1, state)
+        return checkthree(seq[:right+1] + seq[right+2:] + [ state.other(who) ], left, right+1, state)*2/3
     if leftCount == 0 and rightCount == 0:
         return USELESS
     if leftCount == 0 or rightCount == 0:
@@ -102,21 +102,28 @@ def score(seq, state):
     if leng >= 5:
         return DEATH
     elif leng == 4:
-        return checkfour(seq, left, right, state)
+        return checkfour(seq, left, right, state)/4
     elif leng == 3:
-        return checkthree(seq, left, right, state)
+        return checkthree(seq, left, right, state)/3
     elif leng == 2:
-        return checktwo(seq, left, right, state)
+        return checktwo(seq, left, right, state)/2
     elif leng == 1:
         return USELESS # TODO: can improve by looking at jumping 2
 
 def evaluate(state):
     val = 0
-    for x, y, who in state.hist:
+    next = state.next()
+    for x, y in state.hist:
+        who = state.moves[x][y]
         temp  = score(normalize(x, y, 1, 0, -1, 0, who, state), state)
         temp += score(normalize(x, y, 0, 1, 0, -1, who, state), state)
         temp += score(normalize(x, y, 1, 1, -1, -1, who, state), state)
         temp += score(normalize(x, y, 1, -1, -1, 1, who, state), state)
-        multiplier = 1.0 if who == state.AI else -20.1
+        if who == state.AI:
+            multiplier = 1.0
+        elif next == state.AI:
+            multiplier = -0.9
+        else:
+            multiplier = -2.0
         val += multiplier * temp
     return val + random()
