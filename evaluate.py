@@ -8,6 +8,7 @@ OKAY      = 1.0
 USELESS   = 0.0
 
 def normalize(x, y, ax, ay, bx, by, who, state):
+    bx, by = -ax, -ay
     seq = [0 for _ in range(9)]
     seq[4] = who
     for i in range(1, 5):
@@ -115,15 +116,15 @@ def evaluate(state):
     next = state.next()
     for x, y in state.hist:
         who = state.moves[x][y]
-        temp  = score(normalize(x, y, 1, 0, -1, 0, who, state), state)
-        temp += score(normalize(x, y, 0, 1, 0, -1, who, state), state)
-        temp += score(normalize(x, y, 1, 1, -1, -1, who, state), state)
-        temp += score(normalize(x, y, 1, -1, -1, 1, who, state), state)
+        temp  = score(normalize(x, y, 1, 0, who, state), state)
+        temp += score(normalize(x, y, 0, 1, who, state), state)
+        temp += score(normalize(x, y, 1, 1, who, state), state)
+        temp += score(normalize(x, y, 1, -1, who, state), state)
         if who == state.AI:
             multiplier = 1.0
         elif next == state.AI:
             multiplier = -0.9
         else:
-            multiplier = -2.0
+            multiplier = -2.5
         val += multiplier * temp
     return val + random()

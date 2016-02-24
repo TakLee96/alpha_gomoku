@@ -14,7 +14,7 @@ class Agent():
 class ReflexAgent(Agent):
     def getAction(self, state):
         return max([a for a in self.generateActions(state)],
-            key=lambda a: self.value(state.generateSuccessor(a[0], a[1], state.AI)))
+            key=lambda a: self.value(state.generateSuccessor(a[0], a[1])))
     
     def generateActions(self, state):
         actions = set()
@@ -67,6 +67,7 @@ class AlphaBetaAgent(ReflexAgent):
         val, action = self.max_value(state, 0, -INFINITY, INFINITY)
         return action
 
+AGENTS = {'m': AlphaBetaAgent, 'r': ReflexAgent}
 
 class GameData():
     GRID_SIZE = 15
@@ -91,16 +92,16 @@ class GameData():
         w = self.moves[x][y]
         if w != who:
             return False
-        _, _, a = length(normalize(x, y, 1, 0, -1, 0, who, self), self)
+        _, _, a = length(normalize(x, y, 1, 0, who, self), self)
         if a > 4:
             return True
-        _, _, b = length(normalize(x, y, 0, 1, 0, -1, who, self), self)
+        _, _, b = length(normalize(x, y, 0, 1, who, self), self)
         if b > 4:
             return True
-        _, _, c = length(normalize(x, y, 1, 1, -1, -1, who, self), self)
+        _, _, c = length(normalize(x, y, 1, 1, who, self), self)
         if c > 4:
             return True
-        _, _, d = length(normalize(x, y, 1, -1, -1, 1, who, self), self)
+        _, _, d = length(normalize(x, y, 1, -1, who, self), self)
         if d > 4:
             return True
         return False

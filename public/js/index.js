@@ -86,7 +86,8 @@
     }
 
     document.getElementById("go").addEventListener("click", function () {
-        request('POST', '/api?new=1&first=' + document.getElementById("first").value, function (err, data) {
+        request('POST', '/api?new=1&first=' + document.getElementById("first").value +
+            '&agent=' + document.getElementById("agent").value, function (err, data) {
             if (err) console.log(err);
             human = other(parseInt(document.getElementById("first").value));
             var i = data['x'], j = data['y'];

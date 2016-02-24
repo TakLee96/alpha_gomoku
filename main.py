@@ -1,6 +1,6 @@
 from bottle import route, run, request, static_file
 from os import getcwd, path, environ
-from brain import GameData
+from brain import GameData, AGENTS
 
 root = '/'.join(path.abspath(__file__).split('/')[:-1]) + '/public'
 
@@ -18,7 +18,7 @@ gamedata = dict()
 def callback():
     ip = request.environ.get('REMOTE_ADDR')
     if request.query.new:
-        gamedata[ip] = GameData(int(request.query.first)) 
+        gamedata[ip] = GameData(int(request.query.first), agent=AGENTS[request.query.agent]()) 
         if gamedata[ip].first == GameData.AI:
             nx, ny = GameData.GRID_SIZE/2, GameData.GRID_SIZE/2
             gamedata[ip] = gamedata[ip].generateSuccessor(nx, ny)
