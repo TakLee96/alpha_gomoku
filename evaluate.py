@@ -7,7 +7,7 @@ GOOD      = 100.0
 OKAY      = 1.0
 USELESS   = 0.0
 
-def normalize(x, y, ax, ay, bx, by, who, state):
+def normalize(x, y, ax, ay, who, state):
     bx, by = -ax, -ay
     seq = [0 for _ in range(9)]
     seq[4] = who
