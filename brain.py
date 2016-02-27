@@ -28,7 +28,7 @@ class ReflexAgent(Agent):
         # and propose less but better moves to consider to reduce branch factor
         actions = set()
         for x, y in state.hist:
-            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, 1)]:
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 # TODO: this is considering less points
                 nx, ny = x + dx, y + dy
                 if state.inBound(nx, ny) and state.isEmpty(nx, ny):
