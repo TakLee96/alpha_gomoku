@@ -1,7 +1,7 @@
 from evaluate import evaluate, normalize, length
 
 INFINITY = 10000000000.0
-DEPTH = 2
+DEPTH = 3
 
 # TODO: The AI is still very slow, why?
 # TODO: It seems that the AI is still making silly mistakes
@@ -39,8 +39,7 @@ class ReflexAgent(Agent):
 class AlphaBetaAgent(ReflexAgent):
     def value(self, state, depth, alpha, beta):
         who = state.next()
-        if who == state.first:
-            depth += 1
+        depth += 1
         if state.isWin(state.AI):
             return INFINITY - depth / 4.0
         if state.isLose(state.AI):
