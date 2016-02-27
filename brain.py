@@ -3,6 +3,9 @@ from evaluate import evaluate, normalize, length
 INFINITY = 10000000000.0
 DEPTH = 2
 
+# TODO: The AI is still very slow, why?
+# TODO: It seems that the AI is still making silly mistakes
+
 class Agent():
     def value(self, state):
         return evaluate(state)
@@ -13,13 +16,20 @@ class Agent():
 
 class ReflexAgent(Agent):
     def getAction(self, state):
-        return max([a for a in self.generateActions(state)],
-            key=lambda a: self.value(state.generateSuccessor(a[0], a[1])))
+        def key(action):
+            state.move(action[0], action[1])
+            val = self.value(state)
+            state.rewind()
+            return val
+        return max([a for a in self.generateActions(state)], key=key)
     
     def generateActions(self, state):
+        # TODO: I should revise the generateActions function to do some computation
+        # and propose less but better moves to consider to reduce branch factor
         actions = set()
         for x, y in state.hist:
             for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, 1)]:
+                # TODO: this is considering less points
                 nx, ny = x + dx, y + dy
                 if state.inBound(nx, ny) and state.isEmpty(nx, ny):
                     actions.add((nx, ny))
@@ -32,10 +42,12 @@ class AlphaBetaAgent(ReflexAgent):
         if who == state.first:
             depth += 1
         if state.isWin(state.AI):
-            return INFINITY - depth / 4
+            return INFINITY - depth / 4.0
         if state.isLose(state.AI):
-            return -INFINITY + depth / 4
+            return -INFINITY + depth / 4.0
         if depth == DEPTH:
+            # TODO: our current evaluation function is VERY expensive
+            # Can we avoid looking redundantly at every hist move?
             return evaluate(state)
         if who == state.AI:
             return self.max_value(state, depth, alpha, beta)[0]
@@ -44,7 +56,9 @@ class AlphaBetaAgent(ReflexAgent):
     def max_value(self, state, depth, alpha, beta):
         v, chosen = -INFINITY, None
         for action in self.generateActions(state):
-            val = self.value(state.generateSuccessor(action[0], action[1]), depth, alpha, beta)
+            state.move(action[0], action[1])
+            val = self.value(state, depth, alpha, beta)
+            state.rewind()
             if val > v:
                 v, chosen = val, action
             if v > beta:
@@ -55,7 +69,9 @@ class AlphaBetaAgent(ReflexAgent):
     def min_value(self, state, depth, alpha, beta):
         v = INFINITY
         for action in self.generateActions(state):
-            val = self.value(state.generateSuccessor(action[0], action[1]), depth, alpha, beta)
+            state.move(action[0], action[1])
+            val = self.value(state, depth, alpha, beta)
+            state.rewind()
             if val < v:
                 v = val
             if v < alpha:
@@ -75,10 +91,10 @@ class GameData():
     AI        = 1
     HUMAN     = 2
 
-    def __init__(self, first, prev=None, hist=[], agent=AlphaBetaAgent()):
-        self.moves = prev or [[self.EMPTY for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+    def __init__(self, first, agent=AlphaBetaAgent()):
+        self.moves = [[self.EMPTY for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         self.first = first
-        self.hist  = hist
+        self.hist  = []
         self.agent = agent
 
     def inBound(self, x, y):
@@ -114,12 +130,14 @@ class GameData():
             return self.first
         return self.other(self.first)
 
-    def generateSuccessor(self, x, y):
+    def move(self, x, y):
         who = self.next()
-        copy = [col[:] for col in self.moves]
-        copy[x][y] = who
-        hist = self.hist + [ (x, y) ]
-        return GameData(self.first, copy, hist, self.agent)
+        self.moves[x][y] = who
+        self.hist.append( (x, y) )
+
+    def rewind(self):
+        x, y = self.hist.pop()
+        self.moves[x][y] = self.EMPTY
     
     def think(self):
         return self.agent.getAction(self)
