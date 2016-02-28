@@ -40,10 +40,10 @@ class AlphaBetaAgent(ReflexAgent):
     def value(self, state, depth, alpha, beta):
         who = state.next()
         depth += 1
-        if state.isWin(state.AI):
-            return INFINITY - depth / 4.0
         if state.isLose(state.AI):
             return -INFINITY + depth / 4.0
+        if state.isWin(state.AI):
+            return INFINITY - depth / 4.0
         if depth == DEPTH:
             # TODO: our current evaluation function is VERY expensive
             # Can we avoid looking redundantly at every hist move?
