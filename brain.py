@@ -165,7 +165,7 @@ class AlphaBetaAgent():
     def getAction(self, state):
         v = -INFINITY if self.index == state.first else INFINITY
         ##### v Debug v #####
-        # tracker = dict()
+        tracker = dict()
         ##### ^ Debug ^ #####
         suggestedActions = self.suggestActions(state, 0)
         best = choice(suggestedActions)        
@@ -174,7 +174,7 @@ class AlphaBetaAgent():
             val = self.value(state, 0, -INFINITY, INFINITY)
             state.rewind()
             ##### v Debug v #####
-            # tracker[action] = val
+            tracker[action] = val
             ##### ^ Debug ^ #####
             if self.index == state.first and val > v:
                 v = val
@@ -183,11 +183,11 @@ class AlphaBetaAgent():
                 v = val
                 best = action
         ##### v Debug v #####
-        # print state
-        # print "current value:", evaluate(state)
-        # print "features:", extractFeatures(state)
-        # print "optimal action:", best, "with value", v
-        # print "other actions:", tracker
+        print state
+        print "current value:", evaluate(state)
+        print "features:", extractFeatures(state)
+        print "optimal action:", best, "with value", v
+        print "other actions:", tracker
         ##### ^ Debug ^ #####
         return best
 
