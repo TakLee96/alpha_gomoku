@@ -53,6 +53,7 @@
     board += "</table>";
     document.getElementById("board").innerHTML = board;
 
+    var won = false;
     var play = function (i, j, rewind) {
         var grid = state[i][j];
         grid.play(rewind ? 0 : player);
@@ -65,19 +66,21 @@
             var location = this.id.split("-");
             var i = parseInt(location[0]), j = parseInt(location[1]);
             grid = state[i][j];
-            if (player == human && grid.isEmpty()) {
+            if (player == human && grid.isEmpty() && !won) {
                 history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
                     alert(name(other(player)) + " wins!");
+                    won = true;
                 } else {
                     request('POST', '/api?x='+i+'&y='+j, function (err, data) {
-                        if (err) console.log(err);
+                        if (err) return alert(err);
                         var i = data['x'], j = data['y'];
                         history.push([i, j]);
                         play(i, j);
                         if (rules.win(i, j, state)) {
                             alert(name(other(player)) + " wins!");
+                            won = true;
                         }
                     });
                 }
@@ -86,9 +89,8 @@
     }
 
     document.getElementById("go").addEventListener("click", function () {
-        request('POST', '/api?new=1&first=' + document.getElementById("first").value +
-            '&agent=' + document.getElementById("agent").value, function (err, data) {
-            if (err) console.log(err);
+        request('POST', '/api?new=1&first=' + document.getElementById("first").value, function (err, data) {
+            if (err) return alert(err);
             human = other(parseInt(document.getElementById("first").value));
             var i = data['x'], j = data['y'];
             if (i != undefined && j != undefined) {

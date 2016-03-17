@@ -47,7 +47,6 @@ class GameState():
         return self.other(self.first)
 
     def move(self, action):
-        assert action is not None
         x, y = action
         who = self.next()
         self.moves[x][y] = who
@@ -65,8 +64,6 @@ class GameState():
         return self.AI + self.HUMAN - who
 
     def getLegalActions(self):
-        # TODO: I should revise the generateActions function to do some computation
-        # and propose less but better moves to consider to reduce branch factor
         if len(self.hist) == 0:
             return [(self.GRID_SIZE/2, self.GRID_SIZE/2)]
         actions = set()
@@ -83,13 +80,15 @@ class GameState():
     def copy(self):
         return GameState(self.first, self.hist[:], [col[:] for col in self.moves])
 
+    SYMBOL = { 10: 'A', 11: 'B', 12: 'C', 13: 'D', 14: 'E', 15: 'F' }
     def __str__(self):
-        string = "".join(["-" for _ in range(self.GRID_SIZE+2)]) + "\n"
+        sym = lambda i: str(i) if i < 10 else self.SYMBOL[i]
+        string = "- " + "".join([sym(i)+" " for i in range(self.GRID_SIZE)]) + "-\n"
         convert = { 0: "+", 1: "o", 2: "x" }
         for i in range(self.GRID_SIZE):
-            string += "|"
+            string += sym(i) + " "
             for j in range(self.GRID_SIZE):
-                string += convert[self.moves[i][j]]
+                string += convert[self.moves[i][j]] + " "
             string += "|\n"
-        string += "".join(["-" for _ in range(self.GRID_SIZE+2)])
+        string += "".join(["- " for _ in range(self.GRID_SIZE+2)])
         return string
