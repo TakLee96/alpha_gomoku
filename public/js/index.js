@@ -102,6 +102,20 @@
         });
     });
 
+    document.getElementById("load").addEventListener("click", function () {
+        document.getElementById("board").className = "";
+        document.getElementById("options").className = "hidden";
+        var hist = JSON.parse(prompt("Please enter the history JSON object"));
+        var i = 0;
+        var id = setInterval(function () {
+            if (i == hist.length) {
+                clearInterval(id);
+            }
+            move = hist[i++];
+            play(move[0], move[1]);
+        }, 2000);
+    });
+
     window.onbeforeunload = function () {
         request('POST', 'api?end=1', console.log);
     };

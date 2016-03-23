@@ -41,6 +41,9 @@ class GameState():
     def isLose(self, who):
         return self.isWin(self.other(who))
 
+    def isTerminal(self):
+        return self.isWin(self.first) or self.isLose(self.first) or len(self.getLegalActions()) == 0
+
     def next(self):
         if len(self.hist) % 2 == 0:
             return self.first

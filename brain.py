@@ -1,5 +1,6 @@
 from game import GameState
 from random import choice
+from os import environ
 
 class Counter(dict):
     def __getitem__(self, key):
@@ -103,13 +104,14 @@ def evaluate(state):
         value += 1.0 * featureCounter[feature] * weight[feature]
     return value
 
-DEPTH = 6
-GAMMA = 0.9
+
 INFINITY = 1e14
 
 class AlphaBetaAgent():
-    def __init__(self, index=GameState.AI):
+    def __init__(self, index=GameState.AI, depth=4, heuristic=True):
         self.index = index
+        self.depth = depth
+        self.heuristic = heuristic
 
     def value(self, state, depth, alpha, beta):
         who = state.next()
@@ -119,7 +121,7 @@ class AlphaBetaAgent():
             return -sign * INFINITY
         if state.isWin(who):
             return sign * INFINITY
-        if depth == DEPTH:
+        if depth == self.depth:
             return evaluate(state)
         if who == state.first:
             return self.max_value(state, depth, alpha, beta)
@@ -129,7 +131,7 @@ class AlphaBetaAgent():
         v = -INFINITY
         for action in self.suggestActions(state, depth):
             state.move(action)
-            val = GAMMA * self.value(state, depth, alpha, beta)
+            val = self.value(state, depth, alpha, beta)
             state.rewind()
             v = max(v, val)
             if v >= beta:
@@ -141,7 +143,7 @@ class AlphaBetaAgent():
         v = INFINITY
         for action in self.suggestActions(state, depth):
             state.move(action)
-            val = GAMMA * self.value(state, depth, alpha, beta)
+            val = self.value(state, depth, alpha, beta)
             state.rewind()
             v = min(v, val)
             if v <= alpha:
@@ -150,22 +152,25 @@ class AlphaBetaAgent():
         return v
 
     def suggestActions(self, state, depth):
-        num = 15 - depth * 2
-        legalActions = state.getLegalActions()
-        if len(legalActions) < num:
-            return legalActions
-        reverse = state.next() == state.first
-        def key(action):
-            state.move(action)
-            v = evaluate(state)
-            state.rewind()
-            return v
-        return sorted(state.getLegalActions(), key=key, reverse=reverse)[:num]
+        if self.heuristic:
+            num = 15 - depth * 2
+            legalActions = state.getLegalActions()
+            if len(legalActions) < num:
+                return legalActions
+            reverse = state.next() == state.first
+            def key(action):
+                state.move(action)
+                v = evaluate(state)
+                state.rewind()
+                return v
+            return sorted(state.getLegalActions(), key=key, reverse=reverse)[:num]
+        return state.getLegalActions()
 
     def getAction(self, state):
         v = -INFINITY if self.index == state.first else INFINITY
         ##### v Debug v #####
-        tracker = dict()
+        if environ['mode'] == 'debug':
+            tracker = dict()
         ##### ^ Debug ^ #####
         suggestedActions = self.suggestActions(state, 0)
         best = choice(suggestedActions)        
@@ -174,7 +179,8 @@ class AlphaBetaAgent():
             val = self.value(state, 0, -INFINITY, INFINITY)
             state.rewind()
             ##### v Debug v #####
-            tracker[action] = val
+            if environ['mode'] == 'debug':
+                tracker[action] = val
             ##### ^ Debug ^ #####
             if self.index == state.first and val > v:
                 v = val
@@ -183,11 +189,12 @@ class AlphaBetaAgent():
                 v = val
                 best = action
         ##### v Debug v #####
-        print state
-        print "current value:", evaluate(state)
-        print "features:", extractFeatures(state)
-        print "optimal action:", best, "with value", v
-        print "other actions:", tracker
+        if environ['mode'] == 'debug':
+            print state
+            print "current value:", evaluate(state)
+            print "features:", extractFeatures(state)
+            print "optimal action:", best, "with value", v
+            print "other actions:", tracker
         ##### ^ Debug ^ #####
         return best
 

@@ -1,12 +1,12 @@
 from bottle import route, run, request, static_file
-from os import getcwd, path, environ
+from os import getcwd, path
 
 from game import GameState
 from brain import AlphaBetaAgent
 
 root = '/'.join(path.abspath(__file__).split('/')[:-1]) + '/public'
 gamedata = dict()
-agent = AlphaBetaAgent()
+agent = AlphaBetaAgent(depth=6, heuristic=True)
 
 @route('/', method='GET')
 def callback():
@@ -36,4 +36,4 @@ def callback():
         gamedata[ip].move((nx, ny))
         return {'x': nx, 'y': ny}
         
-run(host=environ['host'], port=environ['port'], debug=True)
+run(host='localhost', port='8000', debug=True)
