@@ -38,7 +38,7 @@
         return this.player == 0;
     };
 
-    var state = [], row = null, grid = null;
+    var state = [], row = null, grid = null, history = [];
     var board = "<table>";
     for (var i = 0; i < GRID_SIZE; i++) {
         board += "<tr>"
@@ -74,16 +74,20 @@
             grid = state[i][j];
             if (player == human && grid.isEmpty() && !won) {
                 play(i, j);
+                history.push([i, j]);
                 if (rules.win(i, j, state)) {
                     alert(name(other(player)) + " wins!");
+                    alert(history);
                     won = true;
                 } else {
                     request('POST', '/api?x='+i+'&y='+j, function (err, data) {
                         if (err) return alert(err);
                         var i = data['x'], j = data['y'];
                         play(i, j);
+                        history.push([i, j]);
                         if (rules.win(i, j, state)) {
                             alert(name(other(player)) + " wins!");
+                            alert(history);
                             won = true;
                         }
                     });
@@ -98,7 +102,8 @@
             human = other(parseInt(document.getElementById("first").value));
             var i = data['x'], j = data['y'];
             if (i != undefined && j != undefined) {
-                play(i, j);    
+                play(i, j);
+                history.push([i, j]);  
             }
             document.getElementById("board").className = "";
             document.getElementById("options").className = "hidden";
@@ -110,6 +115,7 @@
         document.getElementById("options").className = "hidden";
         document.getElementById("control").className = "";
         var hist = JSON.parse(prompt("Please enter the history JSON object").replace(/\(/g, "[").replace(/\)/g, "]"));
+        won = true;
         var i = 0;
         document.getElementById("next").addEventListener("click", function () {
             move = hist[i++];
