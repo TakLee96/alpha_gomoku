@@ -77,7 +77,7 @@
                 history.push([i, j]);
                 if (rules.win(i, j, state)) {
                     alert(name(other(player)) + " wins!");
-                    alert(history);
+                    alert(JSON.stringify(history));
                     won = true;
                 } else {
                     request('POST', '/api?x='+i+'&y='+j, function (err, data) {
@@ -87,7 +87,7 @@
                         history.push([i, j]);
                         if (rules.win(i, j, state)) {
                             alert(name(other(player)) + " wins!");
-                            alert(history);
+                            alert(JSON.stringify(history));
                             won = true;
                         }
                     });
