@@ -60,6 +60,12 @@
         player = other(player);
         document.getElementById(i + '-' + j).src = grid.image();
     }
+    var rewind = function (i, j) {
+        var grid = state[i][j];
+        grid.play(0);
+        player = other(player);
+        document.getElementById(i + '-' + j).src = grid.image();
+    }
     var crosses = document.getElementsByClassName("cross");
     for (var k = 0; k < crosses.length; k++) {
         crosses[k].addEventListener("click", function () {
@@ -102,14 +108,20 @@
     document.getElementById("load").addEventListener("click", function () {
         document.getElementById("board").className = "";
         document.getElementById("options").className = "hidden";
+        document.getElementById("control").className = "";
         var hist = JSON.parse(prompt("Please enter the history JSON object").replace(/\(/g, "[").replace(/\)/g, "]"));
         var i = 0;
         document.getElementById("next").addEventListener("click", function () {
-            if (i == hist.length-1) {
-                document.getElementById("next").disabled = true;
-            }
             move = hist[i++];
+            document.getElementById("next").disabled = i == hist.length;
+            document.getElementById("prev").disabled = i == 0;
             play(move[0], move[1]);
+        });
+        document.getElementById("prev").addEventListener("click", function () { 
+            move = hist[--i];
+            document.getElementById("prev").disabled = i == 0;
+            document.getElementById("next").disabled = i == hist.length;
+            rewind(move[0], move[1]);
         });
     });
 
