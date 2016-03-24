@@ -38,7 +38,7 @@
         return this.player == 0;
     };
 
-    var state = [], history = [], row = null, grid = null;
+    var state = [], row = null, grid = null;
     var board = "<table>";
     for (var i = 0; i < GRID_SIZE; i++) {
         board += "<tr>"
@@ -54,9 +54,9 @@
     document.getElementById("board").innerHTML = board;
 
     var won = false;
-    var play = function (i, j, rewind) {
+    var play = function (i, j) {
         var grid = state[i][j];
-        grid.play(rewind ? 0 : player);
+        grid.play(player);
         player = other(player);
         document.getElementById(i + '-' + j).src = grid.image();
     }
@@ -67,7 +67,6 @@
             var i = parseInt(location[0]), j = parseInt(location[1]);
             grid = state[i][j];
             if (player == human && grid.isEmpty() && !won) {
-                history.push([i, j]);
                 play(i, j);
                 if (rules.win(i, j, state)) {
                     alert(name(other(player)) + " wins!");
@@ -76,7 +75,6 @@
                     request('POST', '/api?x='+i+'&y='+j, function (err, data) {
                         if (err) return alert(err);
                         var i = data['x'], j = data['y'];
-                        history.push([i, j]);
                         play(i, j);
                         if (rules.win(i, j, state)) {
                             alert(name(other(player)) + " wins!");
@@ -94,7 +92,6 @@
             human = other(parseInt(document.getElementById("first").value));
             var i = data['x'], j = data['y'];
             if (i != undefined && j != undefined) {
-                history.push([i, j]);
                 play(i, j);    
             }
             document.getElementById("board").className = "";
@@ -105,15 +102,15 @@
     document.getElementById("load").addEventListener("click", function () {
         document.getElementById("board").className = "";
         document.getElementById("options").className = "hidden";
-        var hist = JSON.parse(prompt("Please enter the history JSON object"));
+        var hist = JSON.parse(prompt("Please enter the history JSON object").replace(/\(/g, "[").replace(/\)/g, "]"));
         var i = 0;
-        var id = setInterval(function () {
-            if (i == hist.length) {
-                clearInterval(id);
+        document.getElementById("next").addEventListener("click", function () {
+            if (i == hist.length-1) {
+                document.getElementById("next").disabled = true;
             }
             move = hist[i++];
             play(move[0], move[1]);
-        }, 2000);
+        });
     });
 
     window.onbeforeunload = function () {
