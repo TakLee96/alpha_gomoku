@@ -4,7 +4,7 @@ class GameState():
     AI        = 1
     HUMAN     = 2
 
-    def __init__(self, first, hist=[], prev=None):
+    def __init__(self, first, hist=list(), prev=None):
         self.moves = prev or [[self.EMPTY for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         self.first = first
         self.hist  = hist

@@ -6,7 +6,7 @@ from brain import AlphaBetaAgent
 
 root = '/'.join(path.abspath(__file__).split('/')[:-1]) + '/public'
 gamedata = dict()
-agent = AlphaBetaAgent(depth=6, heuristic=True)
+agent = AlphaBetaAgent(heuristic=lambda d: 5)
 
 @route('/', method='GET')
 def callback():
@@ -20,7 +20,7 @@ def callback(path):
 def callback():
     ip = request.environ.get('REMOTE_ADDR')
     if request.query.new:
-        gamedata[ip] = GameState(int(request.query.first))
+        gamedata[ip] = GameState(int(request.query.first), [])
         if gamedata[ip].first == GameState.AI:
             nx, ny = GameState.GRID_SIZE/2, GameState.GRID_SIZE/2
             gamedata[ip].move((nx, ny))

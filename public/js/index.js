@@ -103,7 +103,7 @@
             var i = data['x'], j = data['y'];
             if (i != undefined && j != undefined) {
                 play(i, j);
-                history.push([i, j]);  
+                history.push([i, j]);
             }
             document.getElementById("board").className = "";
             document.getElementById("options").className = "hidden";

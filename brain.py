@@ -2,6 +2,9 @@ from game import GameState
 from random import choice
 from os import environ
 
+if 'mode' not in environ:
+    environ['mode'] = 'dev'
+
 class Counter(dict):
     def __getitem__(self, key):
         if key in self:
@@ -107,8 +110,10 @@ def evaluate(state):
 
 INFINITY = 1e14
 
+default_heuristic = lambda d: 15 - 2 * d
+
 class AlphaBetaAgent():
-    def __init__(self, index=GameState.AI, depth=4, heuristic=True):
+    def __init__(self, index=GameState.AI, depth=6, heuristic=default_heuristic):
         self.index = index
         self.depth = depth
         self.heuristic = heuristic
@@ -153,7 +158,7 @@ class AlphaBetaAgent():
 
     def suggestActions(self, state, depth):
         if self.heuristic:
-            num = 15 - depth * 2
+            num = self.heuristic(depth)
             legalActions = state.getLegalActions()
             if len(legalActions) < num:
                 return legalActions
@@ -167,6 +172,8 @@ class AlphaBetaAgent():
         return state.getLegalActions()
 
     def getAction(self, state):
+        if len(state.hist) == 0:
+            return (GameState.GRID_SIZE/2, GameState.GRID_SIZE/2)
         v = -INFINITY if self.index == state.first else INFINITY
         ##### v Debug v #####
         if environ['mode'] == 'debug':
