@@ -1,11 +1,14 @@
 # Gomoku AI
 
 - This is a gomoku game with web front end and python back end
-- The AI is currently a depth-6 Minimax with Alpha Beta Pruning
+- You can play with AI or replay an old game with history JSON
+- Rules: 6 stone does not win and black can do 3-3 and 4-4
+- The AI is a complicated unbalanced non-zero-sum tree search agent
 
-# Current Problems
+# To install and play
 
-+ Sometimes the AI does not "long" his 3/4 to win the game directly, should I use gamma?
-+ The AI still misses some useful moves, shall I improve action selection?
-+ The AI does random dead-4 extensions which are not so useful
-+ Can I still do trivial performance improvements?
+- Make sure you have installed [**pypy**](http://pypy.org/), the fastest python interpreter
+- To start the game, run `pypy main.py` in terminal and navigate in your browser to `localhost:8000`
+- There are a lot of useful information displayed in the terminal
+- The AI can spend very long time thinking (the longest I've encountered is 4 minutes)
+- Have fun!
