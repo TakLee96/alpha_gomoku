@@ -37,4 +37,7 @@ Length 5
 *ooooo*,  1000000000
 *xxxxx*, -1000000000
 
+Length > 5
+long-death, -160000000
+
 INFINITY, 1000000000

@@ -74,7 +74,8 @@ def dead_four(features):
     return ('oxxxx-'  in features or
             '*x-xxx*' in features or
             '*xxx-x*' in features or
-            '*xx-xx*' in features)
+            '*xx-xx*' in features or
+            'long-death' in features)
 
 def live_three(features):
     return ('-xxx-'  in features or
