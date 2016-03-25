@@ -1,4 +1,4 @@
-# Gomoku AI
+# Alpha Gomoku
 
 - This is a gomoku game with web front end and python back end
 - You can play with AI or replay an old game with history JSON
