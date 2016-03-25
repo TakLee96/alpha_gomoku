@@ -38,7 +38,7 @@
         return this.player == 0;
     };
 
-    var state = [], row = null, grid = null, history = [];
+    var state = [], row = null, grid = null, history = [], red = null;
     var board = "<table>";
     for (var i = 0; i < GRID_SIZE; i++) {
         board += "<tr>"
@@ -58,12 +58,18 @@
         var grid = state[i][j];
         grid.play(player);
         player = other(player);
-        document.getElementById(i + '-' + j).src = grid.image();
+        var imgElem = document.getElementById(i + '-' + j);
+        imgElem.src = grid.image();
+        imgElem.className = "highlight";
+        if (red) red.className = "";
+        red = imgElem;
     }
     var rewind = function (i, j) {
         var grid = state[i][j];
         grid.play(0);
         player = other(player);
+        if (red) red.className = "";
+        red = null;
         document.getElementById(i + '-' + j).src = grid.image();
     }
     var crosses = document.getElementsByClassName("cross");

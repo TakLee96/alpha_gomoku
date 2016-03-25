@@ -1,208 +1,158 @@
-from game import GameState
 from random import choice
-from os import environ
+from time import time
 
-if 'mode' not in environ:
-    environ['mode'] = 'dev'
+from game import GameState
+from evaluate import extractFeatures, evaluate, characterize, INFINITY
 
-class Counter(dict):
-    def __getitem__(self, key):
-        if key in self:
-            return dict.__getitem__(self, key)
-        return 0
+current_time_millis = lambda: int(round(time() * 1000))
 
-def __check(state, move, direction, checked, features):
-    x, y = move
-    dx, dy = direction
-    who = state.moves[x][y]
-    if who == state.first:
-        one = "o"
-        other = "x"
-    else:
-        one = "x"
-        other = "o"
-    feature = one
-    nx, ny = x + dx, y + dy
-    jumped = False
-    while state.inBound(nx, ny):
-        next = state.moves[nx][ny]
-        if next == who:
-            feature = feature + one
-            checked.add(((nx, ny), direction))
-            nx, ny = nx + dx, ny + dy
-        elif next == state.EMPTY and state.inBound(nx, ny) and state.moves[nx][ny] == who and not jumped:
-            jumped = True
-            feature = feature + "-"
-            nx, ny = nx + dx, ny + dy
-        else:
-            if next == state.EMPTY:
-                feature = feature + "-"
-            else:
-                feature = feature + other
-            break
-    if not state.inBound(nx, ny):
-        feature = feature + other
-    nx, ny = x - dx, y - dy
-    jumped = False
-    while state.inBound(nx, ny):
-        next = state.moves[nx][ny]
-        if next == who:
-            feature = one + feature
-            checked.add(((nx, ny), direction))
-            nx, ny = nx - dx, ny - dy
-        elif next == state.EMPTY and state.inBound(nx, ny) and state.moves[nx][ny] == who and not jumped:
-            jumped = True
-            feature = "-" + feature
-            nx, ny = nx - dx, ny - dy
-        else:
-            if next == state.EMPTY:
-                feature = "-" + feature
-            else:
-                feature = other + feature
-            break
-    if not state.inBound(nx, ny):
-        feature = other + feature
-    if len(feature) >= 7:
-        if feature[1] == "o":
-            features["*ooooo*"] = features["*ooooo*"] + 1
-        else:
-            features["*xxxxx*"] = features["*xxxxx*"] + 1
-    elif len(feature) > 3 and (feature[0] == "-" or feature[-1] == "-"):
-        if feature[0] == "-" and feature[-1] != "-":
-            feature = feature[::-1]
-        features[feature] = features[feature] + 1
+def randomAction(state):
+    return choice(state.getLegalActions())
 
-def extractFeatures(state):
-    checked = set()
-    features = Counter()
-    for move in state.hist:
-        if move != None:
-            for direction in [(1, 0), (0, 1), (1, 1), (-1, 1)]:
-                if (move, direction) not in checked:
-                    checked.add((move, direction))
-                    __check(state, move, direction, checked, features)
-    return features
+def counterDeadFour(state):
+    who = state.next()
+    moves = list()
+    for move in state.getLegalActions():
+        state.move(move)
+        features = extractFeatures(state, who)
+        state.rewind()
+        if '*ooooo*' in features:
+            return [move]
+        if not dead_four(features):
+            moves.append(move)
+    return moves
 
-weight = {
-    "-oo-":    1e3,
-    "-xx-":   -1e2,
-    "xoo-":    10,
-    "oxx-":   -1,
-    "-ooo-":   1e7,
-    "-xxx-":  -1e6,
-    "xooo-":   1e5,
-    "oxxx-":  -1e4,
-    "-oooo-":  1e11,
-    "-xxxx-": -1e10,
-    "xoooo-":  1e9,
-    "oxxxx-": -1e8,
-    "*ooooo*":  1e12,
-    "*xxxxx*": -1e12,
-}
+def counterLiveThree(state):
+    who = state.next()
+    moves = list()
+    for move in state.getLegalActions():
+        state.move(move)
+        features = extractFeatures(state, who)
+        state.rewind()
+        if gonna_win(features): return [move]
+        if not live_three(features) or my_four(features):
+            moves.append(move)
+    return moves
 
-def evaluate(state):
-    featureCounter = extractFeatures(state)
-    value = 0.0
-    for feature in featureCounter.keys():
-        value += 1.0 * featureCounter[feature] * weight[feature]
-    return value
+def top_moves(tuples, num):
+    if len(tuples) > num:
+        tuples = sorted(tuples, key=lambda t: t[1], reverse=True)[:num]
+    return map(lambda t: t[0], tuples)
 
+def bestGrowthMoves(state, curr_features, num=5):
+    who = state.next()
+    styles = {'atk': [], 'def': [], 'ntr': []}
+    for move in state.getLegalActions():
+        state.move(move)
+        features = extractFeatures(state, who)
+        state.rewind()
+        if gonna_win(features): return [move]
+        char = characterize(curr_features, features)
+        styles[char].append( (move, evaluate(features)) )
+    for style in styles.keys():
+        styles[style] = top_moves(styles[style], num)
+    return reduce(lambda a, b: a + b, styles.values())
 
-INFINITY = 1e14
-
-default_heuristic = lambda d: 15 - 2 * d
-
-class AlphaBetaAgent():
-    def __init__(self, index=GameState.AI, depth=6, heuristic=default_heuristic):
-        self.index = index
-        self.depth = depth
-        self.heuristic = heuristic
-
-    def value(self, state, depth, alpha, beta):
-        who = state.next()
-        depth += 1
-        sign = 1.0 if who == state.first else -1.0
-        if state.isLose(who):
-            return -sign * INFINITY
+def winTheGame(state):
+    who = state.next()
+    for move in state.getLegalActions():
+        state.move(move)
         if state.isWin(who):
-            return sign * INFINITY
-        if depth == self.depth:
-            return evaluate(state)
-        if who == state.first:
-            return self.max_value(state, depth, alpha, beta)
-        return self.min_value(state, depth, alpha, beta)
-
-    def max_value(self, state, depth, alpha, beta):
-        v = -INFINITY
-        for action in self.suggestActions(state, depth):
-            state.move(action)
-            val = self.value(state, depth, alpha, beta)
             state.rewind()
-            v = max(v, val)
-            if v >= beta:
-                return v
-            alpha = max(alpha, v)
-        return v
+            return [move]
+        state.rewind()
+    assert False
 
-    def min_value(self, state, depth, alpha, beta):
-        v = INFINITY
-        for action in self.suggestActions(state, depth):
-            state.move(action)
-            val = self.value(state, depth, alpha, beta)
+def my_four(features):
+    return ('xoooo-'  in features or
+            '*o-ooo*' in features or
+            '*ooo-o*' in features or
+            '*oo-oo*' in features or
+            '-oooo-'  in features)
+
+def dead_four(features):
+    return ('oxxxx-'  in features or
+            '*x-xxx*' in features or
+            '*xxx-x*' in features or
+            '*xx-xx*' in features)
+
+def live_three(features):
+    return ('-xxx-'  in features or
+            '-x-xx-' in features or
+            '-xx-x-' in features)
+
+def gonna_win(features):
+    return ('*ooooo*' in features or
+            '-oooo-'  in features)
+
+DETER_DEPTH = 3
+DEPTH = 8
+
+class UNTSAgent():
+    """ Unbalanced Non-zero-sum Tree Search Agent """
+    def __init__(self, index=GameState.AI):
+        self.index = index
+    
+    def value(self, state, depth, deter_depth):
+        who = state.next()
+        if state.isLose(who):
+            return (-INFINITY, INFINITY)
+        if state.isWin(who):
+            return (INFINITY, -INFINITY)
+        if depth == DEPTH or deter_depth == DETER_DEPTH:
+            return (None, None)
+
+        moves, deter = self.getActions(state)
+        depth += 1
+        deter_depth += deter
+        if len(moves) == 0:
+            moves = [randomAction(state)]
+        def val(move):
+            who = state.next()
+            state.move(move)
+            oppval, myval = self.value(state, depth, deter_depth)
+            if myval is None:
+                myval = evaluate(extractFeatures(state, who))
             state.rewind()
-            v = min(v, val)
-            if v <= alpha:
-                return v
-            beta = min(beta, v)
-        return v
+            return (myval, oppval)
+        return max(map(val, moves), key=lambda t: t[0])
 
-    def suggestActions(self, state, depth):
-        if self.heuristic:
-            num = self.heuristic(depth)
-            legalActions = state.getLegalActions()
-            if len(legalActions) < num:
-                return legalActions
-            reverse = state.next() == state.first
-            def key(action):
-                state.move(action)
-                v = evaluate(state)
-                state.rewind()
-                return v
-            return sorted(state.getLegalActions(), key=key, reverse=reverse)[:num]
-        return state.getLegalActions()
+    def getActions(self, state, features=None):
+        features = features or extractFeatures(state, state.next())
+        moves_to_status = dict()
+        if my_four(features):
+            return winTheGame(state), False
+        if '-xxxx-' in features:
+            return list(), False
+        if dead_four(features):
+            return counterDeadFour(state), False
+        if live_three(features):
+            return counterLiveThree(state), False
+        return bestGrowthMoves(state, features), True
 
     def getAction(self, state):
         if len(state.hist) == 0:
             return (GameState.GRID_SIZE/2, GameState.GRID_SIZE/2)
-        v = -INFINITY if self.index == state.first else INFINITY
-        ##### v Debug v #####
-        if environ['mode'] == 'debug':
-            tracker = dict()
-        ##### ^ Debug ^ #####
-        suggestedActions = self.suggestActions(state, 0)
-        best = choice(suggestedActions)        
-        for action in suggestedActions:
-            state.move(action)
-            val = self.value(state, 0, -INFINITY, INFINITY)
+        features = extractFeatures(state, state.next())
+        print state
+        print features
+        moves, deter = self.getActions(state, features)
+        if len(moves) == 0:
+            print "[RESULT] AI thinks he is gonna lose"
+            return randomAction(state)
+        elif len(moves) == 1:
+            print "[RESULT] AI thinks it's obviously here:", moves[0]
+            return moves[0]
+        def key(move):
+            state.move(move)
+            oppval, myval = self.value(state, 1, deter)
             state.rewind()
-            ##### v Debug v #####
-            if environ['mode'] == 'debug':
-                tracker[action] = val
-            ##### ^ Debug ^ #####
-            if self.index == state.first and val > v:
-                v = val
-                best = action
-            elif self.index != state.first and val < v:
-                v = val
-                best = action
-        ##### v Debug v #####
-        if environ['mode'] == 'debug':
-            print state
-            print "current value:", evaluate(state)
-            print "features:", extractFeatures(state)
-            print "optimal action:", best, "with value", v
-            print "other actions:", tracker
-        ##### ^ Debug ^ #####
+            print move, myval, "|",
+            return myval
+        print "[RESULT] AI is thinking"
+        start = current_time_millis()
+        best = max(moves, key=key)
+        end = current_time_millis()
+        print "\nAI thinks it should be here:", best, "[" + str(end-start) + "ms]"
         return best
-
         

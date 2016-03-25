@@ -8,6 +8,11 @@ img {
     display: block;
     width: 40px;
     height: auto;
+    box-sizing: border-box;
+}
+
+.highlight {
+    border: 1px solid red;
 }
 
 table {

@@ -25,10 +25,10 @@ var countDirection = function (i, j, state, direction, player) {
 exports.win = function (i, j, state) {
     var player = state[i][j].player;
     if (
-        countDirection(i, j, state, 'top', player) + countDirection(i, j, state, 'bottom', player) - 1 >= 5 ||
-        countDirection(i, j, state, 'left', player) + countDirection(i, j, state, 'right', player) - 1 >= 5 ||
-        countDirection(i, j, state, 'topleft', player) + countDirection(i, j, state, 'bottomright', player) - 1 >= 5 ||
-        countDirection(i, j, state, 'topright', player) + countDirection(i, j, state, 'bottomleft', player) - 1 >= 5
+        countDirection(i, j, state, 'top', player) + countDirection(i, j, state, 'bottom', player) - 1 == 5 ||
+        countDirection(i, j, state, 'left', player) + countDirection(i, j, state, 'right', player) - 1 == 5 ||
+        countDirection(i, j, state, 'topleft', player) + countDirection(i, j, state, 'bottomright', player) - 1 == 5 ||
+        countDirection(i, j, state, 'topright', player) + countDirection(i, j, state, 'bottomleft', player) - 1 == 5
     ) return true;
     return false;
 };

@@ -2,11 +2,11 @@ from bottle import route, run, request, static_file
 from os import getcwd, path
 
 from game import GameState
-from brain import AlphaBetaAgent
+from brain import UNTSAgent
 
 root = '/'.join(path.abspath(__file__).split('/')[:-1]) + '/public'
 gamedata = dict()
-agent = AlphaBetaAgent(heuristic=lambda d: 5)
+agent = UNTSAgent()
 
 @route('/', method='GET')
 def callback():
