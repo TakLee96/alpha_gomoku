@@ -88,6 +88,7 @@ def gonna_win(features):
 
 DETER_DEPTH = 3
 DEPTH = 8
+GAMMA = 0.99
 
 class UNTSAgent():
     """ Unbalanced Non-zero-sum Tree Search Agent """
@@ -114,6 +115,8 @@ class UNTSAgent():
             oppval, myval = self.value(state, depth, deter_depth)
             if myval is None:
                 myval = evaluate(extractFeatures(state, who))
+            else:
+                myval = GAMMA * myval
             state.rewind()
             return (myval, oppval)
         return max(map(val, moves), key=lambda t: t[0])
