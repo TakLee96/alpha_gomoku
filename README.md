@@ -11,4 +11,4 @@
 - To start the game, run `pypy main.py` in terminal and navigate in your browser to `localhost:8000`
 - There are a lot of useful information displayed in the terminal
 - The AI can spend very long time thinking (the longest I've encountered is 4 minutes)
-- Have fun!
+- Have fun! (Bug report or comments: shoot me an [email](mailto:tak_us@hotmail.com)!)
