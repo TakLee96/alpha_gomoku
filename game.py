@@ -31,10 +31,10 @@ class GameState():
         w = self.moves[x][y]
         if w != who:
             return False
-        if (self.__count(x, y, 1, 0, w)  + 1 + self.__count(x, y, -1, 0, w)  >= 5 or
-            self.__count(x, y, 0, 1, w)  + 1 + self.__count(x, y, 0, -1, w)  >= 5 or
-            self.__count(x, y, 1, 1, w)  + 1 + self.__count(x, y, -1, -1, w) >= 5 or
-            self.__count(x, y, 1, -1, w) + 1 + self.__count(x, y, -1, 1, w)  >= 5):
+        if (self.__count(x, y, 1, 0, w)  + 1 + self.__count(x, y, -1, 0, w)  == 5 or
+            self.__count(x, y, 0, 1, w)  + 1 + self.__count(x, y, 0, -1, w)  == 5 or
+            self.__count(x, y, 1, 1, w)  + 1 + self.__count(x, y, -1, -1, w) == 5 or
+            self.__count(x, y, 1, -1, w) + 1 + self.__count(x, y, -1, 1, w)  == 5):
            return True
         return False
 
