@@ -68,7 +68,8 @@ def my_four(features):
             '*o-ooo*' in features or
             '*ooo-o*' in features or
             '*oo-oo*' in features or
-            '-oooo-'  in features)
+            '-oooo-'  in features or
+            'long-win' in features)
 
 def dead_four(features):
     return ('oxxxx-'  in features or

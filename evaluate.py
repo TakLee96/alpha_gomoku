@@ -65,8 +65,10 @@ def __check(state, who, move, direction, checked, features):
     elif len(feature) == 7:
         feature = '*' + feature[1:6] + '*'
         features[feature] = features[feature] + 1
-    elif len(feature) > 7 and '-oooo-' in feature:
+    elif len(feature) > 7 and '-xxxx-' in feature:
         features['long-death'] = features['long-death'] + 1
+    elif len(feature) > 7 and '-oooo-' in feature:
+        features['long-win'] = features['long-win'] + 1
 
 def extractFeatures(state, who):
     checked = set()
