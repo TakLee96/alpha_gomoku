@@ -12,3 +12,13 @@
 - There are a lot of useful information displayed in the terminal
 - The AI can spend very long time thinking (the longest I've encountered is 4 minutes)
 - Have fun! (Bug report or comments: shoot me an [email](mailto:tak_us@hotmail.com)!)
+
+# Current problems
+
+- Once winning strategy is found, can cache responses
+- Not intelligent enough during open status
+- Still have redundant calculation
+- Big Calculation is not perfect
+- Diff feature calculating is probably better than extract feature for each state
+- Could apply adversarial reinforcement learning
+- Could apply threat space search
