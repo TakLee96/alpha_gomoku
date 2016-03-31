@@ -33,9 +33,9 @@ public class Grid {
 
     public String getImage() {
         switch (w) {
-            case BLACK: return "public/img/grid-blue.jpg";
-            case WHITE: return "public/img/grid-green.jpg";
-            default: return "public/img/grid-empty.jpg";
+            case BLACK: return "img/grid-blue.jpg";
+            case WHITE: return "img/grid-green.jpg";
+            default: return "img/grid-empty.jpg";
         }
     }
 }
