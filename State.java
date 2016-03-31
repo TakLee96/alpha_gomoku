@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class State {
     /* class constants */
@@ -8,6 +9,7 @@ public class State {
     public int newX, newY;
     public String message;
     public ArrayList<Tuple<Integer>> five;
+    public HashMap<String, Integer> features;
     private int dx, dy;
     private boolean blackWins, whiteWins;
     private short numMoves;
@@ -19,7 +21,8 @@ public class State {
         blackWins = false; whiteWins = false;
         numMoves = 0;
         board = new Grid[N][N];
-        five = new ArrayList<Tuple<Integer>>(5);
+        five = new ArrayList<Tuple<Integer>>(8);
+        features = new HashMap<String, Integer>();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = new Grid();
