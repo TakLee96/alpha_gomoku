@@ -145,10 +145,11 @@ public class State {
             }
             sb.append("|\n");
         }
-        sb.append("X");
+        sb.append("X ");
         for (int l = 0; l <= N; l++) {
             sb.append("- ");
         }
+        sb.append("\n");
         return sb.toString();
     }
 
