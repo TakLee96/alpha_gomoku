@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class State {
     /* class constants */
@@ -9,16 +10,17 @@ public class State {
     public int newX, newY;
     public String message;
     public ArrayList<Tuple<Integer>> five;
+    public ArrayList<Tuple<Integer>> history;
     public HashMap<String, Integer> features;
     private int dx, dy;
-    private boolean blackWins, whiteWins;
+    private boolean wins;
     private short numMoves;
     private Grid[][] board;
     public State() {
         newX = -1; newY = -1;
         dx = 0; dy = 0;
         message = "It's Blue Circle's Turn.";
-        blackWins = false; whiteWins = false;
+        wins = false;
         numMoves = 0;
         board = new Grid[N][N];
         five = new ArrayList<Tuple<Integer>>(8);
@@ -38,11 +40,11 @@ public class State {
         if (!end() && inBound(x, y) && board[x][y].isEmpty()) {
             newX = x; newY = y;
             board[x][y].put(isBlacksTurn());
+            history.add(new Tuple(x, y));
             /*check if win and extract feature*/
-            blackWins = win(true); whiteWins = win(false);
-            numMoves++;
-            if (blackWins || whiteWins) {
-                String winner = (!isBlacksTurn()) ? "Blue Circle" : "Green Cross";
+            wins = win(isBlacksTurn());
+            if (wins) {
+                String winner = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
                 message = winner + " wins the game!";
                 boolean b = board[x][y].isBlack();
                 x += dx; y += dy; 
@@ -58,6 +60,7 @@ public class State {
                 five.add(new Tuple<Integer>(newX, newY));
                 newX = -1; newY = -1;
             } else {
+                numMoves++;
                 String who = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
                 message = "It's " + who + "'s Turn.";
             }
@@ -70,7 +73,7 @@ public class State {
     }
 
     public boolean end() {
-        return blackWins || whiteWins || numMoves == N * N;
+        return wins || numMoves == N * N;
     }
 
     public boolean inBound(int x, int y) {
@@ -112,6 +115,15 @@ public class State {
             return true;
         }
         return false;
+    }
+
+    public HashSet<Tuple<Integer>> getLegalActions() {
+        int x, y;
+        HashSet<Tuple<Integer>> a = new HashSet<Tuple<Integer>>();
+        for (Tuple<Integer> t : history) {
+            x = t.x; y = t.y;
+            /* TODO */
+        }
     }
 
     @Override
