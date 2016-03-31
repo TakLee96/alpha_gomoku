@@ -20,7 +20,7 @@ public class Driver {
         }
         if (s.end()) {
             StdDrawPlus.setPenColor(StdDrawPlus.ORANGE);
-            for (Tuple<Integer> t : s.five) {
+            for (Action t : s.five) {
                 StdDrawPlus.square(y2i(t.y) + .5, x2j(t.x) + .5, .5);
             }
         }
@@ -32,12 +32,21 @@ public class Driver {
         StdDrawPlus.setXscale(0, N);
         StdDrawPlus.setYscale(0, N);
         State s = new State();
+        Agent agent = new RandomAgent(true);
+        s.move(agent.getAction(s));
 
         while (true) {
             if (StdDrawPlus.mousePressed()) {
                 double i = StdDrawPlus.mouseX();
                 double j = StdDrawPlus.mouseY();
-                s.move(j2x((int) j), i2y((int) i));
+                int x = j2x((int) j), y = i2y((int) i);
+                if (s.canMove(x, y)) {
+                    s.move(x, y);
+                    Action a = agent.getAction(s);
+                    if (s.canMove(a)) {
+                        s.move(a);    
+                    }
+                }
             }
             drawBoard(s);
             StdDrawPlus.show(100);

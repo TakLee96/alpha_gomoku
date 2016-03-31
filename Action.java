@@ -1,14 +1,14 @@
-public class Tuple<T> {
-    public T x;
-    public T y;
-    public Tuple(T x, T y) {
+public class Action {
+    public int x;
+    public int y;
+    public Action(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
     @Override
     public boolean equals(Object other) {
-        Tuple<T> o = (Tuple<T>) other;
+        Action o = (Action) other;
         return o.x == x && o.y == y;
     }
 

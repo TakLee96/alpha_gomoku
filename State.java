@@ -5,12 +5,24 @@ import java.util.HashSet;
 public class State {
     /* class constants */
     public static final int N = 15;
+    public static final Action start = new Action(N/2, N/2);
+    private static final Action[] neighbors = new Action[16];
+    static {
+        neighbors[0] = new Action(1, 0); neighbors[1] = new Action(-1, 0);
+        neighbors[2] = new Action(0, 1); neighbors[3] = new Action(0, -1);
+        neighbors[4] = new Action(1, 1); neighbors[5] = new Action(-1, 1);
+        neighbors[6] = new Action(1, -1); neighbors[7] = new Action(-1, -1);
+        neighbors[8] = new Action(2, 0); neighbors[9] = new Action(-2, 0);
+        neighbors[10] = new Action(0, 2); neighbors[11] = new Action(0, -2);
+        neighbors[12] = new Action(2, 2); neighbors[13] = new Action(-2, 2);
+        neighbors[14] = new Action(2, -2); neighbors[15] = new Action(-2, -2);
+    }
 
     /* instance attributes & constructor */
     public int newX, newY;
     public String message;
-    public ArrayList<Tuple<Integer>> five;
-    public ArrayList<Tuple<Integer>> history;
+    public ArrayList<Action> five;
+    public ArrayList<Action> history;
     public HashMap<String, Integer> features;
     private int dx, dy;
     private boolean wins;
@@ -23,8 +35,9 @@ public class State {
         wins = false;
         numMoves = 0;
         board = new Grid[N][N];
-        five = new ArrayList<Tuple<Integer>>(8);
+        five = new ArrayList<Action>(8);
         features = new HashMap<String, Integer>();
+        history = new ArrayList<Action>();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = new Grid();
@@ -36,36 +49,45 @@ public class State {
         return numMoves % 2 == 0;
     }
 
+    public boolean canMove(Action a) {
+        return a != null && canMove(a.x, a.y);
+    }
+
+    public boolean canMove(int x, int y) {
+        return !end() && inBound(x, y) && board[x][y].isEmpty();
+    }
+
+    public void move(Action a) {
+        move(a.x, a.y);
+    }
+
     public void move(int x, int y) {
-        if (!end() && inBound(x, y) && board[x][y].isEmpty()) {
-            newX = x; newY = y;
-            board[x][y].put(isBlacksTurn());
-            history.add(new Tuple(x, y));
-            /*check if win and extract feature*/
-            wins = win(isBlacksTurn());
-            if (wins) {
-                String winner = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-                message = winner + " wins the game!";
-                boolean b = board[x][y].isBlack();
-                x += dx; y += dy; 
-                while (inBound(x, y) && board[x][y].is(b)) {
-                    five.add(new Tuple<Integer>(x, y));
-                    x = x + dx; y = y + dy;
-                }
-                x = newX - dx; y = newY - dy;
-                while (inBound(x, y) && board[x][y].is(b)) {
-                    five.add(new Tuple<Integer>(x, y));
-                    x = x - dx; y = y - dy;
-                }
-                five.add(new Tuple<Integer>(newX, newY));
-                newX = -1; newY = -1;
-            } else {
-                numMoves++;
-                String who = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-                message = "It's " + who + "'s Turn.";
+        newX = x; newY = y;
+        board[x][y].put(isBlacksTurn());
+        history.add(new Action(x, y));
+        wins = win(isBlacksTurn());
+        if (wins) {
+            String winner = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
+            message = winner + " wins the game!";
+            boolean b = board[x][y].isBlack();
+            x += dx; y += dy; 
+            while (inBound(x, y) && board[x][y].is(b)) {
+                five.add(new Action(x, y));
+                x = x + dx; y = y + dy;
             }
-            System.out.println(this);
+            x = newX - dx; y = newY - dy;
+            while (inBound(x, y) && board[x][y].is(b)) {
+                five.add(new Action(x, y));
+                x = x - dx; y = y - dy;
+            }
+            five.add(new Action(newX, newY));
+            newX = -1; newY = -1;
+        } else {
+            numMoves++;
+            String who = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
+            message = "It's " + who + "'s Turn.";
         }
+        System.out.println(this);
     }
 
     public Grid get(int x, int y) {
@@ -117,13 +139,21 @@ public class State {
         return false;
     }
 
-    public HashSet<Tuple<Integer>> getLegalActions() {
-        int x, y;
-        HashSet<Tuple<Integer>> a = new HashSet<Tuple<Integer>>();
-        for (Tuple<Integer> t : history) {
-            x = t.x; y = t.y;
-            /* TODO */
+    public HashSet<Action> getLegalActions() {
+        int x, y, nx, ny;
+        HashSet<Action> a = new HashSet<Action>();
+        if (numMoves == 0) {
+            a.add(start);
         }
+        for (Action t : history) {
+            for (Action n : neighbors) {
+                nx = t.x + n.x; ny = t.y + n.y;
+                if (inBound(nx, ny) && board[nx][ny].isEmpty()) {
+                    a.add(new Action(nx, ny));
+                }
+            }
+        }
+        return a;
     }
 
     @Override

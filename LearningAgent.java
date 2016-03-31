@@ -10,9 +10,9 @@ public class LearningAgent {
     }
 
     public static void main(String[] args) {
-        LearningAgent a = new LearningAgent();
+        LearningAgent a = new LearningAgent(0.2, 1.0, 0.2);
 
-        for (int i = 0; i < numTraining; i++) {
+        for (int i = 0; i < 100; i++) {
             State s = new State();
         }
     }
