@@ -31,6 +31,10 @@ public class Grid {
         w = (isBlack) ? Who.BLACK : Who.WHITE;
     }
 
+    public void clean() {
+        w = Who.EMPTY;
+    }
+
     public String getImage() {
         switch (w) {
             case BLACK: return "img/grid-blue.jpg";

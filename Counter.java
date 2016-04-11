@@ -7,6 +7,11 @@ public class Counter {
         map = new HashMap<String, Double>();
     }
 
+    public Counter(Counter other) {
+        this();
+        map.putAll(other.map);
+    }
+
     public void put(String key, double val) {
         map.put(key, val);
     }
@@ -17,6 +22,11 @@ public class Counter {
             return 0.0;
         }
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return map.toString();
     }
 
 }

@@ -1,33 +1,32 @@
-import java.util.ArrayList;
+import java.util.AbstractCollection;
+import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
+import java.util.Map;
 
 public class State {
     /* class constants */
     public static final int N = 15;
     public static final Action start = new Action(N/2, N/2);
-    private static final Action[] neighbors = new Action[16];
-    static {
-        neighbors[0] = new Action(1, 0); neighbors[1] = new Action(-1, 0);
-        neighbors[2] = new Action(0, 1); neighbors[3] = new Action(0, -1);
-        neighbors[4] = new Action(1, 1); neighbors[5] = new Action(-1, 1);
-        neighbors[6] = new Action(1, -1); neighbors[7] = new Action(-1, -1);
-        neighbors[8] = new Action(2, 0); neighbors[9] = new Action(-2, 0);
-        neighbors[10] = new Action(0, 2); neighbors[11] = new Action(0, -2);
-        neighbors[12] = new Action(2, 2); neighbors[13] = new Action(-2, 2);
-        neighbors[14] = new Action(2, -2); neighbors[15] = new Action(-2, -2);
-    }
+    private static final Action[] neighbors = new Action[]{
+        new Action(1, 0), new Action(-1, 0), new Action(0, 1), new Action(0, -1),
+        new Action(1, 1), new Action(-1, 1), new Action(1, -1), new Action(-1, -1),
+        new Action(2, 0), new Action(-2, 0), new Action(0, 2),  new Action(0, -2),
+        new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2)
+    };
 
     /* instance attributes & constructor */
     public int newX, newY;
     public String message;
-    public ArrayList<Action> five;
-    public ArrayList<Action> history;
+    public LinkedList<Action> five;
+    public LinkedList<Action> history;
     public HashMap<String, Integer> features;
     private int dx, dy;
     private boolean wins;
     private short numMoves;
     private Grid[][] board;
+    private Random random;
     public State() {
         newX = -1; newY = -1;
         dx = 0; dy = 0;
@@ -35,9 +34,10 @@ public class State {
         wins = false;
         numMoves = 0;
         board = new Grid[N][N];
-        five = new ArrayList<Action>(8);
+        five = new LinkedList<Action>();
         features = new HashMap<String, Integer>();
-        history = new ArrayList<Action>();
+        history = new LinkedList<Action>();
+        random = new Random(System.currentTimeMillis());
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = new Grid();
@@ -45,7 +45,7 @@ public class State {
         }
     }
 
-    private boolean isBlacksTurn() {
+    public boolean isBlacksTurn() {
         return numMoves % 2 == 0;
     }
 
@@ -61,14 +61,17 @@ public class State {
         move(a.x, a.y);
     }
 
+    private String who() {
+        return (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
+    }
+
     public void move(int x, int y) {
         newX = x; newY = y;
         board[x][y].put(isBlacksTurn());
         history.add(new Action(x, y));
         wins = win(isBlacksTurn());
         if (wins) {
-            String winner = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-            message = winner + " wins the game!";
+            message = who() + " wins the game!";
             boolean b = board[x][y].isBlack();
             x += dx; y += dy; 
             while (inBound(x, y) && board[x][y].is(b)) {
@@ -84,8 +87,7 @@ public class State {
             newX = -1; newY = -1;
         } else {
             numMoves++;
-            String who = (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-            message = "It's " + who + "'s Turn.";
+            message = "It's " + who() + "'s Turn.";
         }
         System.out.println(this);
     }
@@ -112,7 +114,15 @@ public class State {
         return count;
     }
 
-    public boolean win(boolean isBlack) {
+    public boolean blackWins() {
+        return isBlacksTurn() && wins;
+    }
+
+    public boolean whiteWins() {
+        return !isBlacksTurn() && wins;
+    }
+
+    private boolean win(boolean isBlack) {
         if (numMoves == 0 || isBlacksTurn() != isBlack) {
             return false;
         }
@@ -139,7 +149,7 @@ public class State {
         return false;
     }
 
-    public HashSet<Action> getLegalActions() {
+    public AbstractCollection<Action> getLegalActions() {
         int x, y, nx, ny;
         HashSet<Action> a = new HashSet<Action>();
         if (numMoves == 0) {
@@ -154,6 +164,47 @@ public class State {
             }
         }
         return a;
+    }
+
+    public Action randomAction() {
+        AbstractCollection<Action> ac = getLegalActions();
+        int i = 0, index = random.nextInt(ac.size());
+        for (Action a : ac) {
+            if (i == index) {
+                return a;
+            }
+            i++;
+        }
+        return null;
+    }
+
+    public void rewindTill(Action a) {
+        Action last;
+        do {
+            last = history.pop();
+            board[last.x][last.y].clean();
+            if (wins) {
+                wins = false;
+                five.clear();
+            } else {
+                numMoves--;    
+            }
+        } while (!a.equals(last));
+        message = "It's " + who() + "'s Turn.";
+        if (history.isEmpty()) {
+            newX = -1; newY = -1;
+        } else {
+            Action temp = history.getLast();
+            newX = temp.x; newY = temp.y;
+        }
+    }
+
+    public Map<String, Integer> extractFeatures(Action a) {
+        HashMap<String, Integer> features = new HashMap<String, Integer>();
+        /* TODO: this is fucking hard */
+        boolean isBlack = board[a.x][a.y].isBlack();
+        
+        return features;
     }
 
     @Override

@@ -8,6 +8,9 @@ public class Action {
 
     @Override
     public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
         Action o = (Action) other;
         return o.x == x && o.y == y;
     }
