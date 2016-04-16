@@ -145,8 +145,9 @@ public class LearningAgent extends Agent {
         }
         first.doneTraining(); second.doneTraining();
         System.out.println("Training completes. Testing begins.");
+        State s = new State();
         for (int i = 0; i < numTesting; i++) {
-            State s = new State();
+            s = new State();
             for (int j = 0; !s.end(); j = (j + 1) % 2) {
                 agent = agents[j];
                 s.move(agent.getAction(s));
