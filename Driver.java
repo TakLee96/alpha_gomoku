@@ -1,5 +1,5 @@
 public class Driver {
-    
+
     private static final int N = State.N;
 
     private static int i2y(int i) { return i; }
@@ -21,7 +21,7 @@ public class Driver {
         if (s.end()) {
             StdDrawPlus.setPenColor(StdDrawPlus.ORANGE);
             for (Action t : s.five) {
-                StdDrawPlus.square(y2i(t.y) + .5, x2j(t.x) + .5, .5);
+                StdDrawPlus.square(y2i(t.y()) + .5, x2j(t.x()) + .5, .5);
             }
         }
         StdDrawPlus.setPenColor(StdDrawPlus.BLACK);
@@ -44,7 +44,9 @@ public class Driver {
                     s.move(x, y);
                     Action a = agent.getAction(s);
                     if (s.canMove(a)) {
-                        s.move(a);    
+                        s.move(a);
+                        System.out.println(s);
+                        System.out.println(s.extractFeatures());
                     }
                 }
             }

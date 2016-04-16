@@ -5,6 +5,7 @@ public class RandomAgent extends Agent {
     }
 
     public Action getAction(State s) {
+        if (!s.started()) return s.start;
         return s.randomAction();
     }
 

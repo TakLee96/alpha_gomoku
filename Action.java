@@ -1,9 +1,15 @@
 public class Action {
-    public int x;
-    public int y;
+    private int x, y;
+    public int x() { return x; }
+    public int y() { return y; }
     public Action(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Action(Action a) {
+        this.x = a.x;
+        this.y = a.y;
     }
 
     @Override
@@ -17,7 +23,12 @@ public class Action {
 
     @Override
     public String toString() {
-        return "(" + x + "," + y + ")";
+        String xc, yc;
+        if (x < 10) xc = x + "";
+        else xc = ((char) (x - 10 + 'A')) + "";
+        if (y < 10) yc = y + "";
+        else yc = ((char) (y - 10 + 'A')) + "";
+        return "(" + xc + "," + yc + ")";
     }
 
     @Override

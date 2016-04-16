@@ -1,157 +1,153 @@
-import java.util.Stack;
 import java.util.Random;
 import java.util.Map;
 
 public class LearningAgent extends Agent {
 
     private static final double alpha = 0.1;
-    private static final double gamma = 0.9;
+    private static final double gamma = 0.8;
     private static final double epsilon = 0.1;
-    private static final double threshold = 0.015;
-    private static final int numTraining = 1000;
+    private static final double reward = 100.0;
+    private static final int numTraining = 100;
     private static final int numTesting = 10;
 
     private Counter weights;
     private boolean doneTraining;
+    private Action prev;
     private Random random;
-    private Stack<Action> history;
     public LearningAgent(boolean isBlack) {
         super(isBlack);
         weights = new Counter();
         doneTraining = false;
+        prev = null;
         random = new Random(System.currentTimeMillis());
     }
 
-    private double computeQValue(State s, Action a) {
-        Map<String, Integer> features = s.extractFeatures(a);
+    private double computeValue(State s) {
+        Map<String, Integer> features = s.extractFeatures();
         double val = 0.0;
-        for (Map.Entry<String, Integer> e : features.entrySet()) {
+        for (Map.Entry<String, Integer> e : features.entrySet())
             val += e.getValue() * weights.get(e.getKey());
-        }
         return val;
     }
 
-    private Action getPolicy(State s) {
-        double bestVal = Double.MIN_VALUE;
-        double val = 0.0; Action bestAction = null;
-        for (Action a : s.getLegalActions()) {
-            val = computeQValue(s, a);
-            if (val > bestVal) {
-                bestVal = val;
-                bestAction = a;
-            }
+    private double computeQValue(State s, Action a) {
+        double val = 0.0;
+        double minval = Double.MAX_VALUE;
+        s.move(a);
+        if (s.win(isBlack)) {
+            s.rewind();
+            return reward;
         }
-        return bestAction;
+        for (Action ap : s.getLegalActions()) {
+            s.move(ap);
+            if (s.win(!isBlack)) {
+                s.rewind(); s.rewind();
+                return -reward;
+            }
+            val = computeValue(s);
+            if (val < minval) minval = val;
+            s.rewind();
+        }
+        s.rewind();
+        return minval;
     }
 
-    private Action chooseAction(State s) {
-        if (doneTraining || random.nextDouble() > epsilon) {
-            return getPolicy(s);
-        } else {
-            return s.randomAction();
-        }        
+    private Action getPolicy(State s) {
+        double val = 0.0;
+        double maxval = -Double.MAX_VALUE;
+        Action maxaction = null;
+        for (Action a : s.getLegalActions()) {
+            val = computeQValue(s, a);
+            if (val > maxval) {
+                maxval = val;
+                maxaction = a;
+            }
+        }
+        return maxaction;
     }
 
     @Override
     public Action getAction(State s) {
-        Action a = chooseAction(s);
-        history.push(a);
-        return a;
+        if (!s.started()) {
+            prev = s.start;
+        } else if (doneTraining || random.nextDouble() > epsilon) {
+            prev = getPolicy(s);
+        } else {
+            prev = s.randomAction();
+        }
+        return prev;
     }
 
     private void doneTraining() {
         doneTraining = true;
     }
 
-    private void observeTransition(State s, Action a, double r, Counter newWeights) {
-        Map<String, Integer> features = s.extractFeatures(a);
-        double difference; double maxval; double val;
+    private void observeTransition(State s, Action a, double r) {
+        Map<String, Integer> features = s.extractFeatures();
+        double difference;
         for (Map.Entry<String, Integer> e : features.entrySet()) {
-            difference = r - computeQValue(s, a);
-            maxval = Double.MIN_VALUE;
-            s.move(a);
-            for (Action ap : s.getLegalActions()) {
-                /* TODO:
-                 * It is now enemy's turn, how can you ensure 
-                 * that this Q value is valid/correct?
-                 * This is the core difference between minimax q learning
-                 * and other type such as normal q learning and opponent
-                 * modeling q learning and prioritized sweeping
-                 * UPDATE: for now, I will use normal q learning
-                 */
-                val = computeQValue(s, ap);
-                if (val > maxval) {
-                    maxval = val;
-                }
-            }
-            s.rewindTill(a);
-            difference += gamma * maxval;
-            newWeights.put(e.getKey(), weights.get(e.getKey()) + alpha * e.getValue() * difference);
+            difference = r - computeValue(s) + gamma * computeQValue(s, a);
+            weights.put(e.getKey(), weights.get(e.getKey()) + alpha * difference * e.getValue());
         }
-    }
-
-    private void feedback(State s, double val) {
-        Action a; Counter newWeights = new Counter(weights);
-        for (double multiplier = 1.0;
-            multiplier > threshold && !history.empty();
-            multiplier = multiplier * gamma) {
-            a = history.pop();
-            s.rewindTill(a);
-            observeTransition(s, a, multiplier * (1.0 - gamma) * val, newWeights);
-        }
-        weights = newWeights;
-    }
-
-    private void positiveFeedback(State s) {
-        feedback(s, 100.0);
-    }
-
-    private void negativeFeedback(State s) {
-        feedback(s, -100.0);
-    }
-
-    private void neutralFeedback(State s) {
-        feedback(s, 0.0);
     }
 
     public static void main(String[] args) {
-        LearningAgent a = new LearningAgent(true);
-        RandomAgent b = new RandomAgent(false);
-        Agent[] agents = new Agent[]{a, b};
-        Agent c;
+        LearningAgent first  = new LearningAgent(true);
+        LearningAgent second = new LearningAgent(false);
+        LearningAgent[] agents = new LearningAgent[]{first, second};
+        LearningAgent agent;
         int numTrainingWins = 0, numTrainingLoses = 0,
             numTestingWins  = 0, numTestingLoses  = 0;
+        int nx, ny, px = 0, py = 0; boolean started;
 
         System.out.println("Training begins.");
         for (int i = 0; i < numTraining; i++) {
             State s = new State();
+            first.prev = null; second.prev = null;
             for (int j = 0; !s.end(); j = (j + 1) % 2) {
-                c = agents[j];
-                s.move(c.getAction(s));
+                agent = agents[j];
+                if (agent.prev != null) {
+                    nx = s.newX; ny = s.newY; s.rewind(); started = s.started();
+                    if (started) { px = s.newX; py = s.newY; s.rewind(); }
+                    agent.observeTransition(s, agent.prev, 0.0);
+                    if (started) s.move(px, py);
+                    s.move(nx, ny);
+                }
+                s.move(agent.getAction(s));
+                System.out.print(".");
             }
             if (s.blackWins()) {
-                a.positiveFeedback(s);
+                first.observeTransition(s, first.prev, reward);
+                s.rewind();
+                second.observeTransition(s, second.prev, -reward);
                 numTrainingWins++;
+                System.out.println("o");
             } else if (s.whiteWins()) {
-                a.negativeFeedback(s);
+                second.observeTransition(s, second.prev, reward);
+                s.rewind();
+                first.observeTransition(s, first.prev, -reward);
                 numTrainingLoses++;
+                System.out.println("x");
             } else {
-                a.neutralFeedback(s);
+                System.out.println(first.weights);
+                System.out.println(second.weights);
+                throw new RuntimeException("Even?!?!");
             }
             if ((i + 1) % (numTraining / 10) == 0) {
                 System.out.println((i + 1) / (numTraining / 10)
-                    + "0% done. Wins/Loses: "
+                    + "0% done. First's Wins/Loses: "
                     + numTrainingWins + "/" + numTrainingLoses);
-                System.out.println(a.weights);
+                System.out.println(first.weights);
+                System.out.println(second.weights);
             }
         }
-        a.doneTraining();
+        first.doneTraining(); second.doneTraining();
         System.out.println("Training completes. Testing begins.");
         for (int i = 0; i < numTesting; i++) {
             State s = new State();
             for (int j = 0; !s.end(); j = (j + 1) % 2) {
-                c = agents[j];
-                s.move(c.getAction(s));
+                agent = agents[j];
+                s.move(agent.getAction(s));
             }
             if (s.blackWins()) {
                 numTestingWins++;
@@ -159,9 +155,10 @@ public class LearningAgent extends Agent {
                 numTestingLoses++;
             }
         }
-        System.out.println("Testing completes. Wins/Loses: "
+        System.out.println("Testing completes. First's Wins/Loses: "
             + numTestingWins + "/" + numTestingLoses);
-        System.out.println(a.weights);
+        System.out.println(first.weights);
+        System.out.println(second.weights);
     }
 
 }

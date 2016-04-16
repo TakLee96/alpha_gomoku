@@ -1,6 +1,9 @@
 import java.util.HashMap;
+import java.text.DecimalFormat;
 
 public class Counter {
+
+    private static DecimalFormat formatter = new DecimalFormat("#0.000E0");
 
     private HashMap<String, Double> map;
     public Counter() {
@@ -26,7 +29,14 @@ public class Counter {
 
     @Override
     public String toString() {
-        return map.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        for (String key : map.keySet()) {
+            sb.append("    " + key + " : " + formatter.format(map.get(key)) + "\n");
+        }
+        sb.append("}");
+        return sb.toString();
+
     }
 
 }

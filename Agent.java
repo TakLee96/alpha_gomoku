@@ -1,6 +1,6 @@
 public abstract class Agent {
 
-    protected boolean isBlack;
+    public boolean isBlack;
     public Agent(boolean isBlack) {
         this.isBlack = isBlack;
     }
