@@ -1,4 +1,6 @@
 import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Random;
 import java.util.Map;
 
 public class State {
@@ -21,7 +23,8 @@ public class State {
     private boolean wins;
     private short numMoves;
     private Grid[][] board;
-    private RandomSet<Action> legalActions;
+    private Random random;
+    private HashSet<Action> legalActions;
     public State() {
         newX = -1; newY = -1;
         dx = 0; dy = 0;
@@ -31,7 +34,8 @@ public class State {
         board = new Grid[N][N];
         five = new LinkedList<Action>();
         history = new LinkedList<Action>();
-        legalActions = new RandomSet<Action>();
+        legalActions = new HashSet<Action>();
+        random = new Random(System.nanoTime());
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = new Grid();
@@ -158,12 +162,12 @@ public class State {
         return false;
     }
 
-    public Iterable<Action> getLegalActions() {
-        return legalActions;
+    public Action[] getLegalActions() {
+        return legalActions.toArray(new Action[legalActions.size()]);
     }
 
     public Action randomAction() {
-        return legalActions.pollRandom();
+        return getLegalActions()[random.nextInt(legalActions.size())];
     }
 
     public void rewind() {
