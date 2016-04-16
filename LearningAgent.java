@@ -7,8 +7,8 @@ public class LearningAgent extends Agent {
     private static final double gamma = 0.8;
     private static final double epsilon = 0.1;
     private static final double reward = 100.0;
-    private static final int numTraining = 100;
-    private static final int numTesting = 10;
+    private static final int numTraining = 10000;
+    private static final int numTesting = 100;
 
     private Counter weights;
     private boolean doneTraining;
@@ -98,12 +98,13 @@ public class LearningAgent extends Agent {
         LearningAgent agent;
         int numTrainingWins = 0, numTrainingLoses = 0,
             numTestingWins  = 0, numTestingLoses  = 0;
-        int nx, ny, px = 0, py = 0; boolean started;
+        int nx, ny, px = 0, py = 0; boolean started; long time;
 
         System.out.println("Training begins.");
         for (int i = 0; i < numTraining; i++) {
             State s = new State();
             first.prev = null; second.prev = null;
+            time = System.currentTimeMillis();
             for (int j = 0; !s.end(); j = (j + 1) % 2) {
                 agent = agents[j];
                 if (agent.prev != null) {
@@ -121,18 +122,19 @@ public class LearningAgent extends Agent {
                 s.rewind();
                 second.observeTransition(s, second.prev, -reward);
                 numTrainingWins++;
-                System.out.println("o");
+                System.out.print("o");
             } else if (s.whiteWins()) {
                 second.observeTransition(s, second.prev, reward);
                 s.rewind();
                 first.observeTransition(s, first.prev, -reward);
                 numTrainingLoses++;
-                System.out.println("x");
+                System.out.print("x");
             } else {
                 System.out.println(first.weights);
                 System.out.println(second.weights);
                 throw new RuntimeException("Even?!?!");
             }
+            System.out.println(" [" + (System.currentTimeMillis() - time) + "ms]");
             if ((i + 1) % (numTraining / 10) == 0) {
                 System.out.println((i + 1) / (numTraining / 10)
                     + "0% done. First's Wins/Loses: "
@@ -151,14 +153,18 @@ public class LearningAgent extends Agent {
             }
             if (s.blackWins()) {
                 numTestingWins++;
+                System.out.print("o");
             } else if (s.whiteWins()) {
                 numTestingLoses++;
+                System.out.print("x");
             }
         }
         System.out.println("Testing completes. First's Wins/Loses: "
             + numTestingWins + "/" + numTestingLoses);
         System.out.println(first.weights);
         System.out.println(second.weights);
+        System.out.println("Last game:");
+        System.out.println(s.history);
     }
 
 }

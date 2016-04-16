@@ -21,7 +21,7 @@ public class State {
     public LinkedList<Action> history;
     private int dx, dy;
     private boolean wins;
-    private short numMoves;
+    private int numMoves;
     private Grid[][] board;
     private Random random;
     private HashSet<Action> legalActions;
