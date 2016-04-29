@@ -7,7 +7,7 @@ public class Driver {
     private static int j2x(int j) { return N - j - 1; }
     private static int x2j(int x) { return N - x - 1; }
 
-    private static void drawBoard(State s) {
+    public static void drawBoard(State s) {
         StdDrawPlus.clear();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {

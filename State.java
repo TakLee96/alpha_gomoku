@@ -44,6 +44,14 @@ public class State {
         }
     }
 
+    public State clone() {
+        State s = new State();
+        for (Action a : history) {
+            s.move(a);
+        }
+        return s;
+    }
+
     public boolean started() {
         return numMoves > 0;
     }
@@ -68,16 +76,20 @@ public class State {
         return (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
     }
 
+    private String other() {
+        return (!isBlacksTurn()) ? "Blue Circle" : "Green Cross";
+    }
+
     public void move(int x, int y) {
         newX = x; newY = y;
         board[x][y].put(isBlacksTurn());
         Action move = new Action(x, y);
         legalActions.remove(move);
         history.add(move);
-        wins = win(isBlacksTurn());
+        numMoves++;
+        wins = win(!isBlacksTurn());
         if (wins) {
-            message = who() + " wins the game!";
-            numMoves++;
+            message = other() + " wins the game!";
             boolean b = board[x][y].isBlack();
             x += dx; y += dy;
             while (inBound(x, y) && board[x][y].is(b)) {
@@ -92,7 +104,6 @@ public class State {
             five.add(new Action(newX, newY));
             newX = -1; newY = -1;
         } else {
-            numMoves++;
             message = "It's " + who() + "'s Turn.";
         }
     }
@@ -128,15 +139,15 @@ public class State {
     }
 
     public boolean blackWins() {
-        return isBlacksTurn() && wins;
-    }
-
-    public boolean whiteWins() {
         return !isBlacksTurn() && wins;
     }
 
+    public boolean whiteWins() {
+        return isBlacksTurn() && wins;
+    }
+
     public boolean win(boolean isBlack) {
-        if (numMoves == 0 || isBlacksTurn() != isBlack) {
+        if (numMoves == 0 || isBlacksTurn() == isBlack) {
             return false;
         }
         if (1 + count(isBlack, newX, newY, (int) 1, (int) 0)

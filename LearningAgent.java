@@ -2,13 +2,13 @@ import java.util.Random;
 import java.util.Map;
 
 public class LearningAgent extends Agent {
-
+    private static final int N = State.N;
     private static final double alpha = 0.1;
     private static final double gamma = 0.8;
     private static final double epsilon = 0.1;
     private static final double reward = 100.0;
-    private static final int numTraining = 10000;
-    private static final int numTesting = 100;
+    private static final int numTraining = 1000;
+    private static final int numTesting = 10;
 
     private Counter weights;
     private boolean doneTraining;
@@ -58,7 +58,7 @@ public class LearningAgent extends Agent {
         Action maxaction = null;
         for (Action a : s.getLegalActions()) {
             val = computeQValue(s, a);
-            if (val > maxval) {
+            if (val > maxval || (val == maxval && random.nextDouble() > 0.5)) {
                 maxval = val;
                 maxaction = a;
             }
@@ -92,6 +92,7 @@ public class LearningAgent extends Agent {
     }
 
     public static void main(String[] args) {
+        boolean visual = (args.length == 1 && args[0].equals("-v"));
         LearningAgent first  = new LearningAgent(true);
         LearningAgent second = new LearningAgent(false);
         LearningAgent[] agents = new LearningAgent[]{first, second};
@@ -101,6 +102,11 @@ public class LearningAgent extends Agent {
         int nx, ny, px = 0, py = 0; boolean started; long time;
 
         System.out.println("Training begins.");
+        if (visual) {
+            System.out.println("Initializing visualization");
+            StdDrawPlus.setXscale(0, N);
+            StdDrawPlus.setYscale(0, N);
+        }
         for (int i = 0; i < numTraining; i++) {
             State s = new State();
             first.prev = null; second.prev = null;
@@ -115,6 +121,10 @@ public class LearningAgent extends Agent {
                     s.move(nx, ny);
                 }
                 s.move(agent.getAction(s));
+                if (visual) {
+                    Driver.drawBoard(s);
+                    StdDrawPlus.show(100);
+                }
                 System.out.print(".");
             }
             if (s.blackWins()) {
@@ -154,18 +164,18 @@ public class LearningAgent extends Agent {
             }
             if (s.blackWins()) {
                 numTestingWins++;
-                System.out.print("o");
+                System.out.print("Black wins: ");
+                System.out.println(s.history);
             } else if (s.whiteWins()) {
                 numTestingLoses++;
-                System.out.print("x");
+                System.out.print("White wins: ");
+                System.out.println(s.history);
             }
         }
         System.out.println("Testing completes. First's Wins/Loses: "
             + numTestingWins + "/" + numTestingLoses);
         System.out.println(first.weights);
         System.out.println(second.weights);
-        System.out.println("Last game:");
-        System.out.println(s.history);
     }
 
 }
