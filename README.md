@@ -1,10 +1,17 @@
 # Alpha Gomoku
 
-- This is a standard gomoku game with Java GUI
+- This is a standard gomoku game with Java GUI (the AI is currently playing randomly)
 
 # To install and play
 
 - Have Java installed and run `javac *.java && java Driver`
+
+# Old version
+
+- Have **pypy** and **bottle** installed and run `pypy old/main.py`
+- Navigate your browser to `localhost:8000`
+- The AI is working, and fairly strong I believe
+- The website can read a history JSON object and replay an old game
 
 # Past problems
 
