@@ -1,13 +1,15 @@
 package gomoku;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.text.DecimalFormat;
 
 /** Counter, just a map that return 0.0 for none-existing key
  * @author TakLee96 */
 public class Counter {
 
-    private static DecimalFormat formatter = new DecimalFormat("#0.000E0");
+    private static DecimalFormat formatter = new DecimalFormat("#0.000");
 
     private HashMap<String, Double> map;
     public Counter() {
@@ -35,7 +37,10 @@ public class Counter {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
-        for (String key : map.keySet()) {
+
+        ArrayList<String> sortedKeys = new ArrayList<String>(map.keySet());
+        Collections.sort(sortedKeys);
+        for (String key : sortedKeys) {
             sb.append("    " + key + " : " + formatter.format(map.get(key)) + "\n");
         }
         sb.append("}");

@@ -1,4 +1,5 @@
 import csv
+from os import path
 
 class Counter(dict):
     def __getitem__(self, key):
@@ -57,7 +58,7 @@ def __check(state, who, move, direction, checked, features):
             break
     if not state.inBound(nx, ny):
         feature = other + feature
-    
+
     if 4 <= len(feature) <= 6 and (feature[0] == "-" or feature[-1] == "-"):
         if feature[0] == "-" and feature[-1] != "-":
             feature = feature[::-1]
@@ -82,7 +83,7 @@ def extractFeatures(state, who):
     return features
 
 weight = Counter()
-with open('weight.csv', 'rb') as csvfile:
+with open(path.join(path.dirname(path.realpath(__file__)), 'weight.csv'), 'rb') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     for row in spamreader:
         if len(row) > 1:

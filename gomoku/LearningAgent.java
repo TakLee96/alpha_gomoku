@@ -9,12 +9,17 @@ import java.util.Map;
 public class LearningAgent extends Agent {
 
     private static final int N = State.N;
-    private static final double alpha = 0.1;
+    private static final double alpha = 0.2;
     private static final double gamma = 0.9;
     private static final double epsilon = 0.1;
-    private static final int numTraining = 100;
-    private static final int numTesting = 0;
+    private static final double infinity = 1E5;
+    private static final int numTraining = 10000;
+    private static final int numTesting = 1;
     private static final Random random = new Random();
+
+    private static double alpha(int episodes) {
+        return Math.min(alpha / Math.log(episodes + 0.1), alpha);
+    }
 
     private Counter weights;
     private boolean doneTraining;
@@ -37,7 +42,7 @@ public class LearningAgent extends Agent {
     }
 
     private double nextMinValue(State s) {
-        double minVal = Double.MAX_VALUE; double val = 0.0;
+        double minVal = infinity; double val = 0.0;
         for (Action a : s.getLegalActions()) {
             s.move(a);
             val = value(s);
@@ -49,7 +54,7 @@ public class LearningAgent extends Agent {
     }
 
     private double nextMaxValue(State s) {
-        double maxVal = -Double.MAX_VALUE; double val = 0.0;
+        double maxVal = -infinity; double val = 0.0;
         for (Action a : s.getLegalActions()) {
             s.move(a);
             val = value(s);
@@ -61,7 +66,7 @@ public class LearningAgent extends Agent {
     }
 
     private Action nextMinAction(State s) {
-        double minVal = Double.MAX_VALUE; double val = 0.0;
+        double minVal = infinity; double val = 0.0;
         ArrayList<Action> actions = new ArrayList<Action>();
         for (Action a : s.getLegalActions()) {
             s.move(a);
@@ -80,7 +85,7 @@ public class LearningAgent extends Agent {
     }
 
     private Action nextMaxAction(State s) {
-        double maxVal = -Double.MAX_VALUE; double val = 0.0;
+        double maxVal = -infinity; double val = 0.0;
         ArrayList<Action> actions = new ArrayList<Action>();
         for (Action a : s.getLegalActions()) {
             s.move(a);
@@ -105,14 +110,11 @@ public class LearningAgent extends Agent {
     }
 
     // TODO: be careful with this
-    private void observe(State s, double reward) {
-        Action last = s.history.getLast();
-        s.rewind();
+    private void observe(State s, double reward, int episodes) {
         Map<String, Integer> features = s.extractFeatures();
         double delta = reward + gamma * nextValue(s) - value(s, features);
         for (String key : features.keySet())
-            weights.put(key, weights.get(key) + alpha * delta * features.get(key));
-        s.move(last);
+            weights.put(key, weights.get(key) + alpha(episodes) * delta * features.get(key));
     }
 
     private void doneTraining() {
@@ -131,8 +133,9 @@ public class LearningAgent extends Agent {
         return s.randomAction();
     }
 
-    private static void playGame(LearningAgent b, LearningAgent w, boolean withGraphics) {
+    private static void playGame(LearningAgent b, LearningAgent w, boolean withGraphics, int episodes) {
         State s = new State();
+        System.out.print(episodes);
         while (!s.ended()) {
             if (s.isBlacksTurn()) {
                 s.move(b.getAction(s));
@@ -141,8 +144,8 @@ public class LearningAgent extends Agent {
             }
             if (withGraphics) GUIDriver.drawBoard(s);
             System.out.print(".");
-            b.observe(s, 0.0);
-            w.observe(s, 0.0);
+            // b.observe(s, 0.0, episodes);
+            // w.observe(s, 0.0, episodes);
         }
         double blackReward = 0.0;
         if (s.win(true)) {
@@ -155,8 +158,9 @@ public class LearningAgent extends Agent {
             System.out.println("tie");
             blackReward = 0.0;
         }
-        b.observe(s, blackReward);
-        w.observe(s, -blackReward);
+        b.observe(s, blackReward, episodes);
+        w.observe(s, -blackReward, episodes);
+        if (withGraphics) System.out.println(s.history);
     }
 
     public static void main(String[] args) {
@@ -165,9 +169,8 @@ public class LearningAgent extends Agent {
         LearningAgent w = new LearningAgent(false);
         if (withGraphics) GUIDriver.init();
 
-        for (int i = 0; i < numTraining; i++) {
-            System.out.print(i);
-            playGame(b, w, withGraphics);
+        for (int i = 1; i <= numTraining; i++) {
+            playGame(b, w, withGraphics, i);
         }
 
         System.out.println(b.weights);
@@ -175,8 +178,7 @@ public class LearningAgent extends Agent {
         w.doneTraining();
         if (!withGraphics && numTesting > 0) GUIDriver.init();
         for (int j = 0; j < numTesting; j++) {
-            System.out.print(j);
-            playGame(b, w, true);
+            playGame(b, w, true, 0);
         }
 
         System.exit(0);
