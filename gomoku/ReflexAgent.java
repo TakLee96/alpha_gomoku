@@ -102,6 +102,7 @@ public class ReflexAgent extends Agent {
     }
 
     protected Action getPolicy(State s) {
+        if (!s.started()) return s.start;
         if (isBlack) return nextMaxAction(s);
         return nextMinAction(s);
     }

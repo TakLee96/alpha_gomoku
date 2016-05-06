@@ -49,7 +49,7 @@ public class GUIDriver {
     public static void main(String[] args) {
         init();
         State s = new State();
-        Agent agent = new Agent(true);
+        Agent agent = new ReflexAgent(true);
         s.move(agent.getAction(s));
 
         while (true) {

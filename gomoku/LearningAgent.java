@@ -22,7 +22,6 @@ public class LearningAgent extends ReflexAgent {
         return Math.min(alpha / Math.log(episodes + 0.1), alpha);
     }
 
-    private Counter weights;
     private boolean doneTraining;
     public LearningAgent(boolean isBlack) {
         super(isBlack, new Counter());
@@ -43,7 +42,7 @@ public class LearningAgent extends ReflexAgent {
 
     @Override
     public Action getAction(State s) {
-        if (doneTraining || random.nextDouble() > epsilon)
+        if (doneTraining || !s.started() || random.nextDouble() > epsilon)
             return getPolicy(s);
         return s.randomAction();
     }
