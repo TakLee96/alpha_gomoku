@@ -3,16 +3,17 @@ package gomoku;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Map;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 
 /** Reinforcement Learning Agent
  * @author TakLee96 */
-public class LearningAgent extends Agent {
+public class LearningAgent extends ReflexAgent {
 
     private static final int N = State.N;
     private static final double alpha = 0.2;
     private static final double gamma = 0.9;
     private static final double epsilon = 0.1;
-    private static final double infinity = 1E5;
     private static final int numTraining = 10000;
     private static final int numTesting = 1;
     private static final Random random = new Random();
@@ -24,89 +25,8 @@ public class LearningAgent extends Agent {
     private Counter weights;
     private boolean doneTraining;
     public LearningAgent(boolean isBlack) {
-        super(isBlack);
-        weights = new Counter();
+        super(isBlack, new Counter());
         doneTraining = false;
-    }
-
-    private double value(State s) {
-        Map<String, Integer> features = s.extractFeatures();
-        return value(s, features);
-    }
-
-    private double value(State s, Map<String, Integer> features) {
-        double total = 0.0;
-        for (String key : s.extractFeatures().keySet())
-            total += features.get(key) * weights.get(key);
-        return total;
-    }
-
-    private double nextMinValue(State s) {
-        double minVal = infinity; double val = 0.0;
-        for (Action a : s.getLegalActions()) {
-            s.move(a);
-            val = value(s);
-            if (val < minVal)
-                minVal = val;
-            s.rewind();
-        }
-        return minVal;
-    }
-
-    private double nextMaxValue(State s) {
-        double maxVal = -infinity; double val = 0.0;
-        for (Action a : s.getLegalActions()) {
-            s.move(a);
-            val = value(s);
-            if (val > maxVal)
-                maxVal = val;
-            s.rewind();
-        }
-        return maxVal;
-    }
-
-    private Action nextMinAction(State s) {
-        double minVal = infinity; double val = 0.0;
-        ArrayList<Action> actions = new ArrayList<Action>();
-        for (Action a : s.getLegalActions()) {
-            s.move(a);
-            val = value(s);
-            if (val < minVal) {
-                minVal = val;
-                actions.clear();
-                actions.add(a);
-            } else if (val == minVal) {
-                actions.add(a);
-            }
-            s.rewind();
-        }
-        if (actions.size() == 1) return actions.get(0);
-        return actions.get(random.nextInt(actions.size()));
-    }
-
-    private Action nextMaxAction(State s) {
-        double maxVal = -infinity; double val = 0.0;
-        ArrayList<Action> actions = new ArrayList<Action>();
-        for (Action a : s.getLegalActions()) {
-            s.move(a);
-            val = value(s);
-            if (val > maxVal) {
-                maxVal = val;
-                actions.clear();
-                actions.add(a);
-            } else if (val == maxVal) {
-                actions.add(a);
-            }
-            s.rewind();
-        }
-        if (actions.size() == 1) return actions.get(0);
-        return actions.get(random.nextInt(actions.size()));
-    }
-
-    private double nextValue(State s) {
-        if (s.isBlacksTurn())
-            return nextMaxValue(s);
-        return nextMinValue(s);
     }
 
     // TODO: be careful with this
@@ -119,11 +39,6 @@ public class LearningAgent extends Agent {
 
     private void doneTraining() {
         doneTraining = true;
-    }
-
-    private Action getPolicy(State s) {
-        if (isBlack) return nextMaxAction(s);
-        return nextMinAction(s);
     }
 
     @Override
@@ -179,6 +94,15 @@ public class LearningAgent extends Agent {
         if (!withGraphics && numTesting > 0) GUIDriver.init();
         for (int j = 0; j < numTesting; j++) {
             playGame(b, w, true, 0);
+        }
+
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter("gomoku/weight.csv"));
+            String weight = b.weights.toString();
+            bw.write(weight, 0, weight.length());
+            bw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         System.exit(0);

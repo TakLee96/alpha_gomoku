@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.text.DecimalFormat;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 /** Counter, just a map that return 0.0 for none-existing key
  * @author TakLee96 */
@@ -19,6 +21,22 @@ public class Counter {
     public Counter(Counter other) {
         this();
         map.putAll(other.map);
+    }
+
+    public Counter(String file) {
+        this();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    map.put(parts[0].trim(), Double.parseDouble(parts[1].trim()));
+                }
+            }
+            br.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void put(String key, double val) {
