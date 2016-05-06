@@ -1,6 +1,10 @@
+package gomoku;
+
 import java.util.HashMap;
 import java.text.DecimalFormat;
 
+/** Counter, just a map that return 0.0 for none-existing key
+ * @author TakLee96 */
 public class Counter {
 
     private static DecimalFormat formatter = new DecimalFormat("#0.000E0");
@@ -36,7 +40,6 @@ public class Counter {
         }
         sb.append("}");
         return sb.toString();
-
     }
 
 }

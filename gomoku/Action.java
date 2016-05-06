@@ -1,3 +1,7 @@
+package gomoku;
+
+/** Action, essentially just (x, y)
+ * @author TakLee96 */
 public class Action {
     private int x, y;
     public int x() { return x; }

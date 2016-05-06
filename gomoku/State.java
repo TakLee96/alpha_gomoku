@@ -1,12 +1,21 @@
+package gomoku;
+
 import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Map;
 
+/** Gomoku GameState Object
+ * @author TakLee96 */
 public class State {
-    /* class constants */
-    public static final int N = 15;
+    /***********************
+     *** CLASS CONSTANTS ***
+     ***********************/
+    // size of board
+    public static final int N = 7;
+    // default starting action
     public static final Action start = new Action(N/2, N/2);
+    // neighbor positions on the board
     private static final Action[] neighbors = new Action[]{
         new Action(1, 0), new Action(-1, 0), new Action(0, 1), new Action(0, -1),
         new Action(1, 1), new Action(-1, 1), new Action(1, -1), new Action(-1, -1),
@@ -14,28 +23,35 @@ public class State {
         new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2)
     };
 
-    /* instance attributes & constructor */
-    public int newX, newY;
-    public String message;
-    public LinkedList<Action> five;
-    public LinkedList<Action> history;
+    /***************************
+     *** INSTANCE ATTRIBUTES ***
+     ***************************/
+    // the direction of the five generated
     private int dx, dy;
-    private boolean wins;
-    private int numMoves;
-    private Grid[][] board;
-    private Random random;
+    // helper structure to store the winning moves
+    public LinkedList<Action> five;
+    // game history
+    public LinkedList<Action> history;
+    // data structure for easy generation of legal actions
     private HashSet<Action> legalActions;
+    // did any one win the game?
+    private boolean wins;
+    // the board
+    private Grid[][] board;
+    // the random
+    private Random random;
+
+    /*******************
+     *** CONSTRUCTOR ***
+     *******************/
     public State() {
-        newX = -1; newY = -1;
         dx = 0; dy = 0;
-        message = "It's Blue Circle's Turn.";
-        wins = false;
-        numMoves = 0;
-        board = new Grid[N][N];
         five = new LinkedList<Action>();
         history = new LinkedList<Action>();
         legalActions = new HashSet<Action>();
-        random = new Random(System.nanoTime());
+        wins = false;
+        board = new Grid[N][N];
+        random = new Random();
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 board[i][j] = new Grid();
@@ -43,89 +59,54 @@ public class State {
             }
         }
     }
-
     public State clone() {
         State s = new State();
-        for (Action a : history) {
+        for (Action a : history)
             s.move(a);
-        }
         return s;
     }
 
-    public boolean started() {
-        return numMoves > 0;
-    }
+    /********************
+     *** CORE UTILITY ***
+     ********************/
+    public int numMoves() { return history.size(); }
+    public boolean started() { return numMoves() > 0; }
+    public boolean isBlacksTurn() { return numMoves() % 2 == 0; }
+    public boolean isTurn(boolean isBlack) { return !(isBlack ^ isBlacksTurn()); }
+    public boolean canMove(Action a) { return a != null && canMove(a.x(), a.y()); }
+    public boolean canMove(int x, int y) { return !ended() && inBound(x, y) && board[x][y].isEmpty(); }
+    public Grid get(Action a) { return get(a.x(), a.y()); }
+    public Grid get(int x, int y) { return board[x][y]; }
+    public boolean ended() { return wins || numMoves() == N * N; }
+    public boolean inBound(Action a) { return inBound(a.x(), a.y()); }
+    public boolean inBound(int x, int y) { return (x >= 0 && x < N && y >= 0 && y < N); }
+    public boolean win(boolean isBlack) { return wins && isTurn(!isBlack); }
+    public Action[] getLegalActions() { return legalActions.toArray(new Action[legalActions.size()]); }
+    public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
+    public Map<String, Integer> extractFeatures() { return Extractor.extractFeatures(this); }
 
-    public boolean isBlacksTurn() {
-        return numMoves % 2 == 0;
-    }
-
-    public boolean canMove(Action a) {
-        return a != null && canMove(a.x(), a.y());
-    }
-
-    public boolean canMove(int x, int y) {
-        return !end() && inBound(x, y) && board[x][y].isEmpty();
-    }
-
-    public void move(Action a) {
-        move(a.x(), a.y());
-    }
-
-    private String who() {
-        return (isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-    }
-
-    private String other() {
-        return (!isBlacksTurn()) ? "Blue Circle" : "Green Cross";
-    }
-
+    public void move(Action a) { move(a.x(), a.y()); }
     public void move(int x, int y) {
-        newX = x; newY = y;
-        board[x][y].put(isBlacksTurn());
+        boolean who = isBlacksTurn();
+        board[x][y].put(who);
         Action move = new Action(x, y);
         legalActions.remove(move);
-        history.add(move);
-        numMoves++;
-        wins = win(!isBlacksTurn());
+        history.addLast(move);
+        wins = check(who);
         if (wins) {
-            message = other() + " wins the game!";
-            boolean b = board[x][y].isBlack();
-            x += dx; y += dy;
-            while (inBound(x, y) && board[x][y].is(b)) {
-                five.add(new Action(x, y));
-                x = x + dx; y = y + dy;
+            int nx = x; int ny = y;
+            nx += dx; ny += dy;
+            while (inBound(nx, ny) && board[nx][ny].is(who)) {
+                five.add(new Action(nx, ny));
+                nx += dx; ny += dy;
             }
-            x = newX - dx; y = newY - dy;
-            while (inBound(x, y) && board[x][y].is(b)) {
-                five.add(new Action(x, y));
-                x = x - dx; y = y - dy;
+            nx = x - dx; ny = y - dy;
+            while (inBound(nx, ny) && board[nx][ny].is(who)) {
+                five.add(new Action(nx, ny));
+                nx -= dx; ny -= dy;
             }
-            five.add(new Action(newX, newY));
-            newX = -1; newY = -1;
-        } else {
-            message = "It's " + who() + "'s Turn.";
+            five.add(new Action(x, y));
         }
-    }
-
-    public Grid get(Action a) {
-        return get(a.x(), a.y());
-    }
-
-    public Grid get(int x, int y) {
-        return board[x][y];
-    }
-
-    public boolean end() {
-        return wins || numMoves == N * N;
-    }
-
-    public boolean inBound(Action a) {
-        return inBound(a.x(), a.y());
-    }
-
-    public boolean inBound(int x, int y) {
-        return (x >= 0 && x < N && y >= 0 && y < N);
     }
 
     private int count(boolean isBlack, int x, int y, int dx, int dy) {
@@ -138,47 +119,33 @@ public class State {
         return count;
     }
 
-    public boolean blackWins() {
-        return !isBlacksTurn() && wins;
-    }
-
-    public boolean whiteWins() {
-        return isBlacksTurn() && wins;
-    }
-
-    public boolean win(boolean isBlack) {
-        if (numMoves == 0 || isBlacksTurn() == isBlack) {
+    private boolean check(boolean isBlack) {
+        if (!started() || isTurn(isBlack)) {
             return false;
         }
+        Action a = history.getLast();
+        int newX = a.x(); int newY = a.y();
         if (1 + count(isBlack, newX, newY, (int) 1, (int) 0)
-              + count(isBlack, newX, newY, (int)-1, (int) 0) >= 5) {
+              + count(isBlack, newX, newY, (int)-1, (int) 0) == 5) {
             dx = 1; dy = 0;
             return true;
         }
         if (1 + count(isBlack, newX, newY, (int) 0, (int) 1)
-              + count(isBlack, newX, newY, (int) 0, (int)-1) >= 5) {
+              + count(isBlack, newX, newY, (int) 0, (int)-1) == 5) {
             dx = 0; dy = 1;
             return true;
         }
         if (1 + count(isBlack, newX, newY, (int) 1, (int) 1)
-              + count(isBlack, newX, newY, (int)-1, (int)-1) >= 5) {
+              + count(isBlack, newX, newY, (int)-1, (int)-1) == 5) {
             dx = 1; dy = 1;
             return true;
         }
         if (1 + count(isBlack, newX, newY, (int) 1, (int)-1)
-              + count(isBlack, newX, newY, (int)-1, (int) 1) >= 5) {
+              + count(isBlack, newX, newY, (int)-1, (int) 1) == 5) {
             dx = 1; dy = -1;
             return true;
         }
         return false;
-    }
-
-    public Action[] getLegalActions() {
-        return legalActions.toArray(new Action[legalActions.size()]);
-    }
-
-    public Action randomAction() {
-        return getLegalActions()[random.nextInt(legalActions.size())];
     }
 
     public void rewind() {
@@ -189,18 +156,6 @@ public class State {
             wins = false;
             five.clear();
         }
-        numMoves--;
-        message = "It's " + who() + "'s Turn.";
-        if (history.isEmpty()) {
-            newX = -1; newY = -1;
-        } else {
-            Action temp = history.getLast();
-            newX = temp.x(); newY = temp.y();
-        }
-    }
-
-    public Map<String, Integer> extractFeatures() {
-        return Extractor.extractFeatures(this);
     }
 
     @Override

@@ -1,7 +1,11 @@
+package gomoku;
+
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/** feature Extractor for gomoku State
+ * @author TakLee96 */
 public class Extractor {
 
     private static enum Direction {
@@ -96,29 +100,34 @@ public class Extractor {
             feature = OTHER + feature;
 
         if (feature.length() > 3) {
-            // Reduce #Feature
             String reversed = null;
             if (feature.charAt(0) != EMPTY.charAt(0) && feature.length() < 7 &&
-                feature.charAt(0) == feature.charAt(feature.length()-1)) return;
-            else if (feature.contains("ooooo")) feature = "5o";
-            else if (feature.contains("xxxxx")) feature = "5x";
-            else if (feature.contains("-oooo-")) feature = "l4o";
-            else if (feature.contains("-xxxx-")) feature = "l4x";
-            else if (feature.contains("-oooo") ||
-                     feature.contains("oooo-") ||
-                     feature.contains("o-ooo") ||
-                     feature.contains("ooo-o") ||
-                     feature.contains("oo-oo")) feature = "d4o";
-            else if (feature.contains("-xxxx") ||
-                     feature.contains("xxxx-") ||
-                     feature.contains("x-xxx") ||
-                     feature.contains("x-xxx") ||
-                     feature.contains("xx-xx")) feature = "d4x";
-            else reversed = (new StringBuilder(feature)).reverse().toString();
-
-            if (reversed != null && features.containsKey(reversed))
-                features.put(reversed, features.get(reversed) + 1);
-            else if (features.containsKey(feature))
+                feature.charAt(feature.length()-1) != EMPTY.charAt(0)) return;
+            if (who) {
+                if (feature.contains("oooooo")) return;
+                if (feature.contains("ooooo")) feature = "win-o";
+                else if (feature.matches("[x-]o-o-o-o[x-]")) feature = "jump-o";
+                else if (feature.matches("[x-]o-ooo[x-]") ||
+                         feature.matches("[x-]oo-oo[x-]") ||
+                         feature.matches("[x-]ooo-o[x-]")) feature = "four-o";
+                else if (feature.length() > 6) return;
+                else if (feature.charAt(feature.length()-1) == EMPTY.charAt(0) &&
+                         feature.charAt(0) != EMPTY.charAt(0))
+                         feature = (new StringBuilder(feature)).reverse().toString();
+            } else {
+                if (feature.contains("xxxxxx")) return;
+                if (feature.contains("xxxxx")) feature = "win-x";
+                else if (feature.matches("[o-]x-x-x-x[o-]")) feature = "jump-x";
+                else if (feature.matches("[o-]x-xxx[o-]") ||
+                         feature.matches("[o-]xx-xx[o-]") ||
+                         feature.matches("[o-]xxx-x[o-]")) feature = "four-x";
+                else if (feature.length() > 6) return;
+                else if (feature.charAt(feature.length()-1) == EMPTY.charAt(0) &&
+                         feature.charAt(0) != EMPTY.charAt(0))
+                         feature = (new StringBuilder(feature)).reverse().toString();
+            }
+            feature += (state.isTurn(who)) ? " [mine]" : " [oppo]";
+            if (features.containsKey(feature))
                 features.put(feature, features.get(feature) + 1);
             else features.put(feature, 1);
         }

@@ -1,3 +1,5 @@
+package gomoku;
+
 /*************************************************************************
  *  Compilation:  javac StdDrawPlus.java
  *  Execution:    java StdDrawPlus
@@ -6,7 +8,7 @@
  *  creating drawings with your programs. It uses a simple graphics model that
  *  allows you to create drawings consisting of points, lines, and curves
  *  in a window on your computer and to save the drawings to a file.
- *  
+ *
  *  This is a shortened/modified version of the original Std.Java.
  *  For the original, see:
  *  http://introcs.cs.princeton.edu/java/stdlib/StdDrawPlus.java.html.
@@ -754,4 +756,3 @@ public final class StdDrawPlus implements ActionListener, MouseListener, MouseMo
         }
     }
 }
-

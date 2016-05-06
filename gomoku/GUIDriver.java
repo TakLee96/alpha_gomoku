@@ -1,4 +1,6 @@
-public class Driver {
+package gomoku;
+
+public class GUIDriver {
 
     private static final int N = State.N;
 
@@ -7,32 +9,47 @@ public class Driver {
     private static int j2x(int j) { return N - j - 1; }
     private static int x2j(int x) { return N - x - 1; }
 
+    private static String msg(State s) {
+        if (s.ended())
+            if (!s.isBlacksTurn()) return "Blue Naught wins!";
+            else                   return "Green Cross wins!";
+        else
+            if (s.isBlacksTurn())  return "It's Blue Naught's turn!";
+            else                   return "It's Green Cross's turn!";
+    }
+
     public static void drawBoard(State s) {
         StdDrawPlus.clear();
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
                 StdDrawPlus.picture(i + .5, j + .5, s.get(j2x(j), i2y(i)).getImage(), 1, 1);
+        if (s.started()) {
+            Action a = s.history.getLast();
+            int newX = a.x(); int newY = a.y();
+            if (s.inBound(newX, newY)) {
+                StdDrawPlus.setPenColor(StdDrawPlus.RED);
+                StdDrawPlus.square(y2i(newY) + .5, x2j(newX) + .5, .5);
             }
         }
-        if (s.inBound(s.newX, s.newY)) {
-            StdDrawPlus.setPenColor(StdDrawPlus.RED);
-            StdDrawPlus.square(y2i(s.newY) + .5, x2j(s.newX) + .5, .5);
-        }
-        if (s.end()) {
+        if (s.ended()) {
             StdDrawPlus.setPenColor(StdDrawPlus.ORANGE);
-            for (Action t : s.five) {
+            for (Action t : s.five)
                 StdDrawPlus.square(y2i(t.y()) + .5, x2j(t.x()) + .5, .5);
-            }
         }
         StdDrawPlus.setPenColor(StdDrawPlus.BLACK);
-        StdDrawPlus.text(N / 2 + .5, N + .25, s.message);
+        StdDrawPlus.text(N / 2 + .5, N + .25, msg(s));
+        StdDrawPlus.show(100);
+    }
+
+    public static void init() {
+        StdDrawPlus.setXscale(0, N);
+        StdDrawPlus.setYscale(0, N);
     }
 
     public static void main(String[] args) {
-        StdDrawPlus.setXscale(0, N);
-        StdDrawPlus.setYscale(0, N);
+        init();
         State s = new State();
-        Agent agent = new RandomAgent(true);
+        Agent agent = new Agent(true);
         s.move(agent.getAction(s));
 
         while (true) {
@@ -51,7 +68,6 @@ public class Driver {
                 }
             }
             drawBoard(s);
-            StdDrawPlus.show(100);
         }
     }
 }

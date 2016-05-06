@@ -1,8 +1,12 @@
+package gomoku;
+
+/** Grid, recording black/white information
+ * @author TakLee96 */
 public class Grid {
     private static enum Who {
         EMPTY, BLACK, WHITE
     }
-    
+
     private Who w;
     public Grid() {
         w = Who.EMPTY;
