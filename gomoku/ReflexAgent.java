@@ -1,6 +1,7 @@
 package gomoku;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import java.util.Map;
  * @author TakLee96 */
 public class ReflexAgent extends Agent {
     protected static final double infinity = 1E15;
+    protected static final double gamma = 0.99;
     private static final Random random = new Random();
 
     protected Counter weights;
@@ -35,12 +37,13 @@ public class ReflexAgent extends Agent {
 
     protected double nextMinValue(State s) {
         double minVal = infinity; double val = 0.0;
+        LinkedList<Action> rewinder = null;
         for (Action a : s.getLegalActions()) {
-            s.move(a);
+            rewinder = s.move(a);
             val = value(s);
             if (val < minVal)
                 minVal = val;
-            s.rewind();
+            s.rewind(rewinder);
         }
         if (minVal == infinity)
             throw new RuntimeException("everybody is huge!");
@@ -49,12 +52,13 @@ public class ReflexAgent extends Agent {
 
     protected double nextMaxValue(State s) {
         double maxVal = -infinity; double val = 0.0;
+        LinkedList<Action> rewinder = null;
         for (Action a : s.getLegalActions()) {
-            s.move(a);
+            rewinder = s.move(a);
             val = value(s);
             if (val > maxVal)
                 maxVal = val;
-            s.rewind();
+            s.rewind(rewinder);
         }
         if (maxVal == -infinity)
             throw new RuntimeException("everybody is small!");
@@ -64,8 +68,9 @@ public class ReflexAgent extends Agent {
     protected Action nextMinAction(State s) {
         double minVal = infinity; double val = 0.0;
         ArrayList<Action> actions = new ArrayList<Action>();
+        LinkedList<Action> rewinder = null;
         for (Action a : s.getLegalActions()) {
-            s.move(a);
+            rewinder = s.move(a);
             val = value(s);
             if (val < minVal) {
                 minVal = val;
@@ -74,7 +79,7 @@ public class ReflexAgent extends Agent {
             } else if (val == minVal) {
                 actions.add(a);
             }
-            s.rewind();
+            s.rewind(rewinder);
         }
         if (minVal == infinity)
             throw new RuntimeException("everybody is huge!");
@@ -85,8 +90,9 @@ public class ReflexAgent extends Agent {
     protected Action nextMaxAction(State s) {
         double maxVal = -infinity; double val = 0.0;
         ArrayList<Action> actions = new ArrayList<Action>();
+        LinkedList<Action> rewinder = null;
         for (Action a : s.getLegalActions()) {
-            s.move(a);
+            rewinder = s.move(a);
             val = value(s);
             if (val > maxVal) {
                 maxVal = val;
@@ -95,7 +101,7 @@ public class ReflexAgent extends Agent {
             } else if (val == maxVal) {
                 actions.add(a);
             }
-            s.rewind();
+            s.rewind(rewinder);
         }
         if (maxVal == -infinity)
             throw new RuntimeException("everybody is small!");

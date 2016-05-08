@@ -59,11 +59,10 @@ public class GUIDriver {
                 double i = StdDrawPlus.mouseX();
                 double j = StdDrawPlus.mouseY();
                 int x = j2x((int) j), y = i2y((int) i);
-                if (s.canMove(x, y)) {
+                if (!s.ended() && s.canMove(x, y)) {
                     s.move(x, y);
-                    Action a = agent.getAction(s);
-                    if (s.canMove(a)) {
-                        s.move(a);
+                    if (!s.ended()) {
+                        s.move(agent.getAction(s));
                         System.out.println(s);
                         System.out.println(s.extractFeatures());
                     }

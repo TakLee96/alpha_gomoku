@@ -12,7 +12,6 @@ public class LearningAgent extends ReflexAgent {
 
     private static final int N = State.N;
     private static final double alpha = 0.2;
-    private static final double gamma = 0.9;
     private static final double epsilon = 0.1;
     private static final double reward = 1.0;
     private static final double maxStepSize = 100.0;
@@ -32,7 +31,7 @@ public class LearningAgent extends ReflexAgent {
 
     // TODO: be careful with this
     private void observe(State s, double reward, int episodes) {
-        Action a = s.rewind();
+        Action a = s.rewind(null); // error!!!
         Map<String, Integer> features = s.extractFeatures();
         double delta = reward - value(s, features) + gamma * nextValue(s);
         delta = Math.signum(delta) * Math.min(Math.abs(delta), maxStepSize);

@@ -20,7 +20,9 @@ public class State {
         new Action(1, 0), new Action(-1, 0), new Action(0, 1), new Action(0, -1),
         new Action(1, 1), new Action(-1, 1), new Action(1, -1), new Action(-1, -1),
         new Action(2, 0), new Action(-2, 0), new Action(0, 2),  new Action(0, -2),
-        new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2)
+        new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2),
+        new Action(3, 0), new Action(-3, 0), new Action(0, 3), new Action(0, -3),
+        new Action(3, 3), new Action(-3, 3), new Action(3, -3), new Action(-3, -3)
     };
 
     /***************************
@@ -49,15 +51,13 @@ public class State {
         five = new LinkedList<Action>();
         history = new LinkedList<Action>();
         legalActions = new HashSet<Action>();
+        legalActions.add(start);
         wins = false;
         board = new Grid[N][N];
         random = new Random();
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
                 board[i][j] = new Grid();
-                legalActions.add(new Action(i, j));
-            }
-        }
     }
     public State clone() {
         State s = new State();
@@ -92,18 +92,31 @@ public class State {
         return legalActions.toArray(new Action[legalActions.size()]);
     }
 
-    public void move(Action a) { move(a.x(), a.y()); }
-    public void move(int x, int y) {
+    public LinkedList<Action> move(Action a) { return move(a.x(), a.y()); }
+    public LinkedList<Action> move(int x, int y) {
         if (ended())
             throw new RuntimeException("game has already ended");
         boolean who = isBlacksTurn();
         board[x][y].put(who);
         Action move = new Action(x, y);
+
+        LinkedList<Action> rewinder = new LinkedList<Action>();
+        int nx = 0, ny = 0; Action a = null;
+        for (Action d : neighbors) {
+            nx = x + d.x();
+            ny = y + d.y();
+            if (inBound(nx, ny) && board[nx][ny].isEmpty()) {
+                a = new Action(nx, ny);
+                if (legalActions.add(a))
+                    rewinder.add(a);
+            }
+        }
         legalActions.remove(move);
         history.addLast(move);
+
         wins = check(who);
         if (wins) {
-            int nx = x; int ny = y;
+            nx = x; ny = y;
             nx += dx; ny += dy;
             while (inBound(nx, ny) && board[nx][ny].is(who)) {
                 five.add(new Action(nx, ny));
@@ -116,6 +129,7 @@ public class State {
             }
             five.add(new Action(x, y));
         }
+        return rewinder;
     }
 
     private int count(boolean isBlack, int x, int y, int dx, int dy) {
@@ -157,11 +171,14 @@ public class State {
         return false;
     }
 
-    public Action rewind() {
+    public Action rewind(LinkedList<Action> rewinder) {
         if (!started())
             throw new RuntimeException("rewind at the beginning");
         Action last = history.pollLast();
         board[last.x()][last.y()].clean();
+        for (Action a : rewinder)
+            if (!legalActions.remove(a))
+                throw new RuntimeException("illegal rewinder");
         legalActions.add(last);
         if (wins) {
             wins = false;
