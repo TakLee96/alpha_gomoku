@@ -4,6 +4,9 @@ all:
 learn:
 	java gomoku/LearningAgent
 
+learn-out:
+	java gomoku/LearningAgent > output.txt
+
 visual:
 	java gomoku/LearningAgent -v
 

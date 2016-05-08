@@ -1,5 +1,7 @@
 package gomoku;
 
+/** Game GUI Driver class
+ * @author TakLee96 */
 public class GUIDriver {
 
     private static final int N = State.N;

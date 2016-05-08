@@ -81,12 +81,21 @@ public class State {
     public boolean inBound(Action a) { return inBound(a.x(), a.y()); }
     public boolean inBound(int x, int y) { return (x >= 0 && x < N && y >= 0 && y < N); }
     public boolean win(boolean isBlack) { return wins && isTurn(!isBlack); }
-    public Action[] getLegalActions() { return legalActions.toArray(new Action[legalActions.size()]); }
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
     public Map<String, Integer> extractFeatures() { return Extractor.extractFeatures(this); }
 
+    public Action[] getLegalActions() {
+        if (legalActions.size() == 0) {
+            System.out.println("#ended says: " + ended());
+            throw new RuntimeException("no action available");
+        }
+        return legalActions.toArray(new Action[legalActions.size()]);
+    }
+
     public void move(Action a) { move(a.x(), a.y()); }
     public void move(int x, int y) {
+        if (ended())
+            throw new RuntimeException("game has already ended");
         boolean who = isBlacksTurn();
         board[x][y].put(who);
         Action move = new Action(x, y);
@@ -148,7 +157,9 @@ public class State {
         return false;
     }
 
-    public void rewind() {
+    public Action rewind() {
+        if (!started())
+            throw new RuntimeException("rewind at the beginning");
         Action last = history.pollLast();
         board[last.x()][last.y()].clean();
         legalActions.add(last);
@@ -156,6 +167,7 @@ public class State {
             wins = false;
             five.clear();
         }
+        return last;
     }
 
     @Override

@@ -126,7 +126,7 @@ public class Extractor {
                          feature.charAt(0) != EMPTY.charAt(0))
                          feature = (new StringBuilder(feature)).reverse().toString();
             }
-            feature += (state.isTurn(who)) ? " [mine]" : " [oppo]";
+            feature = ((state.isBlacksTurn()) ? "[black]" : "[white]") + feature;
             if (features.containsKey(feature))
                 features.put(feature, features.get(feature) + 1);
             else features.put(feature, 1);

@@ -7,7 +7,7 @@ import java.util.Map;
 /** Basic ReflexAgent
  * @author TakLee96 */
 public class ReflexAgent extends Agent {
-    private static final double infinity = 1E5;
+    protected static final double infinity = 1E15;
     private static final Random random = new Random();
 
     protected Counter weights;
@@ -42,6 +42,8 @@ public class ReflexAgent extends Agent {
                 minVal = val;
             s.rewind();
         }
+        if (minVal == infinity)
+            throw new RuntimeException("everybody is huge!");
         return minVal;
     }
 
@@ -54,6 +56,8 @@ public class ReflexAgent extends Agent {
                 maxVal = val;
             s.rewind();
         }
+        if (maxVal == -infinity)
+            throw new RuntimeException("everybody is small!");
         return maxVal;
     }
 
@@ -72,6 +76,8 @@ public class ReflexAgent extends Agent {
             }
             s.rewind();
         }
+        if (minVal == infinity)
+            throw new RuntimeException("everybody is huge!");
         if (actions.size() == 1) return actions.get(0);
         return actions.get(random.nextInt(actions.size()));
     }
@@ -91,6 +97,8 @@ public class ReflexAgent extends Agent {
             }
             s.rewind();
         }
+        if (maxVal == -infinity)
+            throw new RuntimeException("everybody is small!");
         if (actions.size() == 1) return actions.get(0);
         return actions.get(random.nextInt(actions.size()));
     }
@@ -102,7 +110,10 @@ public class ReflexAgent extends Agent {
     }
 
     protected Action getPolicy(State s) {
-        if (!s.started()) return s.start;
+        if (!s.isTurn(isBlack))
+            throw new RuntimeException("not my turn");
+        if (!s.started())
+            return s.start;
         if (isBlack) return nextMaxAction(s);
         return nextMinAction(s);
     }

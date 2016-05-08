@@ -14,8 +14,10 @@ public class LearningAgent extends ReflexAgent {
     private static final double alpha = 0.2;
     private static final double gamma = 0.9;
     private static final double epsilon = 0.1;
-    private static final int numTraining = 10000;
-    private static final int numTesting = 1;
+    private static final double reward = 1.0;
+    private static final double maxStepSize = 100.0;
+    private static final int numTraining = 20;
+    private static final int numTesting = 0;
     private static final Random random = new Random();
 
     private static double alpha(int episodes) {
@@ -30,10 +32,15 @@ public class LearningAgent extends ReflexAgent {
 
     // TODO: be careful with this
     private void observe(State s, double reward, int episodes) {
+        Action a = s.rewind();
         Map<String, Integer> features = s.extractFeatures();
-        double delta = reward + gamma * nextValue(s) - value(s, features);
+        double delta = reward - value(s, features) + gamma * nextValue(s);
+        delta = Math.signum(delta) * Math.min(Math.abs(delta), maxStepSize);
         for (String key : features.keySet())
             weights.put(key, weights.get(key) + alpha(episodes) * delta * features.get(key));
+        s.move(a);
+        if (!isBlack)
+            System.out.println(a + " " + delta);
     }
 
     private void doneTraining() {
@@ -50,7 +57,7 @@ public class LearningAgent extends ReflexAgent {
     private static void playGame(LearningAgent b, LearningAgent w, boolean withGraphics, int episodes) {
         State s = new State();
         System.out.print(episodes);
-        while (!s.ended()) {
+        while (true) {
             if (s.isBlacksTurn()) {
                 s.move(b.getAction(s));
             } else {
@@ -58,22 +65,25 @@ public class LearningAgent extends ReflexAgent {
             }
             if (withGraphics) GUIDriver.drawBoard(s);
             System.out.print(".");
-            // b.observe(s, 0.0, episodes);
-            // w.observe(s, 0.0, episodes);
+            if (!s.ended()) {
+                b.observe(s, 0.0, episodes);
+                w.observe(s, 0.0, episodes);
+            } else break;
         }
         double blackReward = 0.0;
         if (s.win(true)) {
             System.out.println("win");
-            blackReward = 1.0;
+            blackReward = reward;
         } else if (s.win(false)) {
             System.out.println("lose");
-            blackReward = -1.0;
+            blackReward = -reward;
         } else {
             System.out.println("tie");
             blackReward = 0.0;
         }
         b.observe(s, blackReward, episodes);
-        w.observe(s, -blackReward, episodes);
+        w.observe(s, blackReward, episodes);
+        System.out.println(w.weights);
         if (withGraphics) System.out.println(s.history);
     }
 
