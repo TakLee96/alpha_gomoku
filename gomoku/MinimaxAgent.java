@@ -12,9 +12,9 @@ import java.util.Set;
  * @author TakLee96 */
 public class MinimaxAgent extends ReflexAgent {
 
-    private static final int maxDepth = 8;
-    private static final int maxBigDepth = 4;
-    private static final int branch = 8;
+    private static final int maxDepth = 10;
+    private static final int maxBigDepth = 5;
+    private static final int branch = 10;
 
     private class Node {
         public Action a;
