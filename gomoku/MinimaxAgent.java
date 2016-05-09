@@ -16,7 +16,7 @@ public class MinimaxAgent extends Agent {
     private static final double gamma = 0.99;
     private static final int maxDepth = 12;
     private static final int maxBigDepth = 4;
-    private static final int branch = 12;
+    private static final int branch = 15;
 
     private class Node {
         public Action a;
@@ -122,35 +122,39 @@ public class MinimaxAgent extends Agent {
         return minvalue(s, alpha, beta, depth, bigDepth, actions);
     }
 
-    private boolean containsFour(boolean next, Counter features, boolean isBlack) {
+    private int four(Counter features, boolean isBlack) {
         if (isBlack)
-            return (features.getInt("-oooox") + features.getInt("four-o") > 0);
-        return (features.getInt("-xxxxo") + features.getInt("four-x") > 0);
+            return (features.getInt("-oooox") + features.getInt("four-o"));
+        return (features.getInt("-xxxxo") + features.getInt("four-x"));
     }
-    private boolean containsStraightFour(boolean next, Counter features, boolean isBlack) {
+    private int straightFour(Counter features, boolean isBlack) {
         if (isBlack)
-            return features.getInt("-oooo-") > 0;
-        return features.getInt("-xxxx-") > 0;
+            return features.getInt("-oooo-");
+        return features.getInt("-xxxx-");
     }
-    private boolean containsThree(boolean next, Counter features, boolean isBlack) {
+    private int three(Counter features, boolean isBlack) {
         if (isBlack)
             return (features.getInt("-o-oo-") +
                     features.getInt("-oo-o-") +
-                    features.getInt("-ooo-")  > 0);
+                    features.getInt("-ooo-"));
         return (features.getInt("-x-xx-") +
                 features.getInt("-xx-x-") +
-                features.getInt("-xxx-")  > 0);
+                features.getInt("-xxx-"));
     }
 
     private Set<Action> movesExtendFour(State s, Counter features) {
         Set<Action> result = new HashSet<Action>(1, 2);
-        boolean w = s.isBlacksTurn();
+        String win = (s.isBlacksTurn()) ? "win-o" : "win-x";
         for (Action a : s.getLegalActions()) {
-            Rewinder rewinder = s.move(a);
-            if (s.win(w))
+            if (Extractor.diffFeatures(s, a).getInt(win) > 0) {
                 result.add(a);
-            s.rewind(rewinder);
-            if (!result.isEmpty()) return result;
+                return result;
+            }
+            // Rewinder rewinder = s.move(a);
+            // if (s.win(w))
+            //     result.add(a);
+            // s.rewind(rewinder);
+            // if (!result.isEmpty()) return result;
         }
         throw new RuntimeException("my four is missing?");
     }
@@ -158,11 +162,15 @@ public class MinimaxAgent extends Agent {
         Set<Action> result = new HashSet<Action>(1, 2);
         boolean w = s.isBlacksTurn();
         for (Action a : s.getLegalActions()) {
-            Rewinder rewinder = s.move(a);
-            if (!containsFour(!w, s.extractFeatures(), !w))
+            if (-four(Extractor.diffFeatures(s, a), !w) >= four(features, !w)) {
                 result.add(a);
-            s.rewind(rewinder);
-            if (!result.isEmpty()) return result;
+                return result;
+            }
+            // Rewinder rewinder = s.move(a);
+            // if (!containsFour(!w, s.extractFeatures(), !w))
+            //     result.add(a);
+            // s.rewind(rewinder);
+            // if (!result.isEmpty()) return result;
         }
         return result;
     }
@@ -170,13 +178,17 @@ public class MinimaxAgent extends Agent {
         Set<Action> result = new HashSet<Action>(1, 2);
         boolean w = s.isBlacksTurn();
         for (Action a : s.getLegalActions()) {
-            Rewinder rewinder = s.move(a);
-            if (containsStraightFour(!w, s.extractFeatures(), w))
+            if (straightFour(Extractor.diffFeatures(s, a), w) > 0) {
                 result.add(a);
-            s.rewind(rewinder);
-            if (!result.isEmpty()) return result;
+                return result;
+            }
+            // Rewinder rewinder = s.move(a);
+            // if (containsStraightFour(!w, s.extractFeatures(), w))
+            //     result.add(a);
+            // s.rewind(rewinder);
+            // if (!result.isEmpty()) return result;
         }
-        if (containsThree(w, features, !w))
+        if (three(features, !w) > 0)
             return movesCounterThree(s, features);
         return movesBestGrowth(s, features);
     }
@@ -184,10 +196,12 @@ public class MinimaxAgent extends Agent {
         Set<Action> result = new HashSet<Action>(3, 2);
         boolean w = s.isBlacksTurn();
         for (Action a : s.getLegalActions()) {
-            Rewinder rewinder = s.move(a);
-            if (!containsThree(!w, s.extractFeatures(), !w))
+            if (-three(Extractor.diffFeatures(s, a), !w) >= three(features, !w))
                 result.add(a);
-            s.rewind(rewinder);
+            // Rewinder rewinder = s.move(a);
+            // if (!containsThree(!w, s.extractFeatures(), !w))
+            //     result.add(a);
+            // s.rewind(rewinder);
         }
         return result;
     }
@@ -196,29 +210,34 @@ public class MinimaxAgent extends Agent {
         boolean w = s.isBlacksTurn();
         Action[] actions = s.getLegalActions();
         Node[] nodes = new Node[actions.length];
-        for (int i = 0; i < actions.length; i++) {
-            Rewinder rewinder = s.move(actions[i]);
-            nodes[i] = new Node(actions[i], value(s));
-            s.rewind(rewinder);
-        }
+        for (int i = 0; i < actions.length; i++)
+            nodes[i] = new Node(actions[i], heuristic(s, actions[i]));
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
         for (int i = 0; i < branch && i < nodes.length; i++)
             result.add(nodes[i].a);
         return result;
     }
 
+    private int heuristic(State s, Action a) {
+        Counter diff = Extractor.diffFeatures(s, a);
+        int score = 0;
+        for (String key : diff.keySet())
+            score += Extractor.sign(key) * diff.getInt(key);
+        return score;
+    }
+
     private Set<Action> getActions(State s) {
         Counter f = s.extractFeatures();
         boolean w = s.isBlacksTurn();
-        if (containsFour(w, f, w) || containsStraightFour(w, f, w))
+        if (four(f, w) > 0 || straightFour(f, w) > 0)
             return movesExtendFour(s, f);
-        if (containsStraightFour(w, f, !w))
+        if (straightFour(f, !w) > 0)
             return new HashSet<Action>(1);
-        if (containsFour(w, f, !w))
+        if (four(f, !w) > 0)
             return movesCounterFour(s, f);
-        if (containsThree(w, f, w))
+        if (three(f, w) > 0)
             return movesExtendThree(s, f);
-        if (containsThree(w, f, !w))
+        if (three(f, !w) > 0)
             return movesCounterThree(s, f);
         return movesBestGrowth(s, f);
     }

@@ -100,13 +100,11 @@ public class State {
         Counter diffFeatures = null;
         try {
             diffFeatures = Extractor.diffFeatures(this, x, y);
-            System.out.println("before:" + features);
             features.add(diffFeatures);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(this + "@" + "(" + x + ", " + y + ")");
+            System.out.println(this + "@ (" + x + ", " + y + ", " + isBlacksTurn() + ")");
             System.out.println(diffFeatures);
-            System.out.println(features);
             System.out.println(history);
             throw new RuntimeException("stop here");
         }
