@@ -1,66 +1,62 @@
 {
-    [black]-xxo   : -10
-    [black]-x-xo  : -10
-    [black]-oox   :  1
-    [black]-o-ox  :  1
+    white : -xxo   : -10
+    white : -x-xo  : -10
+    white : -oox   :  1
+    white : -o-ox  :  1
 
-    [black]-x-x-  : -1000
-    [black]-xx-   : -1000
-    [black]-xx-xo : -1000
-    [black]-x-xxo : -1000
-    [black]-xxxo  : -1000
-    [black]-o-o-  :  100
-    [black]-oo-   :  100
-    [black]-oo-ox :  100
-    [black]-o-oox :  100
-    [black]-ooox  :  100
+    white : -x-x-  : -1000
+    white : -xx-   : -1000
+    white : -x-xxo : -1000
+    white : -xxxo  : -1000
+    white : x-x-x  : -1000
+    white : -o-o-  :  100
+    white : -oo-   :  100
+    white : -o-oox :  100
+    white : -ooox  :  100
+    white : o-o-o  :  100
 
-    [black]-x-xx- : -100000
-    [black]-xx-x- : -100000
-    [black]-xxx-  : -100000
-    [black]-o-oo- :  10000
-    [black]-oo-o- :  10000
-    [black]-ooo-  :  10000
+    white : -x-xx- : -100000
+    white : -xxx-  : -100000
+    white : -o-oo- :  10000
+    white : -ooo-  :  10000
 
-    [black]-xxxx- : -10000000
-    [black]-xxxxo : -10000000
-    [black]four-x : -10000000
-    [black]-oooo- :  1000000
-    [black]-oooox :  1000000
-    [black]four-o :  1000000
+    white : -xxxx- : -10000000
+    white : -xxxxo : -10000000
+    white : four-x : -10000000
+    white : -oooo- :  1000000
+    white : -oooox :  1000000
+    white : four-o :  1000000
 
-    [black]win-x  : -100000000
+    white : win-x  : -100000000
 
 
-    [white]-oox   :  10
-    [white]-o-ox  :  10
-    [white]-xxo   : -1
-    [white]-x-xo  : -1
+    black : -oox   :  10
+    black : -o-ox  :  10
+    black : -xxo   : -1
+    black : -x-xo  : -1
 
-    [white]-o-o-  :  1000
-    [white]-oo-   :  1000
-    [white]-oo-ox :  1000
-    [white]-o-oox :  1000
-    [white]-ooox  :  1000
-    [white]-x-x-  : -100
-    [white]-xx-   : -100
-    [white]-xx-xo : -100
-    [white]-x-xxo : -100
-    [white]-xxxo  : -100
+    black : -o-o-  :  1000
+    black : -oo-   :  1000
+    black : -o-oox :  1000
+    black : -ooox  :  1000
+    black : o-o-o  :  1000
+    black : -x-x-  : -100
+    black : -xx-   : -100
+    black : -x-xxo : -100
+    black : -xxxo  : -100
+    black : x-x-x  : -100
 
-    [white]-o-oo- :  100000
-    [white]-oo-o- :  100000
-    [white]-ooo-  :  100000
-    [white]-x-xx- : -10000
-    [white]-xx-x- : -10000
-    [white]-xxx-  : -10000
+    black : -o-oo- :  100000
+    black : -ooo-  :  100000
+    black : -x-xx- : -10000
+    black : -xxx-  : -10000
 
-    [white]-oooo- :  10000000
-    [white]-oooox :  10000000
-    [white]four-o :  10000000
-    [white]-xxxx- : -1000000
-    [white]-xxxxo : -1000000
-    [white]four-x : -1000000
+    black : -oooo- :  10000000
+    black : -oooox :  10000000
+    black : four-o :  10000000
+    black : -xxxx- : -1000000
+    black : -xxxxo : -1000000
+    black : four-x : -1000000
 
-    [white]win-o  :  100000000
+    black : win-o  :  100000000
 }

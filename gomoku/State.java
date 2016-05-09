@@ -21,8 +21,6 @@ public class State {
         new Action(1, 1), new Action(-1, 1), new Action(1, -1), new Action(-1, -1),
         new Action(2, 0), new Action(-2, 0), new Action(0, 2),  new Action(0, -2),
         new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2)
-//        ,new Action(3, 0), new Action(-3, 0), new Action(0, 3), new Action(0, -3),
-//        new Action(3, 3), new Action(-3, 3), new Action(3, -3), new Action(-3, -3)
     };
 
     /***************************
@@ -42,6 +40,8 @@ public class State {
     private Grid[][] board;
     // the random
     private Random random;
+    // the features
+    private Counter features;
 
     /*******************
      *** CONSTRUCTOR ***
@@ -58,6 +58,7 @@ public class State {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 board[i][j] = new Grid();
+        features = new Counter();
     }
     public State clone() {
         State s = new State();
@@ -82,7 +83,7 @@ public class State {
     public boolean inBound(int x, int y) { return (x >= 0 && x < N && y >= 0 && y < N); }
     public boolean win(boolean isBlack) { return wins && isTurn(!isBlack); }
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
-    public Map<String, Integer> extractFeatures() { return Extractor.extractFeatures(this); }
+    public Counter extractFeatures() { return features; }
 
     public Action[] getLegalActions() {
         if (legalActions.size() == 0) {
@@ -92,15 +93,28 @@ public class State {
         return legalActions.toArray(new Action[legalActions.size()]);
     }
 
-    public LinkedList<Action> move(Action a) { return move(a.x(), a.y()); }
-    public LinkedList<Action> move(int x, int y) {
+    public Rewinder move(Action a) { return move(a.x(), a.y()); }
+    public Rewinder move(int x, int y) {
         if (ended())
             throw new RuntimeException("game has already ended");
+        Counter diffFeatures = null;
+        try {
+            diffFeatures = Extractor.diffFeatures(this, x, y);
+            System.out.println("before:" + features);
+            features.add(diffFeatures);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(this + "@" + "(" + x + ", " + y + ")");
+            System.out.println(diffFeatures);
+            System.out.println(features);
+            System.out.println(history);
+            throw new RuntimeException("stop here");
+        }
         boolean who = isBlacksTurn();
         board[x][y].put(who);
         Action move = new Action(x, y);
 
-        LinkedList<Action> rewinder = new LinkedList<Action>();
+        LinkedList<Action> removedLegalActions = new LinkedList<Action>();
         int nx = 0, ny = 0; Action a = null;
         for (Action d : neighbors) {
             nx = x + d.x();
@@ -108,7 +122,7 @@ public class State {
             if (inBound(nx, ny) && board[nx][ny].isEmpty()) {
                 a = new Action(nx, ny);
                 if (legalActions.add(a))
-                    rewinder.add(a);
+                    removedLegalActions.add(a);
             }
         }
         legalActions.remove(move);
@@ -129,7 +143,7 @@ public class State {
             }
             five.add(new Action(x, y));
         }
-        return rewinder;
+        return new Rewinder(removedLegalActions, diffFeatures);
     }
 
     private int count(boolean isBlack, int x, int y, int dx, int dy) {
@@ -171,12 +185,12 @@ public class State {
         return false;
     }
 
-    public Action rewind(LinkedList<Action> rewinder) {
+    public Action rewind(Rewinder rewinder) {
         if (!started())
             throw new RuntimeException("rewind at the beginning");
         Action last = history.pollLast();
         board[last.x()][last.y()].clean();
-        for (Action a : rewinder)
+        for (Action a : rewinder.removedLegalActions)
             if (!legalActions.remove(a))
                 throw new RuntimeException("illegal rewinder");
         legalActions.add(last);
@@ -184,6 +198,7 @@ public class State {
             wins = false;
             five.clear();
         }
+        features.sub(rewinder.diffFeatures);
         return last;
     }
 

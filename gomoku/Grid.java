@@ -46,4 +46,13 @@ public class Grid {
             default: return "img/grid-empty.jpg";
         }
     }
+
+    @Override
+    public String toString() {
+        switch (w) {
+            case BLACK: return "BLACK";
+            case WHITE: return "WHITE";
+            default: return "EMPTY";
+        }
+    }
 }

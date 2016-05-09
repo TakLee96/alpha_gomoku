@@ -1,5 +1,6 @@
 package gomoku;
 
+import java.util.Set;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,25 +14,21 @@ public class Counter {
 
     private static DecimalFormat formatter = new DecimalFormat("#0.000");
 
-    private HashMap<String, Double> map;
+    private HashMap<String, Number> map;
     public Counter() {
-        map = new HashMap<String, Double>();
+        map = new HashMap<String, Number>();
     }
 
-    public Counter(Counter other) {
-        this();
-        map.putAll(other.map);
-    }
-
-    public Counter(String file) {
-        this();
+    public static void read(Counter black, Counter white, String file) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    map.put(parts[0].trim(), Double.parseDouble(parts[1].trim()));
-                }
+                if (parts.length == 3)
+                    if (parts[0].trim().equals("black"))
+                        black.put(parts[1].trim(), Double.parseDouble(parts[2].trim()));
+                    else
+                        white.put(parts[1].trim(), Double.parseDouble(parts[2].trim()));
             }
             br.close();
         } catch (Exception e) {
@@ -39,16 +36,64 @@ public class Counter {
         }
     }
 
-    public void put(String key, double val) {
-        if (val != 0.0)
-            map.put(key, val);
+    public void put(String key, Number val) {
+        if (key != null) map.put(key, val);
     }
 
-    public double get(String key) {
-        Double result = map.get(key);
+    public int getInt(String key) {
+        return get(key).intValue();
+    }
+
+    public double getDouble(String key) {
+        return get(key).doubleValue();
+    }
+
+    private Number get(String key) {
+        if (key == null)
+            return 0.0;
+        Number result = map.get(key);
         if (result == null)
             return 0.0;
         return result;
+    }
+
+    public boolean containsKey(String key) {
+        return map.containsKey(key);
+    }
+
+    public Set<String> keySet() {
+        return map.keySet();
+    }
+
+    public void add(Counter diff) {
+        int count = 0;
+        for (String key : diff.keySet()) {
+            count = get(key).intValue() + diff.get(key).intValue();
+            if (count < 0) {
+                System.out.println(key);
+                throw new RuntimeException("negative count");
+            }
+            put(key, count);
+        }
+    }
+
+    public void sub(Counter diff) {
+        int count = 0;
+        for (String key : diff.keySet()) {
+            count = get(key).intValue() - diff.get(key).intValue();
+            if (count < 0) {
+                System.out.println(key);
+                throw new RuntimeException("negative count");
+            }
+            put(key, count);
+        }
+    }
+
+    public double mul(Counter features) {
+        double total = 0.0;
+        for (String key : features.keySet())
+            total += get(key).doubleValue() * features.get(key).intValue();
+        return total;
     }
 
     @Override
@@ -59,7 +104,8 @@ public class Counter {
         ArrayList<String> sortedKeys = new ArrayList<String>(map.keySet());
         Collections.sort(sortedKeys);
         for (String key : sortedKeys) {
-            sb.append("    " + key + " : " + formatter.format(map.get(key)) + "\n");
+            if (map.get(key).doubleValue() != 0.0)
+                sb.append("    " + key + " : " + map.get(key) + "\n");
         }
         sb.append("}");
         return sb.toString();
