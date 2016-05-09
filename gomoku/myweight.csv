@@ -22,7 +22,6 @@
     [black]-oo-o- :  10000
     [black]-ooo-  :  10000
 
-
     [black]-xxxx- : -10000000
     [black]-xxxxo : -10000000
     [black]four-x : -10000000
@@ -31,6 +30,7 @@
     [black]four-o :  1000000
 
     [black]win-x  : -100000000
+
 
     [white]-oox   :  10
     [white]-o-ox  :  10
@@ -54,7 +54,6 @@
     [white]-x-xx- : -10000
     [white]-xx-x- : -10000
     [white]-xxx-  : -10000
-
 
     [white]-oooo- :  10000000
     [white]-oooox :  10000000

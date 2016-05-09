@@ -12,7 +12,7 @@ public class State {
      *** CLASS CONSTANTS ***
      ***********************/
     // size of board
-    public static final int N = 7;
+    public static final int N = 15;
     // default starting action
     public static final Action start = new Action(N/2, N/2);
     // neighbor positions on the board
@@ -20,9 +20,9 @@ public class State {
         new Action(1, 0), new Action(-1, 0), new Action(0, 1), new Action(0, -1),
         new Action(1, 1), new Action(-1, 1), new Action(1, -1), new Action(-1, -1),
         new Action(2, 0), new Action(-2, 0), new Action(0, 2),  new Action(0, -2),
-        new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2),
-        new Action(3, 0), new Action(-3, 0), new Action(0, 3), new Action(0, -3),
-        new Action(3, 3), new Action(-3, 3), new Action(3, -3), new Action(-3, -3)
+        new Action(2, 2),  new Action(-2, 2), new Action(2, -2),  new Action(-2, -2)
+//        ,new Action(3, 0), new Action(-3, 0), new Action(0, 3), new Action(0, -3),
+//        new Action(3, 3), new Action(-3, 3), new Action(3, -3), new Action(-3, -3)
     };
 
     /***************************

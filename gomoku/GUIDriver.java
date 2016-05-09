@@ -25,6 +25,9 @@ public class GUIDriver {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 StdDrawPlus.picture(i + .5, j + .5, s.get(j2x(j), i2y(i)).getImage(), 1, 1);
+        // StdDrawPlus.setPenColor(StdDrawPlus.BLUE);
+        // for (Action a : s.getLegalActions())
+        //     StdDrawPlus.square(y2i(a.y()) + .5, x2j(a.x()) + .5, .5);
         if (s.started()) {
             Action a = s.history.getLast();
             int newX = a.x(); int newY = a.y();
@@ -51,7 +54,7 @@ public class GUIDriver {
     public static void main(String[] args) {
         init();
         State s = new State();
-        Agent agent = new ReflexAgent(true);
+        Agent agent = new MinimaxAgent(true);
         s.move(agent.getAction(s));
 
         while (true) {
@@ -61,6 +64,7 @@ public class GUIDriver {
                 int x = j2x((int) j), y = i2y((int) i);
                 if (!s.ended() && s.canMove(x, y)) {
                     s.move(x, y);
+                    drawBoard(s);
                     if (!s.ended()) {
                         s.move(agent.getAction(s));
                         System.out.println(s);
