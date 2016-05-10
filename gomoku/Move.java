@@ -1,6 +1,6 @@
 package gomoku;
 
-/** Action, essentially just (x, y)
+/** Move, essentially just (x, y, w)
  * @author TakLee96 */
 public class Move extends Action {
     private boolean isBlack;
@@ -30,7 +30,7 @@ public class Move extends Action {
         else xc = ((char) (x - 10 + 'A')) + "";
         if (y < 10) yc = y + "";
         else yc = ((char) (y - 10 + 'A')) + "";
-        String me = (isBlack) ? "black" : "white";
+        String me = (isBlack) ? "o" : "x";
         return "(" + xc + "," + yc + "," + me + ")";
     }
 

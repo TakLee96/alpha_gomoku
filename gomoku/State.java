@@ -88,6 +88,8 @@ public class State {
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
     public Action lastAction() { return history.getLast(); }
     public Counter extractFeatures() { return features; }
+    public void makeDangerousNullMove() { history.addLast(null); }
+    public void rewindDangerousNullMove() { history.pollLast(); }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
     public Rewinder move(int x, int y) {

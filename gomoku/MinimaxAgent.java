@@ -17,7 +17,7 @@ public class MinimaxAgent extends Agent {
     private static final double gamma = 0.99;
     private static final int maxDepth = 15;
     private static final int maxBigDepth = 5;
-    private static final int branch = 20;
+    private static final int branch = 21;
 
     private class Node {
         public Action a;
@@ -211,13 +211,15 @@ public class MinimaxAgent extends Agent {
         boolean w = s.isBlacksTurn();
         Action[] actions = s.getLegalActions();
 
+        // nodes that looks contributive
         Node[] nodes = new Node[actions.length];
         for (int i = 0; i < actions.length; i++)
             nodes[i] = new Node(actions[i], heuristic(s, actions[i]));
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/2 && i < nodes.length; i++)
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
+        // nodes that looks good
         nodes = new Node[actions.length]; Rewinder r = null;
         for (int i = 0; i < actions.length; i++) {
             r = s.move(actions[i]);
@@ -225,9 +227,22 @@ public class MinimaxAgent extends Agent {
             s.rewind(r);
         }
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/2 && i < nodes.length; i++)
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
+        // nodes that looks critical
+        nodes = new Node[actions.length];
+        s.makeDangerousNullMove();
+        for (int i = 0; i < actions.length; i++) {
+            r = s.move(actions[i]);
+            nodes[i] = new Node(actions[i], -value(s));
+            s.rewind(r);
+        }
+        s.rewindDangerousNullMove();
+        Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
+            result.add(nodes[i].a);
+            
         return result;
     }
 
