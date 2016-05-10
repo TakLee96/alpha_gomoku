@@ -54,9 +54,10 @@ public class GUIDriver {
 
     public static void main(String[] args) {
         init();
+        boolean isBlack = (args == null || args.length == 0);
         State s = new State(); Action a = null;
-        Agent agent = new MinimaxAgent(true);
-        s.move(agent.getAction(s));
+        Agent agent = new MinimaxAgent(isBlack);
+        if (isBlack) s.move(agent.getAction(s));
         Rewinder r = null;
 
         while (true) {

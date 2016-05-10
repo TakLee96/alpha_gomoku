@@ -4,7 +4,7 @@
 
 # To install and play
 
-- Have Java 7 installed, run `make compile`, and then `make`
+- Have Java 7 installed, and run `make`
 
 # Old version
 
