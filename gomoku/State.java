@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Map;
+import java.util.Set;
 
 /** Gomoku GameState Object
  * @author TakLee96 */
@@ -181,6 +182,12 @@ public class State {
             return true;
         }
         return false;
+    }
+
+    public Set<Action> highlight = new HashSet<Action>(1);
+    public void highlight(Set<Action> actions) {
+        highlight = actions;
+        GUIDriver.drawBoard(this);
     }
 
     public Action rewind(Rewinder rewinder) {

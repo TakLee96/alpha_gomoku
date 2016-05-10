@@ -65,6 +65,7 @@ public class MinimaxAgent extends Agent {
     private Node maxvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action maxaction = null; double maxvalue = -infinity, val = 0;
         Rewinder rewinder = null;
+        if (depth == 1) s.highlight(actions);
         for (Action a : actions) {
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
@@ -85,6 +86,7 @@ public class MinimaxAgent extends Agent {
     private Node minvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action minaction = null; double minvalue = infinity, val = 0;
         Rewinder rewinder = null;
+        if (depth == 1) s.highlight(actions);
         for (Action a : actions) {
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
@@ -241,7 +243,9 @@ public class MinimaxAgent extends Agent {
             throw new RuntimeException("not my turn");
         if (!s.started())
             return s.start;
-        return value(s, -infinity, infinity, 0, 0).a;
+        Action retval = value(s, -infinity, infinity, 0, 0).a;
+        s.highlight(new HashSet<Action>(1));
+        return retval;
     }
 
 }

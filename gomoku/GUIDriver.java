@@ -25,6 +25,9 @@ public class GUIDriver {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 StdDrawPlus.picture(i + .5, j + .5, s.get(j2x(j), i2y(i)).getImage(), 1, 1);
+        StdDrawPlus.setPenColor(StdDrawPlus.DARK_GRAY);
+        for (Action a : s.highlight)
+            StdDrawPlus.square(y2i(a.y()) + .5, x2j(a.x()) + .5, .5);
         if (s.started()) {
             Action a = s.history.getLast();
             int newX = a.x(); int newY = a.y();
