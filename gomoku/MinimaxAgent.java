@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -50,11 +51,13 @@ public class MinimaxAgent extends Agent {
 
     private Counter blackWeights;
     private Counter whiteWeights;
+    private HashMap<Set<Move>, Node> memo;
     public MinimaxAgent(boolean isBlack) {
         super(isBlack);
         blackWeights = new Counter();
         whiteWeights = new Counter();
         Counter.read(blackWeights, whiteWeights, "gomoku/myweight.csv");
+        memo = new HashMap<Set<Move>, Node>();
     }
 
     private double value(State s) {
@@ -65,7 +68,6 @@ public class MinimaxAgent extends Agent {
     private Node maxvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action maxaction = null; double maxvalue = -infinity, val = 0;
         Rewinder rewinder = null;
-        if (depth == 1) s.highlight(actions);
         for (Action a : actions) {
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
@@ -86,7 +88,6 @@ public class MinimaxAgent extends Agent {
     private Node minvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action minaction = null; double minvalue = infinity, val = 0;
         Rewinder rewinder = null;
-        if (depth == 1) s.highlight(actions);
         for (Action a : actions) {
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
@@ -113,15 +114,32 @@ public class MinimaxAgent extends Agent {
             return new Node(null, 0.0);
         if (depth == maxDepth || bigDepth == maxBigDepth)
             return new Node(null, value(s));
-        depth += 1;
+
+        Set<Move> prev = s.previousMoves(depth);
+        Node memoized = memo.get(prev);
+        if (memoized != null) return memoized;
+
         Set<Action> actions = getActions(s);
         if (actions.size() == 0)
             return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
         if (actions.size() > 3)
             bigDepth += 1;
-        if (s.isBlacksTurn())
-            return maxvalue(s, alpha, beta, depth, bigDepth, actions);
-        return minvalue(s, alpha, beta, depth, bigDepth, actions);
+
+        if (depth == 0) {
+            s.highlight(actions);
+            if (actions.size() == 0)
+                return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
+            if (actions.size() == 1)
+                for (Action a : actions)
+                    return new Node(a, 0);
+        }
+
+        depth += 1;
+        Node node = null; boolean who = s.isBlacksTurn();
+        if (who) node = maxvalue(s, alpha, beta, depth, bigDepth, actions);
+        else     node = minvalue(s, alpha, beta, depth, bigDepth, actions);
+        memo.put(prev, node);
+        return node;
     }
 
     private int four(Counter features, boolean isBlack) {
@@ -243,6 +261,7 @@ public class MinimaxAgent extends Agent {
             throw new RuntimeException("not my turn");
         if (!s.started())
             return s.start;
+        memo.clear();
         Node retval = value(s, -infinity, infinity, 0, 0);
         s.highlight(new HashSet<Action>(1));
         System.out.println("Done: " + retval.a + " " + (int) retval.v);

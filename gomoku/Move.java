@@ -2,16 +2,16 @@ package gomoku;
 
 /** Action, essentially just (x, y)
  * @author TakLee96 */
-public class Action {
-    protected int x, y;
-    public int x() { return x; }
-    public int y() { return y; }
-    public Action(int x, int y) {
-        this.x = x; this.y = y;
+public class Move extends Action {
+    private boolean isBlack;
+    public Move(int x, int y, boolean isBlack) {
+        super(x, y);
+        this.isBlack = isBlack;
     }
 
-    public Action(Action a) {
-        this.x = a.x; this.y = a.y;
+    public Move(Action a, boolean isBlack) {
+        super(a);
+        this.isBlack = isBlack;
     }
 
     @Override
@@ -19,8 +19,8 @@ public class Action {
         if (other == null) {
             return false;
         }
-        Action o = (Action) other;
-        return x == o.x && y == o.y;
+        Move o = (Move) other;
+        return o.x == x && o.y == y && o.isBlack == isBlack;
     }
 
     @Override
@@ -30,11 +30,12 @@ public class Action {
         else xc = ((char) (x - 10 + 'A')) + "";
         if (y < 10) yc = y + "";
         else yc = ((char) (y - 10 + 'A')) + "";
-        return "(" + xc + "," + yc + ")";
+        String me = (isBlack) ? "black" : "white";
+        return "(" + xc + "," + yc + "," + me + ")";
     }
 
     @Override
     public int hashCode() {
-        return x * State.N + y;
+        return ((isBlack) ? 1 : -1) * (x * State.N + y);
     }
 }

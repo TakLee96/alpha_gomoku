@@ -202,11 +202,14 @@ public class State {
         return last;
     }
 
-    public Set<Action> previousActions(int i) {
-        Set<Action> prev = new HashSet<Action>(i + 1, 1);
+    public Set<Move> previousMoves(int i) {
+        Set<Move> prev = new HashSet<Move>(i + 1, 1);
         Iterator<Action> iter = history.descendingIterator();
-        while (iter.hasNext() && prev.size() < i)
-            prev.add(iter.next());
+        boolean who = !isBlacksTurn();
+        while (iter.hasNext() && prev.size() < i) {
+            prev.add(new Move(iter.next(), who));
+            who = !who;
+        }
         return prev;
     }
 

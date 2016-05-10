@@ -11,7 +11,9 @@ public class Agent {
 
     public Action getAction(State s) {
         if (!s.started()) return s.start;
-        return s.randomAction();
+        Action a = s.randomAction();
+        System.out.println("Done: " + a);
+        return a;
     }
 
 }

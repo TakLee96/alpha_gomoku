@@ -56,6 +56,7 @@ public class GUIDriver {
         State s = new State(); Action a = null;
         Agent agent = new MinimaxAgent(true);
         s.move(agent.getAction(s));
+        Rewinder r = null;
 
         while (true) {
             if (StdDrawPlus.mousePressed()) {
@@ -63,13 +64,17 @@ public class GUIDriver {
                 double j = StdDrawPlus.mouseY();
                 int x = j2x((int) j), y = i2y((int) i);
                 if (!s.ended() && s.canMove(x, y)) {
-                    s.move(x, y);
+                    r = s.move(x, y);
                     drawBoard(s);
                     if (!s.ended()) {
                         System.out.println(s);
+                        System.out.println("You played: " + new Action(x, y));
+                        System.out.println("Diff: " + r.diffFeatures);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.print("AI is thinking... ");
-                        s.move(agent.getAction(s));
+                        r = s.move(agent.getAction(s));
+                        System.out.println("Diff: " + r.diffFeatures);
+                        System.out.println("Feature: " + s.extractFeatures());
                         System.out.println("=================================");
                     }
                 }
