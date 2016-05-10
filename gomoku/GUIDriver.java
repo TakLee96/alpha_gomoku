@@ -25,9 +25,10 @@ public class GUIDriver {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 StdDrawPlus.picture(i + .5, j + .5, s.get(j2x(j), i2y(i)).getImage(), 1, 1);
-        StdDrawPlus.setPenColor(StdDrawPlus.BLUE);
         for (Action a : s.highlight)
-            StdDrawPlus.square(y2i(a.y()) + .5, x2j(a.x()) + .5, .5);
+            StdDrawPlus.picture(y2i(a.y()) + .5, x2j(a.x()) + .5, "img/grid-red.jpg", 1, 1);
+        if (s.evaluating != null)
+            StdDrawPlus.picture(y2i(s.evaluating.y()) + .5, x2j(s.evaluating.x()) + .5, "img/grid-yellow.jpg", 1, 1);
         if (s.started()) {
             Action a = s.lastAction();
             int newX = a.x(); int newY = a.y();
@@ -43,7 +44,7 @@ public class GUIDriver {
         }
         StdDrawPlus.setPenColor(StdDrawPlus.BLACK);
         StdDrawPlus.text(N / 2 + .5, N + .25, msg(s));
-        StdDrawPlus.show(100);
+        StdDrawPlus.show(20);
     }
 
     public static void init() {

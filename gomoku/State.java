@@ -187,6 +187,12 @@ public class State {
         GUIDriver.drawBoard(this);
     }
 
+    public Action evaluating = null;
+    public void evaluate(Action e) {
+        evaluating = e;
+        GUIDriver.drawBoard(this);
+    }
+
     public Action rewind(Rewinder rewinder) {
         if (!started())
             throw new RuntimeException("rewind at the beginning");

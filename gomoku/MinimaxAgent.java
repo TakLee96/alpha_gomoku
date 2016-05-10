@@ -69,6 +69,7 @@ public class MinimaxAgent extends Agent {
         Action maxaction = null; double maxvalue = -infinity, val = 0;
         Rewinder rewinder = null;
         for (Action a : actions) {
+            if (depth == 1) s.evaluate(a);
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
             s.rewind(rewinder);
@@ -89,6 +90,7 @@ public class MinimaxAgent extends Agent {
         Action minaction = null; double minvalue = infinity, val = 0;
         Rewinder rewinder = null;
         for (Action a : actions) {
+            if (depth == 1) s.evaluate(a);
             rewinder = s.move(a);
             val = gamma * value(s, alpha, beta, depth, bigDepth).v;
             s.rewind(rewinder);
@@ -281,6 +283,7 @@ public class MinimaxAgent extends Agent {
         memo.clear();
         Node retval = value(s, -infinity, infinity, 0, 0);
         s.highlight(new HashSet<Action>(1));
+        s.evaluate(null);
         System.out.println("Done: " + retval.a + " " + (int) retval.v);
         return retval.a;
     }
