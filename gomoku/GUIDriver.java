@@ -60,7 +60,7 @@ public class GUIDriver {
         if (isBlack) s.move(agent.getAction(s));
         Rewinder r = null;
 
-        while (true) {
+        while (!s.ended()) {
             if (StdDrawPlus.mousePressed()) {
                 double i = StdDrawPlus.mouseX();
                 double j = StdDrawPlus.mouseY();
@@ -83,5 +83,11 @@ public class GUIDriver {
             }
             drawBoard(s);
         }
+
+        if (s.win(isBlack))       System.out.println("### YOU LOSE!!! ###");
+        else if (s.win(!isBlack)) System.out.println("### YOU WIN!!!! ###");
+        else                      System.out.println("### EVEN!!!!!!! ###");
+        System.out.println("History: " + s.history());
+        System.out.println("Close the window or press CTRL+C to terminate");
     }
 }

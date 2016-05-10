@@ -90,6 +90,7 @@ public class State {
     public Counter extractFeatures() { return features; }
     public void makeDangerousNullMove() { history.addLast(null); }
     public void rewindDangerousNullMove() { history.pollLast(); }
+    public LinkedList<Action> history() { return new LinkedList<Action>(history); }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
     public Rewinder move(int x, int y) {
@@ -181,18 +182,6 @@ public class State {
         return false;
     }
 
-    public Set<Action> highlight = new HashSet<Action>(1);
-    public void highlight(Set<Action> actions) {
-        highlight = actions;
-        GUIDriver.drawBoard(this);
-    }
-
-    public Action evaluating = null;
-    public void evaluate(Action e) {
-        evaluating = e;
-        GUIDriver.drawBoard(this);
-    }
-
     public Action rewind(Rewinder rewinder) {
         if (!started())
             throw new RuntimeException("rewind at the beginning");
@@ -219,6 +208,21 @@ public class State {
             who = !who;
         }
         return prev;
+    }
+
+    /*********************
+     *** DEBUG UTILITY ***
+     *********************/
+    public Set<Action> highlight = new HashSet<Action>(1);
+    public void highlight(Set<Action> actions) {
+        highlight = actions;
+        GUIDriver.drawBoard(this);
+    }
+
+    public Action evaluating = null;
+    public void evaluate(Action e) {
+        evaluating = e;
+        GUIDriver.drawBoard(this);
     }
 
     @Override
