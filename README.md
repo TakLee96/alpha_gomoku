@@ -10,14 +10,13 @@
 
 - Have **pypy** and **bottle** installed and run `pypy old/main.py`
 - Navigate your browser to `localhost:8000`
-- The website can read a history JSON object and display an old game
+- The old-version AI might be a bit slow, but it's strong
+- The website can also read a history JSON object and display an old game, like `[(7, 7), (9, 6), ...]`
 
 # Past problems
 
-- Once winning strategy is found, can cache responses
-- Can improve action picking heuristic
+- Once winning strategy is found, can cache responses with a Trie
+- Can still improve action picking heuristic
 - Not intelligent enough during open status
-- Still have redundant calculation
-- Big Calculation is not perfect
+- Still might have redundant calculation
 - Could apply adversarial reinforcement learning
-- Could apply threat space search

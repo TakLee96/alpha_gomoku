@@ -199,9 +199,11 @@ public class MinimaxAgent extends Agent {
     }
     private Set<Action> movesCounterThree(State s, Counter features) {
         Set<Action> result = new HashSet<Action>(3, 2);
-        boolean w = s.isBlacksTurn();
+        boolean w = s.isBlacksTurn(); Counter diff = null;
         for (Action a : s.getLegalActions()) {
-            if (-three(Extractor.diffFeatures(s, a), !w) >= three(features, !w))
+            diff = Extractor.diffFeatures(s, a);
+            if (-three(diff, !w) >= three(features, !w) ||
+                four(diff, w) > 0)
                 result.add(a);
         }
         return result;
@@ -242,7 +244,7 @@ public class MinimaxAgent extends Agent {
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
         for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
-            
+
         return result;
     }
 
