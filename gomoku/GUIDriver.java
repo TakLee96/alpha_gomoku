@@ -25,7 +25,7 @@ public class GUIDriver {
         for (int i = 0; i < N; i++)
             for (int j = 0; j < N; j++)
                 StdDrawPlus.picture(i + .5, j + .5, s.get(j2x(j), i2y(i)).getImage(), 1, 1);
-        StdDrawPlus.setPenColor(StdDrawPlus.DARK_GRAY);
+        StdDrawPlus.setPenColor(StdDrawPlus.BLUE);
         for (Action a : s.highlight)
             StdDrawPlus.square(y2i(a.y()) + .5, x2j(a.x()) + .5, .5);
         if (s.started()) {
@@ -69,9 +69,7 @@ public class GUIDriver {
                         System.out.println(s);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.print("AI is thinking... ");
-                        a = agent.getAction(s);
-                        System.out.println("Done: " + a);
-                        s.move(a);
+                        s.move(agent.getAction(s));
                         System.out.println("=================================");
                     }
                 }

@@ -243,9 +243,10 @@ public class MinimaxAgent extends Agent {
             throw new RuntimeException("not my turn");
         if (!s.started())
             return s.start;
-        Action retval = value(s, -infinity, infinity, 0, 0).a;
+        Node retval = value(s, -infinity, infinity, 0, 0);
         s.highlight(new HashSet<Action>(1));
-        return retval;
+        System.out.println("Done: " + retval.a + " " + (int) retval.v);
+        return retval.a;
     }
 
 }
