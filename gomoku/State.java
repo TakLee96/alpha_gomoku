@@ -1,6 +1,7 @@
 package gomoku;
 
 import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class State {
     // helper structure to store the winning moves
     public LinkedList<Action> five;
     // game history
-    public LinkedList<Action> history;
+    private LinkedList<Action> history;
     // data structure for easy generation of legal actions
     private HashSet<Action> legalActions;
     // did any one win the game?
@@ -83,16 +84,10 @@ public class State {
     public boolean inBound(Action a) { return inBound(a.x(), a.y()); }
     public boolean inBound(int x, int y) { return (x >= 0 && x < N && y >= 0 && y < N); }
     public boolean win(boolean isBlack) { return wins && isTurn(!isBlack); }
+    public Action[] getLegalActions() { return legalActions.toArray(new Action[legalActions.size()]); }
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
+    public Action lastAction() { return history.getLast(); }
     public Counter extractFeatures() { return features; }
-
-    public Action[] getLegalActions() {
-        if (legalActions.size() == 0) {
-            System.out.println("#ended says: " + ended());
-            throw new RuntimeException("no action available");
-        }
-        return legalActions.toArray(new Action[legalActions.size()]);
-    }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
     public Rewinder move(int x, int y) {
@@ -205,6 +200,14 @@ public class State {
         }
         features.sub(rewinder.diffFeatures);
         return last;
+    }
+
+    public Set<Action> previousActions(int i) {
+        Set<Action> prev = new HashSet<Action>(i + 1, 1);
+        Iterator<Action> iter = history.descendingIterator();
+        while (iter.hasNext() && prev.size() < i)
+            prev.add(iter.next());
+        return prev;
     }
 
     @Override

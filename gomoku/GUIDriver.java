@@ -29,7 +29,7 @@ public class GUIDriver {
         for (Action a : s.highlight)
             StdDrawPlus.square(y2i(a.y()) + .5, x2j(a.x()) + .5, .5);
         if (s.started()) {
-            Action a = s.history.getLast();
+            Action a = s.lastAction();
             int newX = a.x(); int newY = a.y();
             if (s.inBound(newX, newY)) {
                 StdDrawPlus.setPenColor(StdDrawPlus.RED);

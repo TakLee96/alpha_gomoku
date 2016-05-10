@@ -3,17 +3,11 @@ package gomoku;
 /** Action, essentially just (x, y)
  * @author TakLee96 */
 public class Action {
-    private int x, y;
-    public int x() { return x; }
-    public int y() { return y; }
+    private int data;
+    public int x() { return data % State.N; }
+    public int y() { return data / State.N; }
     public Action(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public Action(Action a) {
-        this.x = a.x;
-        this.y = a.y;
+        this.data = y * State.N + x;
     }
 
     @Override
@@ -22,12 +16,12 @@ public class Action {
             return false;
         }
         Action o = (Action) other;
-        return o.x == x && o.y == y;
+        return o.data == data;
     }
 
     @Override
     public String toString() {
-        String xc, yc;
+        String xc, yc; int x = x(), y = y();
         if (x < 10) xc = x + "";
         else xc = ((char) (x - 10 + 'A')) + "";
         if (y < 10) yc = y + "";
@@ -37,6 +31,6 @@ public class Action {
 
     @Override
     public int hashCode() {
-        return x * 1009 + y;
+        return data;
     }
 }
