@@ -23,8 +23,8 @@ public class Extractor {
         "-x-xx-", "-xxx-", "-o-oo-", "-ooo-",
         "-xxxx-", "-xxxxo", "-oooo-", "-oooox"
     }));
-    private static Pattern blackFour = Pattern.compile("[x-](o-ooo|oo-oo|ooo-o)[x-]");
-    private static Pattern whiteFour = Pattern.compile("[o-](x-xxx|xx-xx|xxx-x)[o-]");
+    private static Pattern blackFour = Pattern.compile(".*[x-](o-ooo|oo-oo|ooo-o)[x-].*");
+    private static Pattern whiteFour = Pattern.compile(".*[o-](x-xxx|xx-xx|xxx-x)[o-].*");
     private static Pattern jumpThree = Pattern.compile(".[xo][xo]-[xo].");
     private static String format(String feature) {
         if (feature.length() < 3)
@@ -39,6 +39,8 @@ public class Extractor {
             return "four-o";
         if (whiteFour.matcher(feature).matches())
             return "four-x";
+        if (feature.length() > 6)
+            return null;
         if (feature.charAt(0) != EMPTY.charAt(0) &&
             feature.charAt(feature.length()-1) == EMPTY.charAt(0))
             feature = new StringBuilder(feature).reverse().toString();
@@ -77,6 +79,9 @@ public class Extractor {
     private static void check(State s, int x, int y, int dx, int dy, Counter count) {
         int posX = x + dx, posY = y + dy, negX = x - dx, negY = y - dy;
         boolean who = s.isBlacksTurn();
+        if (!s.inBound(posX, posY) && !s.inBound(negX, negY))
+            // both out of bound; imagine at top-left with direction top-right
+            return;
         if (!s.inBound(posX, posY))
             // right out of bound
             checkOnly(s, x, y, -dx, -dy, count);
@@ -269,11 +274,20 @@ public class Extractor {
     }
 
     private static void checkOnly(State s, int x, int y, int dx, int dy, Counter count) {
-        String right = rightHelper(s, x, y, dx, dy);
-        String oldfeature = null;
-        String newfeature = null;
-        if (s.isBlacksTurn()) {
-            if (s.get(x + dx, y + dy).is(true)) {
+        // assume left out of bound, want to check right
+        int nx = x + dx, ny = y + dy;
+        boolean who = s.isBlacksTurn();
+        String right = null, oldfeature = null, newfeature = null;
+        if (s.inBound(nx, ny) && !s.get(nx, ny).isEmpty()) {
+            right = rightHelper(s, x, y, dx, dy);
+        } else if (s.inBound(nx + dx, ny + dy) && s.get(nx + dx, ny + dy).is(who)) {
+            right = EMPTY + rightHelper(s, nx, ny, dx, dy);
+            nx += dx; ny += dy;
+        } else {
+            return;
+        }
+        if (who) {
+            if (s.get(nx, ny).is(true)) {
                 oldfeature = EMPTY + right;
                 newfeature = WHITE + BLACK + right;
             } else {
@@ -281,7 +295,7 @@ public class Extractor {
                 newfeature = BLACK + right;
             }
         } else {
-            if (s.get(x + dx, y + dy).is(true)) {
+            if (s.get(nx, ny).is(true)) {
                 oldfeature = EMPTY + right;
                 newfeature = WHITE + right;
             } else {
