@@ -119,9 +119,15 @@ public class Extractor {
             if (rightright.is(who)) {
                 // o-o-o
                 if ((!s.inBound(llx - dx, lly - dy) || !s.get(llx - dx, lly - dy).is(who)) &&
-                    (!s.inBound(rrx + dx, rry + dy) || !s.get(rrx + dx, rry + dy).is(who)))
+                    (!s.inBound(rrx + dx, rry + dy) || !s.get(rrx + dx, rry + dy).is(who))) {
                     if (who) count.put("o-o-o", count.getInt("o-o-o") + 1);
                     else     count.put("x-x-x", count.getInt("x-x-x") + 1);
+                } else {
+                    String left = leftHelper(s, llx + dx, lly + dy, dx, dy);
+                    String right = rightHelper(s, rrx - dx, rry - dy, dx, dy);
+                    String newfeature = format(left + EMPTY + ONE + EMPTY + right);
+                    count.put(newfeature, count.getInt(newfeature) + 1);
+                }
             } else {
                 // o-o--
                 String left = leftHelper(s, llx + dx, lly + dy, dx, dy);
