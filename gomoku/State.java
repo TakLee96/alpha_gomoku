@@ -235,7 +235,6 @@ public class State {
         for (int l = 0; l <= N; l++) {
             sb.append("- ");
         }
-        sb.append("\n");
         return sb.toString();
     }
 

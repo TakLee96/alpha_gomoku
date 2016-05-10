@@ -99,15 +99,15 @@ public class Counter {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
+        sb.append("{");
 
         ArrayList<String> sortedKeys = new ArrayList<String>(map.keySet());
         Collections.sort(sortedKeys);
         for (String key : sortedKeys) {
             if (map.get(key).doubleValue() != 0.0)
-                sb.append("    " + key + " : " + map.get(key) + "\n");
+                sb.append(" " + key + " : " + map.get(key) + ",");
         }
-        sb.append("}");
+        sb.append(" }");
         return sb.toString();
     }
 
