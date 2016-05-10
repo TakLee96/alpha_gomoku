@@ -14,9 +14,9 @@ public class MinimaxAgent extends Agent {
 
     private static final double infinity = 1E15;
     private static final double gamma = 0.99;
-    private static final int maxDepth = 12;
-    private static final int maxBigDepth = 4;
-    private static final int branch = 15;
+    private static final int maxDepth = 15;
+    private static final int maxBigDepth = 5;
+    private static final int branch = 20;
 
     private class Node {
         public Action a;
@@ -150,11 +150,6 @@ public class MinimaxAgent extends Agent {
                 result.add(a);
                 return result;
             }
-            // Rewinder rewinder = s.move(a);
-            // if (s.win(w))
-            //     result.add(a);
-            // s.rewind(rewinder);
-            // if (!result.isEmpty()) return result;
         }
         throw new RuntimeException("my four is missing?");
     }
@@ -166,11 +161,6 @@ public class MinimaxAgent extends Agent {
                 result.add(a);
                 return result;
             }
-            // Rewinder rewinder = s.move(a);
-            // if (!containsFour(!w, s.extractFeatures(), !w))
-            //     result.add(a);
-            // s.rewind(rewinder);
-            // if (!result.isEmpty()) return result;
         }
         return result;
     }
@@ -182,11 +172,6 @@ public class MinimaxAgent extends Agent {
                 result.add(a);
                 return result;
             }
-            // Rewinder rewinder = s.move(a);
-            // if (containsStraightFour(!w, s.extractFeatures(), w))
-            //     result.add(a);
-            // s.rewind(rewinder);
-            // if (!result.isEmpty()) return result;
         }
         if (three(features, !w) > 0)
             return movesCounterThree(s, features);
@@ -198,10 +183,6 @@ public class MinimaxAgent extends Agent {
         for (Action a : s.getLegalActions()) {
             if (-three(Extractor.diffFeatures(s, a), !w) >= three(features, !w))
                 result.add(a);
-            // Rewinder rewinder = s.move(a);
-            // if (!containsThree(!w, s.extractFeatures(), !w))
-            //     result.add(a);
-            // s.rewind(rewinder);
         }
         return result;
     }
@@ -209,12 +190,24 @@ public class MinimaxAgent extends Agent {
         Set<Action> result = new HashSet<Action>();
         boolean w = s.isBlacksTurn();
         Action[] actions = s.getLegalActions();
+
         Node[] nodes = new Node[actions.length];
         for (int i = 0; i < actions.length; i++)
             nodes[i] = new Node(actions[i], heuristic(s, actions[i]));
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch && i < nodes.length; i++)
+        for (int i = 0; i < branch/2 && i < nodes.length; i++)
             result.add(nodes[i].a);
+
+        nodes = new Node[actions.length]; Rewinder r = null;
+        for (int i = 0; i < actions.length; i++) {
+            r = s.move(actions[i]);
+            nodes[i] = new Node(actions[i], value(s));
+            s.rewind(r);
+        }
+        Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
+        for (int i = 0; i < branch/2 && i < nodes.length; i++)
+            result.add(nodes[i].a);
+
         return result;
     }
 
