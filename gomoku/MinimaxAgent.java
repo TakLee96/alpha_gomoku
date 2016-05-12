@@ -17,7 +17,7 @@ public class MinimaxAgent extends Agent {
 
     private static final double infinity = 1E15;
     private static final double gamma = 0.99;
-    private static final int maxDepth = 15;
+    private static final int maxDepth = 16;
     private static final int maxBigDepth = 5;
     private static final int branch = 24;
     private static final Random random = new Random();
@@ -223,7 +223,7 @@ public class MinimaxAgent extends Agent {
         for (int i = 0; i < actions.length; i++)
             nodes[i] = new Node(actions[i], heuristic(s, actions[i]));
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/4 && i < nodes.length; i++)
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
         // nodes that looks good to me
@@ -234,7 +234,7 @@ public class MinimaxAgent extends Agent {
             s.rewind(r);
         }
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/4 && i < nodes.length; i++)
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
         // nodes that looks good to opponent
@@ -247,11 +247,12 @@ public class MinimaxAgent extends Agent {
         }
         s.rewindDangerousNullMove();
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/4 && i < nodes.length; i++)
+        for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
         // nodes that are randomly selected
-        for (int i = 0; i < branch/4; i++)
+        int diff = branch - result.size();
+        for (int i = 0; i < diff; i++)
             result.add(actions[random.nextInt(actions.length)]);
 
         return result;
