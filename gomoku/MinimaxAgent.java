@@ -1,10 +1,12 @@
 package gomoku;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,7 @@ public class MinimaxAgent extends Agent {
     private static final int maxDepth = 15;
     private static final int maxBigDepth = 5;
     private static final int branch = 21;
+    private static final Random random = new Random();
 
     private class Node {
         public Action a;
@@ -211,9 +214,9 @@ public class MinimaxAgent extends Agent {
         return result;
     }
     private Set<Action> movesBestGrowth(State s, Counter features) {
+        Action[] actions = s.getLegalActions();
         Set<Action> result = new HashSet<Action>();
         boolean w = s.isBlacksTurn();
-        Action[] actions = s.getLegalActions();
 
         // nodes that looks contributive
         Node[] nodes = new Node[actions.length];
@@ -246,6 +249,11 @@ public class MinimaxAgent extends Agent {
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
         for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
+
+        // nodes that are randomly selected
+        int extra = result.size() - branch;
+        for (int i = 0; i < extra; i++)
+            result.add(actions[random.nextInt(actions.length)]);
 
         return result;
     }
@@ -284,7 +292,7 @@ public class MinimaxAgent extends Agent {
         Node retval = value(s, -infinity, infinity, 0, 0);
         s.highlight(new HashSet<Action>(1));
         s.evaluate(null);
-        System.out.println("Done: " + retval.a + " " + (int) retval.v);
+        System.out.print("Done: " + retval.a + " " + (int) retval.v);
         return retval.a;
     }
 

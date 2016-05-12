@@ -58,7 +58,8 @@ public class GUIDriver {
         State s = new State(); Action a = null;
         Agent agent = new MinimaxAgent(isBlack);
         if (isBlack) s.move(agent.getAction(s));
-        Rewinder r = null;
+        Rewinder r = null; long time = System.currentTimeMillis();
+        drawBoard(s);
 
         while (!s.ended()) {
             if (StdDrawPlus.mousePressed()) {
@@ -74,19 +75,22 @@ public class GUIDriver {
                         System.out.println("Diff: " + r.diffFeatures);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.print("AI is thinking... ");
+                        time = System.currentTimeMillis();
                         r = s.move(agent.getAction(s));
+                        time = System.currentTimeMillis() - time;
+                        System.out.println(" [" +  time + "ms]");
                         System.out.println("Diff: " + r.diffFeatures);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.println("=================================");
+                        drawBoard(s);
                     }
                 }
             }
-            drawBoard(s);
         }
 
-        if (s.win(isBlack))       System.out.println("### YOU LOSE!!! ###");
-        else if (s.win(!isBlack)) System.out.println("### YOU WIN!!!! ###");
-        else                      System.out.println("### EVEN!!!!!!! ###");
+        if (s.win(isBlack))       System.out.println("### YOU LOSE ###");
+        else if (s.win(!isBlack)) System.out.println("### YOU WIN ###");
+        else                      System.out.println("### EVEN ###");
         System.out.println("History: " + s.history());
         System.out.println("Close the window or press CTRL+C to terminate");
     }
