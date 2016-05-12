@@ -251,7 +251,7 @@ public class MinimaxAgent extends Agent {
             result.add(nodes[i].a);
 
         // nodes that are randomly selected
-        int extra = result.size() - branch;
+        int extra = branch - result.size();
         for (int i = 0; i < extra; i++)
             result.add(actions[random.nextInt(actions.length)]);
 
