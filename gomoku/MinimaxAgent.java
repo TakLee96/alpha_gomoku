@@ -286,14 +286,38 @@ public class MinimaxAgent extends Agent {
     public Action getAction(State s) {
         if (!s.isTurn(isBlack))
             throw new RuntimeException("not my turn");
-        if (!s.started())
-            return s.start;
-        memo.clear();
-        Node retval = value(s, -infinity, infinity, 0, 0);
+        Node retval = null;
+        if (!s.started()) {
+            retval = new Node(s.start, 0);
+        } else {
+            memo.clear();
+            retval = value(s, -infinity, infinity, 0, 0);
+        }
         s.highlight(new HashSet<Action>(1));
         s.evaluate(null);
-        System.out.print("Done: " + retval.a + " " + (int) retval.v);
+        System.out.print("Done: " + ((isBlack) ? "BLACK" : "WHITE") +
+                         " " + retval.a + " " + (long) retval.v);
         return retval.a;
+    }
+
+    public static void main(String[] args) {
+        GUIDriver.init();
+        Agent a = new MinimaxAgent(true);
+        Agent b = new MinimaxAgent(false);
+        State s = new State();
+        System.out.println("### BEGIN ###");
+        while (!s.ended()) {
+            if (s.isBlacksTurn()) s.move(a.getAction(s));
+            else                  s.move(b.getAction(s));
+            System.out.println("");
+            GUIDriver.drawBoard(s);
+        }
+        if (s.win(true))       System.out.println("### BLACK WINS ###");
+        else if (s.win(false)) System.out.println("### WHITE WINS ###");
+        else System.out.println("### TIE ###");
+        System.out.println(s);
+        System.out.println("History: " + s.history());
+        System.out.println("Close the window or press CTRL+C to terminate");
     }
 
 }
