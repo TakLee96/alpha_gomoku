@@ -58,7 +58,7 @@ public class GUIDriver {
         State s = new State(); Action a = null;
         Agent agent = new MinimaxAgent(isBlack);
         if (isBlack) s.move(agent.getAction(s));
-        Rewinder r = null; long time = System.currentTimeMillis();
+        Rewinder r = null;
         drawBoard(s);
 
         while (!s.ended()) {
@@ -75,10 +75,7 @@ public class GUIDriver {
                         System.out.println("Diff: " + r.diffFeatures);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.print("AI is thinking... ");
-                        time = System.currentTimeMillis();
                         r = s.move(agent.getAction(s));
-                        time = System.currentTimeMillis() - time;
-                        System.out.println(" [" +  time + "ms]");
                         System.out.println("Diff: " + r.diffFeatures);
                         System.out.println("Feature: " + s.extractFeatures());
                         System.out.println("=================================");

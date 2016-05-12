@@ -19,7 +19,7 @@ public class MinimaxAgent extends Agent {
     private static final double gamma = 0.99;
     private static final int maxDepth = 15;
     private static final int maxBigDepth = 5;
-    private static final int branch = 21;
+    private static final int branch = 24;
     private static final Random random = new Random();
 
     private class Node {
@@ -223,10 +223,10 @@ public class MinimaxAgent extends Agent {
         for (int i = 0; i < actions.length; i++)
             nodes[i] = new Node(actions[i], heuristic(s, actions[i]));
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/3 && i < nodes.length; i++)
+        for (int i = 0; i < branch/4 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
-        // nodes that looks good
+        // nodes that looks good to me
         nodes = new Node[actions.length]; Rewinder r = null;
         for (int i = 0; i < actions.length; i++) {
             r = s.move(actions[i]);
@@ -234,10 +234,10 @@ public class MinimaxAgent extends Agent {
             s.rewind(r);
         }
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/3 && i < nodes.length; i++)
+        for (int i = 0; i < branch/4 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
-        // nodes that looks critical
+        // nodes that looks good to opponent
         nodes = new Node[actions.length];
         s.makeDangerousNullMove();
         for (int i = 0; i < actions.length; i++) {
@@ -247,12 +247,11 @@ public class MinimaxAgent extends Agent {
         }
         s.rewindDangerousNullMove();
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
-        for (int i = 0; i < branch/3 && i < nodes.length; i++)
+        for (int i = 0; i < branch/4 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
         // nodes that are randomly selected
-        int extra = branch - result.size();
-        for (int i = 0; i < extra; i++)
+        for (int i = 0; i < branch/4; i++)
             result.add(actions[random.nextInt(actions.length)]);
 
         return result;
@@ -286,6 +285,7 @@ public class MinimaxAgent extends Agent {
     public Action getAction(State s) {
         if (!s.isTurn(isBlack))
             throw new RuntimeException("not my turn");
+        long time = System.currentTimeMillis();
         Node retval = null;
         if (!s.started()) {
             retval = new Node(s.start, 0);
@@ -293,10 +293,18 @@ public class MinimaxAgent extends Agent {
             memo.clear();
             retval = value(s, -infinity, infinity, 0, 0);
         }
+
+        // For debug purposes
+        String elapsed = System.currentTimeMillis() - time + "";
+        String value = (retval.v == 0) ? "None" : ("" + (long) retval.v);
         s.highlight(new HashSet<Action>(1));
         s.evaluate(null);
-        System.out.print("Done: " + ((isBlack) ? "BLACK" : "WHITE") +
-                         " " + retval.a + " " + (long) retval.v);
+        System.out.println("Done: " + ((isBlack) ? "BLACK" : "WHITE") + " " +
+                         retval.a + " " + value + " [" + elapsed + "ms]");
+        if (retval.v > infinity / 10)
+            System.out.println("AI thinks BLACK is gonna win");
+        else if (retval.v < -infinity / 10)
+            System.out.println("AI thinks WHITE is gonna win");
         return retval.a;
     }
 
@@ -309,7 +317,6 @@ public class MinimaxAgent extends Agent {
         while (!s.ended()) {
             if (s.isBlacksTurn()) s.move(a.getAction(s));
             else                  s.move(b.getAction(s));
-            System.out.println("");
             GUIDriver.drawBoard(s);
         }
         if (s.win(true))       System.out.println("### BLACK WINS ###");
