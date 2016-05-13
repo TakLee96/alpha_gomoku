@@ -1,14 +1,14 @@
 package gomoku;
 
-import java.util.LinkedList;
+import java.util.ArrayDeque;
 
 /** Helper class for State
  * @author TakLee96 */
 public class Rewinder {
 
-    public LinkedList<Action> removedLegalActions;
+    public ArrayDeque<Action> removedLegalActions;
     public Counter diffFeatures;
-    public Rewinder(LinkedList<Action> rla, Counter df) {
+    public Rewinder(ArrayDeque<Action> rla, Counter df) {
         removedLegalActions = rla;
         diffFeatures = df;
     }

@@ -2,7 +2,6 @@ package gomoku;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;

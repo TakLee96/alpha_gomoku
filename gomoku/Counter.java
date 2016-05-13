@@ -37,7 +37,11 @@ public class Counter {
     }
 
     public void put(String key, Number val) {
-        if (key != null) map.put(key, val);
+        if (key != null)
+            if (val.doubleValue() != 0.0)
+                map.put(key, val);
+            else
+                map.remove(key);
     }
 
     public int getInt(String key) {

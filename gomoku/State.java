@@ -1,6 +1,6 @@
 package gomoku;
 
-import java.util.LinkedList;
+import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.Random;
@@ -31,9 +31,9 @@ public class State {
     // the direction of the five generated
     private int dx, dy;
     // helper structure to store the winning moves
-    public LinkedList<Action> five;
+    public ArrayDeque<Action> five;
     // game history
-    private LinkedList<Action> history;
+    private ArrayDeque<Action> history;
     // data structure for easy generation of legal actions
     private HashSet<Action> legalActions;
     // did any one win the game?
@@ -50,8 +50,8 @@ public class State {
      *******************/
     public State() {
         dx = 0; dy = 0;
-        five = new LinkedList<Action>();
-        history = new LinkedList<Action>();
+        five = new ArrayDeque<Action>(5);
+        history = new ArrayDeque<Action>();
         legalActions = new HashSet<Action>();
         legalActions.add(start);
         wins = false;
@@ -90,7 +90,7 @@ public class State {
     public Counter extractFeatures() { return features; }
     public void makeDangerousNullMove() { history.addLast(null); }
     public void rewindDangerousNullMove() { history.pollLast(); }
-    public LinkedList<Action> history() { return new LinkedList<Action>(history); }
+    public ArrayDeque<Action> history() { return new ArrayDeque<Action>(history); }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
     public Rewinder move(int x, int y) {
@@ -111,7 +111,7 @@ public class State {
         board[x][y].put(who);
         Action move = new Action(x, y);
 
-        LinkedList<Action> removedLegalActions = new LinkedList<Action>();
+        ArrayDeque<Action> removedLegalActions = new ArrayDeque<Action>();
         int nx = 0, ny = 0; Action a = null;
         for (Action d : neighbors) {
             nx = x + d.x();
