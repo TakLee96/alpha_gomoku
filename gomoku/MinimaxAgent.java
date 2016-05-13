@@ -14,15 +14,26 @@ import java.util.Set;
 /** Advanced MinimaxAgent
  * @author TakLee96 */
 public class MinimaxAgent extends Agent {
-
+    /***********************
+     *** CLASS CONSTANTS ***
+     ***********************/
+    // maximum evaluation score
     private static final double infinity = 1E15;
+    // discount rate
     private static final double gamma = 0.99;
+    // maximum search depth
     private static final int maxDepth = 16;
+    // maximum big search depth
     private static final int maxBigDepth = 5;
+    // branching factor
     private static final int branch = 24;
+    // the random
     private static final Random random = new Random();
 
-    private class Node {
+    /**********************
+     *** HELPER CLASSES ***
+     **********************/
+    private static class Node {
         public Action a;
         public double v;
         public Node(Action a, double v) {
@@ -52,17 +63,33 @@ public class MinimaxAgent extends Agent {
         public int compare(Node a, Node b) { return (int) (a.v - b.v); }
     };
 
+    /***************************
+     *** INSTANCE ATTRIBUTES ***
+     ***************************/
+    // weights for evaluating states where black plays next
     private Counter blackWeights;
+    // weights for evaluating states where white plays next
     private Counter whiteWeights;
+    // total time for thinking
+    private long thinking;
+    // a cache for storing responses and evaluation scores
     private HashMap<Set<Move>, Node> memo;
+
+    /*******************
+     *** CONSTRUCTOR ***
+     *******************/
     public MinimaxAgent(boolean isBlack) {
         super(isBlack);
         blackWeights = new Counter();
         whiteWeights = new Counter();
+        thinking = 0;
         Counter.read(blackWeights, whiteWeights, "gomoku/myweight.csv");
         memo = new HashMap<Set<Move>, Node>();
     }
 
+    /********************
+     *** CORE UTILITY ***
+     ********************/
     private double value(State s) {
         if (s.isBlacksTurn()) return blackWeights.mul(s.extractFeatures());
         return whiteWeights.mul(s.extractFeatures());
@@ -296,7 +323,9 @@ public class MinimaxAgent extends Agent {
         }
 
         // For debug purposes
-        String elapsed = System.currentTimeMillis() - time + "";
+        time = System.currentTimeMillis() - time;
+        thinking += time;
+        String elapsed = time + "";
         String value = (retval.v == 0) ? "None" : ("" + (long) retval.v);
         s.highlight(new HashSet<Action>(1));
         s.evaluate(null);
@@ -309,10 +338,15 @@ public class MinimaxAgent extends Agent {
         return retval.a;
     }
 
+    /*********************
+     *** DEBUG UTILITY ***
+     *********************/
+    public long thinking() { return thinking; }
+
     public static void main(String[] args) {
         GUIDriver.init();
-        Agent a = new MinimaxAgent(true);
-        Agent b = new MinimaxAgent(false);
+        MinimaxAgent a = new MinimaxAgent(true);
+        MinimaxAgent b = new MinimaxAgent(false);
         State s = new State();
         System.out.println("### BEGIN ###");
         while (!s.ended()) {
@@ -324,6 +358,8 @@ public class MinimaxAgent extends Agent {
         else if (s.win(false)) System.out.println("### WHITE WINS ###");
         else System.out.println("### TIE ###");
         System.out.println(s);
+        System.out.println("Black average thinking time: " + (a.thinking() / s.blackMoves()) + "ms");
+        System.out.println("White average thinking time: " + (b.thinking() / s.whiteMoves()) + "ms");
         System.out.println("History: " + s.history());
         System.out.println("Close the window or press CTRL+C to terminate");
     }

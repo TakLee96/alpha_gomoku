@@ -225,6 +225,13 @@ public class State {
         GUIDriver.drawBoard(this);
     }
 
+    public int blackMoves() {
+        return numMoves() / 2 + numMoves() % 2;
+    }
+    public int whiteMoves() {
+        return numMoves() / 2;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
