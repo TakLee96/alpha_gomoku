@@ -88,7 +88,7 @@ public class State {
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
     public Action lastAction() { return history.getLast(); }
     public Counter extractFeatures() { return features; }
-    public void makeDangerousNullMove() { history.addLast(null); }
+    public void makeDangerousNullMove() { history.addLast(new Action(-1, -1)); }
     public void rewindDangerousNullMove() { history.pollLast(); }
     public ArrayDeque<Action> history() { return new ArrayDeque<Action>(history); }
 

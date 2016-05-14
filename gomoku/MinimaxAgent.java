@@ -17,15 +17,15 @@ public class MinimaxAgent extends Agent {
      *** CLASS CONSTANTS ***
      ***********************/
     // maximum evaluation score
-    private static final double infinity = 1E15;
+    private static final double infinity = 1E10;
     // discount rate
     private static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 16;
+    private static final int maxDepth = 15;
     // maximum big search depth
-    private static final int maxBigDepth = 5;
+    private static final int maxBigDepth = 6;
     // branching factor
-    private static final int branch = 24;
+    private static final int branch = 15;
     // the random
     private static final Random random = new Random();
 
