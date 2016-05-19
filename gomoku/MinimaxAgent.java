@@ -23,9 +23,9 @@ public class MinimaxAgent extends Agent {
     // maximum search depth
     private static final int maxDepth = 15;
     // maximum big search depth
-    private static final int maxBigDepth = 6;
+    private static final int maxBigDepth = 5;
     // branching factor
-    private static final int branch = 15;
+    private static final int branch = 24;
     // the random
     private static final Random random = new Random();
 
