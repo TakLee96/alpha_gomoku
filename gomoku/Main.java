@@ -38,29 +38,30 @@ public class Main extends JApplet {
         public ButtonListener(int x, int y) { i = x; j = y; }
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!state.ended() && state.canMove(j, i)) {
+            if (!state.ended() && state.canMove(i, j)) {
                 humanClicked = true;
                 if (state.started()) {
                     Action a = state.lastAction();
-                    ref[a.y()][a.x()].setBorderPainted(false);
+                    ref[a.x()][a.y()].setBorderPainted(false);
                 }
-                state.move(j, i);
-                if (state.get(j, i).isBlack())
+                state.move(i, j);
+                System.out.println(state);
+                if (state.get(i, j).isBlack())
                     ref[i][j].setIcon(blue);
                 else ref[i][j].setIcon(green);
                 ref[i][j].setBorder(redBorder);
                 ref[i][j].setBorderPainted(true);
                 if (state.ended()) {
                     for (Action a : state.five) {
-                        ref[a.y()][a.x()].setBorder(yellowBorder);
-                        ref[a.y()][a.x()].setBorderPainted(true);
+                        ref[a.x()][a.y()].setBorder(yellowBorder);
+                        ref[a.x()][a.y()].setBorderPainted(true);
                     }
                 } else if (state.isBlacksTurn()) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             Action a = agent.getAction(state);
-                            ref[a.y()][a.x()].doClick();
+                            ref[a.x()][a.y()].doClick();
                         }
                     });
                 }
@@ -111,11 +112,12 @@ public class Main extends JApplet {
             @Override
             public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
+                System.out.println("Considering: " + actions);
                 for (Action a : actions) {
-                    i = a.y();
-                    j = a.x();
+                    i = a.x();
+                    j = a.y();
                     ref[i][j].setIcon(yellow);
-                    ref[i][j].paintImmediately(i * L, j * L, L, L);
+                    ref[i][j].paintImmediately(j, i, L, L);
                 }
             }
         });
@@ -124,10 +126,10 @@ public class Main extends JApplet {
             public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
                 for (Action a : actions) {
-                    i = a.y();
-                    j = a.x();
+                    i = a.x();
+                    j = a.y();
                     ref[i][j].setIcon(empty);
-                    ref[i][j].paintImmediately(i * L, j * L, L, L);
+                    ref[i][j].paintImmediately(j, i, L, L);
                 }
             }
         });
@@ -136,16 +138,16 @@ public class Main extends JApplet {
             public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
                 for (Action a : actions) {
-                    i = a.y();
-                    j = a.x();
+                    i = a.x();
+                    j = a.y();
                     ref[i][j].setIcon(red);
-                    ref[i][j].paintImmediately(i * L, j * L, L, L);
+                    ref[i][j].paintImmediately(j, i, L, L);
                 }
             }
         });
 
         // first move
         Action a = agent.getAction(state);
-        ref[a.y()][a.x()].doClick();
+        ref[a.x()][a.y()].doClick();
     }
 }

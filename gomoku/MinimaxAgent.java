@@ -341,25 +341,4 @@ public class MinimaxAgent extends Agent {
      *********************/
     public long thinking() { return thinking; }
 
-    public static void main(String[] args) {
-        GUIDriver.init();
-        MinimaxAgent a = new MinimaxAgent(true);
-        MinimaxAgent b = new MinimaxAgent(false);
-        State s = new State();
-        System.out.println("### BEGIN ###");
-        while (!s.ended()) {
-            if (s.isBlacksTurn()) s.move(a.getAction(s));
-            else                  s.move(b.getAction(s));
-            GUIDriver.drawBoard(s);
-        }
-        if (s.win(true))       System.out.println("### BLACK WINS ###");
-        else if (s.win(false)) System.out.println("### WHITE WINS ###");
-        else System.out.println("### TIE ###");
-        System.out.println(s);
-        System.out.println("Black average thinking time: " + (a.thinking() / s.blackMoves()) + "ms");
-        System.out.println("White average thinking time: " + (b.thinking() / s.whiteMoves()) + "ms");
-        System.out.println("History: " + s.history());
-        System.out.println("Close the window or press CTRL+C to terminate");
-    }
-
 }
