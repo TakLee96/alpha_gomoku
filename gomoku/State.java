@@ -213,17 +213,42 @@ public class State {
     /*********************
      *** DEBUG UTILITY ***
      *********************/
-    public Set<Action> highlight = new HashSet<Action>(1);
-    public void highlight(Set<Action> actions) {
-        highlight = actions;
-        GUIDriver.drawBoard(this);
-    }
+     public Set<Action> highlight = null;
+     private Listener highlightListener = null;
+     public void onHighlight(Listener listener) {
+         highlightListener = listener;
+     }
+     public void highlight(Set<Action> actions) {
+         if (highlight == null) {
+             highlight = actions;
+             if (highlightListener != null)
+                 highlightListener.digest(actions);
+         }
+     }
 
-    public Action evaluating = null;
-    public void evaluate(Action e) {
-        evaluating = e;
-        GUIDriver.drawBoard(this);
-    }
+     private Listener evaluateListener = null;
+     public void onEvaluate(Listener listener) {
+         evaluateListener = listener;
+     }
+     public void evaluate(Action a) {
+         if (evaluateListener != null) {
+             Set<Action> set = new HashSet<Action>(1);
+             set.add(a);
+             evaluateListener.digest(set);
+         }
+     }
+
+     private Listener unhighlightListener = null;
+     public void onUnhighlight(Listener listener) {
+         unhighlightListener = listener;
+     }
+     public void unhighlight() {
+         if (highlight != null) {
+             if (unhighlightListener != null)
+                 unhighlightListener.digest(highlight);
+             highlight = null;
+         }
+     }
 
     public int blackMoves() {
         return numMoves() / 2 + numMoves() % 2;

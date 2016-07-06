@@ -21,9 +21,11 @@ public class MinimaxAgent extends Agent {
     // discount rate
     private static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 15;
+    private static final int maxDepth = 20;
     // maximum big search depth
     private static final int maxBigDepth = 5;
+    // separate big depth and normal depth
+    private static final int bigDepthThreshold = 5;
     // branching factor
     private static final int branch = 24;
     // the random
@@ -82,7 +84,7 @@ public class MinimaxAgent extends Agent {
         blackWeights = new Counter();
         whiteWeights = new Counter();
         thinking = 0;
-        Counter.read(blackWeights, whiteWeights, "gomoku/myweight.csv");
+        Counter.read(blackWeights, whiteWeights);
         memo = new HashMap<Set<Move>, Node>();
     }
 
@@ -153,13 +155,11 @@ public class MinimaxAgent extends Agent {
         Set<Action> actions = getActions(s);
         if (actions.size() == 0)
             return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
-        if (actions.size() > 3)
+        if (actions.size() > bigDepthThreshold)
             bigDepth += 1;
 
         if (depth == 0) {
             s.highlight(actions);
-            if (actions.size() == 0)
-                return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
             if (actions.size() == 1)
                 for (Action a : actions)
                     return new Node(a, 0);
@@ -268,11 +268,11 @@ public class MinimaxAgent extends Agent {
         s.makeDangerousNullMove();
         for (int i = 0; i < actions.length; i++) {
             r = s.move(actions[i]);
-            nodes[i] = new Node(actions[i], -value(s));
+            nodes[i] = new Node(actions[i], value(s));
             s.rewind(r);
         }
         s.rewindDangerousNullMove();
-        Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
+        Arrays.sort(nodes, (!w) ? blackComparator : whiteComparator);
         for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
 
@@ -326,8 +326,7 @@ public class MinimaxAgent extends Agent {
         thinking += time;
         String elapsed = time + "";
         String value = (retval.v == 0) ? "None" : ("" + (long) retval.v);
-        s.highlight(new HashSet<Action>(1));
-        s.evaluate(null);
+        s.unhighlight();
         System.out.println("Done: " + ((isBlack) ? "BLACK" : "WHITE") + " " +
                          retval.a + " " + value + " [" + elapsed + "ms]");
         if (retval.v > infinity / 10)
