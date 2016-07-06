@@ -129,7 +129,6 @@ public class Main extends JApplet {
                     i = a.x();
                     j = a.y();
                     ref[i][j].setIcon(empty);
-                    ref[i][j].paintImmediately(j, i, L, L);
                 }
             }
         });
