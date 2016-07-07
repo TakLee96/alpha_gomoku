@@ -72,8 +72,10 @@ public class Main extends JApplet {
     @Override
     public void init() {
         String base = this.getDocumentBase().toString();
+        if (base.indexOf('#') != -1) base = base.substring(0, base.indexOf('#'));
         if (base.charAt(base.length()-1) != '/') base += "/";
         base += "gomoku/img/";
+        System.out.println(base);
         try {
             blue   = new ImageIcon(this.getImage(new URL(base+"grid-blue.jpg")));
             empty  = new ImageIcon(this.getImage(new URL(base+"grid-empty.jpg")));
@@ -81,7 +83,7 @@ public class Main extends JApplet {
             red    = new ImageIcon(this.getImage(new URL(base+"grid-red.jpg")));
             yellow = new ImageIcon(this.getImage(new URL(base+"grid-yellow.jpg")));
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            e.printStackTrace();
         }
 
         state = new State();
