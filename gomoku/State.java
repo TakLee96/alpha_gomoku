@@ -88,8 +88,8 @@ public class State {
     public Action randomAction() { return getLegalActions()[random.nextInt(legalActions.size())]; }
     public Action lastAction() { return history.getLast(); }
     public Counter extractFeatures() { return features; }
-    public void makeDangerousNullMove() { history.addLast(new Action(-1, -1)); }
-    public void rewindDangerousNullMove() { history.pollLast(); }
+    void makeDangerousNullMove() { history.addLast(new Action(-1, -1)); }
+    void rewindDangerousNullMove() { history.pollLast(); }
     public ArrayDeque<Action> history() { return new ArrayDeque<Action>(history); }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
@@ -182,7 +182,7 @@ public class State {
         return false;
     }
 
-    public Action rewind(Rewinder rewinder) {
+    Action rewind(Rewinder rewinder) {
         if (!started())
             throw new RuntimeException("rewind at the beginning");
         Action last = history.pollLast();
@@ -199,7 +199,7 @@ public class State {
         return last;
     }
 
-    public Set<Move> previousMoves(int i) {
+    Set<Move> previousMoves(int i) {
         Set<Move> prev = new HashSet<Move>(i + 1, 1);
         Iterator<Action> iter = history.descendingIterator();
         boolean who = !isBlacksTurn();
@@ -213,7 +213,7 @@ public class State {
     /*********************
      *** DEBUG UTILITY ***
      *********************/
-     public Set<Action> highlight = null;
+     private Set<Action> highlight = null;
      private Listener highlightListener = null;
      public void onHighlight(Listener listener) {
          highlightListener = listener;
@@ -250,10 +250,10 @@ public class State {
          }
      }
 
-    public int blackMoves() {
+    int blackMoves() {
         return numMoves() / 2 + numMoves() % 2;
     }
-    public int whiteMoves() {
+    int whiteMoves() {
         return numMoves() / 2;
     }
 

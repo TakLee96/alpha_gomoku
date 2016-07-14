@@ -9,7 +9,7 @@ import java.util.Map;
 
 /** feature Extractor for gomoku State
  * @author TakLee96 */
-public class Extractor {
+class Extractor {
 
     private static final Action[] directions = new Action[]{
         new Action(1, 0), new Action(0, 1), new Action(1, 1), new Action(-1, 1)

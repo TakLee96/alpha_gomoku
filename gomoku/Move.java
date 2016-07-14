@@ -2,7 +2,7 @@ package gomoku;
 
 /** Move, essentially just (x, y, w)
  * @author TakLee96 */
-public class Move extends Action {
+class Move extends Action {
     private boolean isBlack;
     public Move(int x, int y, boolean isBlack) {
         super(x, y);

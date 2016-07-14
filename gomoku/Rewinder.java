@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 
 /** Helper class for State
  * @author TakLee96 */
-public class Rewinder {
+class Rewinder {
 
     public ArrayDeque<Action> removedLegalActions;
     public Counter diffFeatures;

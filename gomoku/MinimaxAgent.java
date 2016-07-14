@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -21,15 +20,13 @@ public class MinimaxAgent extends Agent {
     // discount rate
     private static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 20;
+    private static final int maxDepth = 16;
     // maximum big search depth
     private static final int maxBigDepth = 5;
     // separate big depth and normal depth
-    private static final int bigDepthThreshold = 5;
+    private static final int bigDepthThreshold = 6;
     // branching factor
     private static final int branch = 24;
-    // the random
-    private static final Random random = new Random();
 
     /**********************
      *** HELPER CLASSES ***
@@ -275,11 +272,6 @@ public class MinimaxAgent extends Agent {
         Arrays.sort(nodes, (!w) ? blackComparator : whiteComparator);
         for (int i = 0; i < branch/3 && i < nodes.length; i++)
             result.add(nodes[i].a);
-
-        // nodes that are randomly selected
-        int diff = branch - result.size();
-        for (int i = 0; i < diff; i++)
-            result.add(actions[random.nextInt(actions.length)]);
 
         return result;
     }

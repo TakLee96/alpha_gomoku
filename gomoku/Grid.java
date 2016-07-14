@@ -39,14 +39,6 @@ public class Grid {
         w = Who.EMPTY;
     }
 
-    public String getImage() {
-        switch (w) {
-            case BLACK: return "img/grid-blue.jpg";
-            case WHITE: return "img/grid-green.jpg";
-            default: return "img/grid-empty.jpg";
-        }
-    }
-
     @Override
     public String toString() {
         switch (w) {
