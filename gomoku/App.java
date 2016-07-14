@@ -41,7 +41,7 @@ public class App {
                 if (state.started()) {
                     Action a = state.lastAction();
                     ref[a.x()][a.y()].setBorderPainted(false);
-                    ref[a.x()][a.y()].repaint(0, 0, L, L);
+                    // ref[a.x()][a.y()].repaint(0, 0, L, L);
                 }
                 state.move(i, j);
                 System.out.println(state);
@@ -50,12 +50,12 @@ public class App {
                 else ref[i][j].setIcon(green);
                 ref[i][j].setBorder(redBorder);
                 ref[i][j].setBorderPainted(true);
-                ref[i][j].paintImmediately(0, 0, L, L);
+                // ref[i][j].paintImmediately(0, 0, L, L);
                 if (state.ended()) {
                     for (Action a : state.five) {
                         ref[a.x()][a.y()].setBorder(yellowBorder);
                         ref[a.x()][a.y()].setBorderPainted(true);
-                        ref[a.x()][a.y()].repaint(0, 0, L, L);
+                        // ref[a.x()][a.y()].repaint(0, 0, L, L);
                     }
                 } else if (state.isBlacksTurn()) {
                     SwingUtilities.invokeLater(new Runnable() {
@@ -126,7 +126,6 @@ public class App {
                     i = a.x();
                     j = a.y();
                     ref[i][j].setIcon(empty);
-                    ref[i][j].repaint(0, 0, L, L);
                 }
             }
         });
