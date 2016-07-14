@@ -74,6 +74,7 @@ public class Applet extends JApplet {
     public void init() {
         String base = this.getDocumentBase().toString();
         if (base.indexOf('#') != -1) base = base.substring(0, base.indexOf('#'));
+        if (base.indexOf(".html") != -1) base = base.substring(0, base.lastIndexOf('/'));
         if (base.charAt(base.length()-1) != '/') base += "/";
         base += "gomoku/img/";
         System.out.println(base);
