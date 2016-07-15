@@ -9,8 +9,9 @@ import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 import javax.swing.SwingUtilities;
 
-import java.awt.Container;
 import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -23,54 +24,58 @@ public class App {
     private static final int S = L * N;
     private static Border redBorder = BorderFactory.createLineBorder(Color.red);
     private static Border yellowBorder = BorderFactory.createLineBorder(Color.yellow);
-
-    private ImageIcon blue   = null,
-                      empty  = null,
-                      green  = null,
-                      red    = null,
-                      yellow = null;
-    private JButton[][] ref;
-    private State state;
-    private MinimaxAgent agent;
-    private class ButtonListener implements ActionListener {
+    private static JFrame frame = new JFrame("Alpha Gomoku");
+    private static ImageIcon blue   = null,
+                             empty  = null,
+                             green  = null,
+                             red    = null,
+                             yellow = null;
+    private static boolean uiready = false;
+    private static boolean isBlacksTurn = true;
+    private static JButton[][] ref;
+    private static State state = new State();
+    private static MinimaxAgent agent = new MinimaxAgent(true);
+    private static void sleep(long time) {
+        try {
+            Thread.sleep(time);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    private static void click(Action a) {
+        click(a.x(), a.y());
+    }
+    private static void click(int i, int j) {
+        if (state.started()) {
+            Action a = state.lastAction();
+            ref[a.x()][a.y()].setBorderPainted(false);
+        }
+        state.move(i, j);
+        isBlacksTurn = !isBlacksTurn;
+        if (state.get(i, j).isBlack())
+            ref[i][j].setIcon(blue);
+        else ref[i][j].setIcon(green);
+        ref[i][j].setBorder(redBorder);
+        ref[i][j].setBorderPainted(true);
+        if (state.ended()) {
+            for (Action a : state.five) {
+                ref[a.x()][a.y()].setBorder(yellowBorder);
+                ref[a.x()][a.y()].setBorderPainted(true);
+            }
+        }
+    }
+    private static class ButtonListener implements ActionListener {
         private int i, j;
         public ButtonListener(int x, int y) { i = x; j = y; }
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!state.ended() && state.canMove(i, j)) {
-                if (state.started()) {
-                    Action a = state.lastAction();
-                    ref[a.x()][a.y()].setBorderPainted(false);
-                    // ref[a.x()][a.y()].repaint(0, 0, L, L);
-                }
-                state.move(i, j);
-                System.out.println(state);
-                if (state.get(i, j).isBlack())
-                    ref[i][j].setIcon(blue);
-                else ref[i][j].setIcon(green);
-                ref[i][j].setBorder(redBorder);
-                ref[i][j].setBorderPainted(true);
-                // ref[i][j].paintImmediately(0, 0, L, L);
-                if (state.ended()) {
-                    for (Action a : state.five) {
-                        ref[a.x()][a.y()].setBorder(yellowBorder);
-                        ref[a.x()][a.y()].setBorderPainted(true);
-                        // ref[a.x()][a.y()].repaint(0, 0, L, L);
-                    }
-                } else if (state.isBlacksTurn()) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            Action a = agent.getAction(state);
-                            ref[a.x()][a.y()].doClick();
-                        }
-                    });
-                }
+            if (!state.ended() && state.canMove(i, j) && !isBlacksTurn) {
+                click(i, j);
             }
         }
     }
 
-    public void init(Container content) {
+    public static void init(Container content) {
         String base = "gomoku/img/";
         try {
             blue   = new ImageIcon(ImageIO.read(new File(base + "grid-blue.jpg")));
@@ -82,10 +87,7 @@ public class App {
             throw new RuntimeException(e.getMessage());
         }
 
-        state = new State();
         ref = new JButton[N][N];
-        agent = new MinimaxAgent(true);
-
         content.setBackground(Color.white);
 
         JButton grid = null;
@@ -103,18 +105,31 @@ public class App {
         // trigger UI update
         grid = new JButton();
         content.add(grid);
+    }
 
-        // register callback functions
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                Container main = frame.getContentPane();
+                Dimension dim = new Dimension(S, S);
+                main.setPreferredSize(dim);
+                init(frame.getContentPane());
+                frame.pack();
+                frame.setVisible(true);
+                uiready = true;
+            }
+        });
+
         state.onHighlight(new Listener() {
             @Override
             public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
-                System.out.println("Considering: " + actions);
                 for (Action a : actions) {
                     i = a.x();
                     j = a.y();
                     ref[i][j].setIcon(yellow);
-                    ref[i][j].paintImmediately(0, 0, L, L);
                 }
             }
         });
@@ -137,27 +152,18 @@ public class App {
                     i = a.x();
                     j = a.y();
                     ref[i][j].setIcon(red);
-                    ref[i][j].paintImmediately(0, 0, L, L);
                 }
             }
         });
 
-        // first move
-        Action a = agent.getAction(state);
-        ref[a.x()][a.y()].doClick();
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JFrame frame = new JFrame("Alpha Gomoku");
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                App app = new App();
-                app.init(frame.getContentPane());
-                frame.setSize(750, 770);
-                frame.setVisible(true);
+        while (!uiready) {
+            sleep(100);
+        }
+        while (!state.ended()) {
+            if (isBlacksTurn) {
+                click(agent.getAction(state));
             }
-        });
+            sleep(100);
+        }
     }
 }
