@@ -26,7 +26,7 @@ public class MinimaxAgent extends Agent {
     // separate big depth and normal depth
     private static final int bigDepthThreshold = 6;
     // branching factor
-    private static final int branch = 24;
+    private static final int branch = 15;
 
     /**********************
      *** HELPER CLASSES ***
