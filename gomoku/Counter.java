@@ -12,58 +12,58 @@ import java.io.FileReader;
  * @author TakLee96 */
 public class Counter {
 
-    private static String weights = String.join("\n", "{",
-        "white : -xxo   : -10       ",
-        "white : -x-xo  : -10       ",
-        "white : -oox   :  1        ",
-        "white : -o-ox  :  1        ",
-        "white : -x-x-  : -1000     ",
-        "white : -xx-   : -1000     ",
-        "white : -x-xxo : -1000     ",
-        "white : -xxxo  : -1000     ",
-        "white : x-x-x  : -1000     ",
-        "white : -o-o-  :  100      ",
-        "white : -oo-   :  100      ",
-        "white : -o-oox :  100      ",
-        "white : -ooox  :  100      ",
-        "white : o-o-o  :  100      ",
-        "white : -x-xx- : -100000   ",
-        "white : -xxx-  : -100000   ",
-        "white : -o-oo- :  10000    ",
-        "white : -ooo-  :  10000    ",
-        "white : -xxxx- : -10000000 ",
-        "white : -xxxxo : -10000000 ",
-        "white : four-x : -10000000 ",
-        "white : -oooo- :  1000000  ",
-        "white : -oooox :  1000000  ",
-        "white : four-o :  1000000  ",
-        "white : win-x  : -100000000",
-        "black : -oox   :  10       ",
-        "black : -o-ox  :  10       ",
-        "black : -xxo   : -1        ",
-        "black : -x-xo  : -1        ",
-        "black : -o-o-  :  1000     ",
-        "black : -oo-   :  1000     ",
-        "black : -o-oox :  1000     ",
-        "black : -ooox  :  1000     ",
-        "black : o-o-o  :  1000     ",
-        "black : -x-x-  : -100      ",
-        "black : -xx-   : -100      ",
-        "black : -x-xxo : -100      ",
-        "black : -xxxo  : -100      ",
-        "black : x-x-x  : -100      ",
-        "black : -o-oo- :  100000   ",
-        "black : -ooo-  :  100000   ",
-        "black : -x-xx- : -10000    ",
-        "black : -xxx-  : -10000    ",
-        "black : -oooo- :  10000000 ",
-        "black : -oooox :  10000000 ",
-        "black : four-o :  10000000 ",
-        "black : -xxxx- : -1000000  ",
-        "black : -xxxxo : -1000000  ",
-        "black : four-x : -1000000  ",
-        "black : win-o  :  100000000",
-    "}");
+    private static String score = "{\n" +
+        "white : -xxo   : -10       \n" +
+        "white : -x-xo  : -10       \n" +
+        "white : -oox   :  1        \n" +
+        "white : -o-ox  :  1        \n" +
+        "white : -x-x-  : -1000     \n" +
+        "white : -xx-   : -1000     \n" +
+        "white : -x-xxo : -1000     \n" +
+        "white : -xxxo  : -1000     \n" +
+        "white : x-x-x  : -1000     \n" +
+        "white : -o-o-  :  100      \n" +
+        "white : -oo-   :  100      \n" +
+        "white : -o-oox :  100      \n" +
+        "white : -ooox  :  100      \n" +
+        "white : o-o-o  :  100      \n" +
+        "white : -x-xx- : -100000   \n" +
+        "white : -xxx-  : -100000   \n" +
+        "white : -o-oo- :  10000    \n" +
+        "white : -ooo-  :  10000    \n" +
+        "white : -xxxx- : -10000000 \n" +
+        "white : -xxxxo : -10000000 \n" +
+        "white : four-x : -10000000 \n" +
+        "white : -oooo- :  1000000  \n" +
+        "white : -oooox :  1000000  \n" +
+        "white : four-o :  1000000  \n" +
+        "white : win-x  : -100000000\n" +
+        "black : -oox   :  10       \n" +
+        "black : -o-ox  :  10       \n" +
+        "black : -xxo   : -1        \n" +
+        "black : -x-xo  : -1        \n" +
+        "black : -o-o-  :  1000     \n" +
+        "black : -oo-   :  1000     \n" +
+        "black : -o-oox :  1000     \n" +
+        "black : -ooox  :  1000     \n" +
+        "black : o-o-o  :  1000     \n" +
+        "black : -x-x-  : -100      \n" +
+        "black : -xx-   : -100      \n" +
+        "black : -x-xxo : -100      \n" +
+        "black : -xxxo  : -100      \n" +
+        "black : x-x-x  : -100      \n" +
+        "black : -o-oo- :  100000   \n" +
+        "black : -ooo-  :  100000   \n" +
+        "black : -x-xx- : -10000    \n" +
+        "black : -xxx-  : -10000    \n" +
+        "black : -oooo- :  10000000 \n" +
+        "black : -oooox :  10000000 \n" +
+        "black : four-o :  10000000 \n" +
+        "black : -xxxx- : -1000000  \n" +
+        "black : -xxxxo : -1000000  \n" +
+        "black : four-x : -1000000  \n" +
+        "black : win-o  :  100000000\n" +
+    "}";
 
     private static DecimalFormat formatter = new DecimalFormat("#0.000");
 
@@ -73,7 +73,7 @@ public class Counter {
     }
 
     public static void read(Counter black, Counter white) {
-          for (String line : weights.split("")) {
+          for (String line : score.split("\n")) {
               String[] parts = line.split(":");
               if (parts.length == 3)
                   if (parts[0].trim().equals("black"))
