@@ -112,6 +112,7 @@ public class App {
             @Override
             public void run() {
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setResizable(false);
                 Container main = frame.getContentPane();
                 Dimension dim = new Dimension(S, S);
                 main.setPreferredSize(dim);
