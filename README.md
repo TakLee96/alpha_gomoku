@@ -131,10 +131,12 @@ public void onUnhighlight(Listener listener); // done thinking
 - The old-version AI might be a bit slow, but it's not too bad
 - The website can also read a history JSON object and display an old game, like `[(7, 7), (9, 6), ...]`
 
-# Past problems
+# Potential Improvements
 
-- Once winning strategy is found, can cache responses with a Trie
-- Can still improve action picking heuristic
-- Not intelligent enough during open status
-- Still might have redundant calculation
-- Could apply adversarial reinforcement learning
+- Cache winning strategy with Trie
+- Fine tune parameters
+  + Design action picking weights
+  + Tune evaluation weights
+  + Tune hyperparams: `maxDepth`, `maxBigDepth`, `bigDepthThreshold`, `branch`
+- Reduce redundant calculation
+- Parallel computing
