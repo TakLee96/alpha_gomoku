@@ -31,7 +31,7 @@ class Move extends Action {
         if (y < 10) yc = y + "";
         else yc = ((char) (y - 10 + 'A')) + "";
         String me = (isBlack) ? "o" : "x";
-        return "(" + xc + "," + yc + "," + me + ")";
+        return "Move(" + xc + ", " + yc + ", " + me + ")";
     }
 
     @Override

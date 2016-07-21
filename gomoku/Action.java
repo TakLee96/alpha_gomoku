@@ -30,7 +30,7 @@ public class Action {
         else xc = ((char) (x - 10 + 'A')) + "";
         if (y < 10) yc = y + "";
         else yc = ((char) (y - 10 + 'A')) + "";
-        return "(" + xc + "," + yc + ")";
+        return "Action(" + xc + ", " + yc + ")";
     }
 
     @Override
