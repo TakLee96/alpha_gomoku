@@ -17,7 +17,14 @@ jar:
 	@jar cfe gomoku.jar gomoku.App gomoku
 	@echo "[make] gomoku.jar created"
 
-clean:
+clean-class:
 	@rm gomoku/*.class
+	@echo "[make] class files cleaned"
+
+clean-jar:
 	@rm gomoku.jar
-	@echo "[make] class files and jar file removed"
+	@echo "[make] jar file cleaned"
+
+clean: clean-class clean-jar
+
+rebuild: clean-class build
