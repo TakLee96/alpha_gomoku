@@ -20,11 +20,11 @@ public class MinimaxAgent extends Agent {
     // discount rate
     private static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 16;
+    private static final int maxDepth = 15;
     // maximum big search depth
     private static final int maxBigDepth = 5;
     // separate big depth and normal depth
-    private static final int bigDepthThreshold = 6;
+    private static final int bigDepthThreshold = 5;
     // branching factor
     private static final int branch = 15;
 

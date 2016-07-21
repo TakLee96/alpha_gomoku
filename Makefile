@@ -1,12 +1,12 @@
 all:
-	@echo "[Make] Usage: make [jar/run/build/clean]"
+	@echo "[make] Usage: make [jar/run/build/clean]"
 	@echo "jar - generate gomoku.jar file"
 	@echo "run - launch gomoku application"
 	@echo "build - compile java files to class files"
 	@echo "clean - remove jar and class files"
 
 run:
-	@echo "[Make] launching application"
+	@echo "[make] launching application"
 	@java gomoku/App
 
 build:
