@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.AbstractMap;
 import java.util.Set;
 
 /** Advanced MinimaxAgent
@@ -16,22 +16,22 @@ public class MinimaxAgent extends Agent {
      *** CLASS CONSTANTS ***
      ***********************/
     // maximum evaluation score
-    private static final double infinity = 1E10;
+    protected static final double infinity = 1E10;
     // discount rate
-    private static final double gamma = 0.99;
+    protected static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 16;
+    protected static final int maxDepth = 16;
     // maximum big search depth
-    private static final int maxBigDepth = 6;
+    protected static final int maxBigDepth = 6;
     // separate big depth and normal depth
-    private static final int bigDepthThreshold = 6;
+    protected static final int bigDepthThreshold = 6;
     // branching factor
-    private static final int branch = 21;
+    protected static final int branch = 21;
 
     /**********************
      *** HELPER CLASSES ***
      **********************/
-    private static class Node {
+    protected static class Node {
         public Action a;
         public double v;
         public Node(Action a, double v) {
@@ -54,10 +54,10 @@ public class MinimaxAgent extends Agent {
         }
     }
 
-    private static Comparator<Node> blackComparator = new Comparator<Node>(){
+    protected static Comparator<Node> blackComparator = new Comparator<Node>(){
         @Override public int compare(Node a, Node b) { return (int) (b.v - a.v); }
     };
-    private static Comparator<Node> whiteComparator = new Comparator<Node>(){
+    protected static Comparator<Node> whiteComparator = new Comparator<Node>(){
         @Override public int compare(Node a, Node b) { return (int) (a.v - b.v); }
     };
 
@@ -65,7 +65,7 @@ public class MinimaxAgent extends Agent {
      *** INSTANCE ATTRIBUTES ***
      ***************************/
     // a cache for storing responses and evaluation scores
-    private HashMap<Set<Move>, Node> memo;
+    protected AbstractMap<Set<Move>, Node> memo;
 
     /*******************
      *** CONSTRUCTOR ***
@@ -85,24 +85,24 @@ public class MinimaxAgent extends Agent {
     }
 
     // ANALYSIS
-    static int numInstantEval  = 0;
-    static int numDepthEval    = 0;
-    static int totalEvalDepth  = 0;
-    static int numCacheHit     = 0;
-    static int numCacheMiss    = 0;
-    static int totalBranchSize = 0;
-    static int numRecursion    = 0;
-    static void initAnalysis() {
-        numInstantEval  = 0;
-        numDepthEval    = 0;
-        totalEvalDepth  = 0;
-        numCacheHit     = 0;
-        numCacheMiss    = 0;
-        totalBranchSize = 0;
-        numRecursion    = 0;       
-    }
+    // static int numInstantEval  = 0;
+    // static int numDepthEval    = 0;
+    // static int totalEvalDepth  = 0;
+    // static int numCacheHit     = 0;
+    // static int numCacheMiss    = 0;
+    // static int totalBranchSize = 0;
+    // static int numRecursion    = 0;
+    // static void initAnalysis() {
+    //     numInstantEval  = 0;
+    //     numDepthEval    = 0;
+    //     totalEvalDepth  = 0;
+    //     numCacheHit     = 0;
+    //     numCacheMiss    = 0;
+    //     totalBranchSize = 0;
+    //     numRecursion    = 0;       
+    // }
 
-    private Node maxvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
+    protected Node maxvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action maxaction = null; double maxvalue = -infinity, val = 0;
         Rewinder rewinder = null;
         for (Action a : actions) {
@@ -122,7 +122,7 @@ public class MinimaxAgent extends Agent {
         if (maxaction == null) throw new RuntimeException("everybody is too small");
         return new Node(maxaction, maxvalue);
     }
-    private Node minvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
+    protected Node minvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action minaction = null; double minvalue = infinity, val = 0;
         Rewinder rewinder = null;
         for (Action a : actions) {
@@ -142,10 +142,10 @@ public class MinimaxAgent extends Agent {
         if (minaction == null) throw new RuntimeException("everybody is too large");
         return new Node(minaction, minvalue);
     }
-    private Node value(State s, double alpha, double beta, int depth, int bigDepth) {
+    protected Node value(State s, double alpha, double beta, int depth, int bigDepth) {
         if (s.ended())
             // ANALYSIS: instant eval
-            numInstantEval += 1;
+            // numInstantEval += 1;
         if (s.win(true))
             return new Node(null, infinity);
         if (s.win(false))
@@ -154,28 +154,28 @@ public class MinimaxAgent extends Agent {
             return new Node(null, 0.0);
         if (depth == maxDepth || bigDepth == maxBigDepth) {
             // ANALYSIS: max depth eval
-            numDepthEval += 1;
-            totalEvalDepth += depth;
+            // numDepthEval += 1;
+            // totalEvalDepth += depth;
             return new Node(null, evaluate(s));
         }
 
         // ANALYSIS: num recursion
-        numRecursion += 1;
+        // numRecursion += 1;
 
         Set<Move> prev = s.previousMoves(depth);
         Node memoized = memo.get(prev);
         if (memoized != null) {
             // ANALYSIS: cache hit
-            numCacheHit += 1;
+            // numCacheHit += 1;
             return memoized;
         } else {
             // ANALYSIS: cache miss
-            numCacheMiss += 1;
+            // numCacheMiss += 1;
         }
 
         Set<Action> actions = getActions(s);
         // ANALYSIS: branch size
-        totalBranchSize += actions.size();
+        // totalBranchSize += actions.size();
         if (actions.size() == 0)
             return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
         if (actions.size() > bigDepthThreshold)
@@ -310,7 +310,7 @@ public class MinimaxAgent extends Agent {
         return score;
     }
 
-    private Set<Action> getActions(State s) {
+    protected Set<Action> getActions(State s) {
         Counter f = s.extractFeatures();
         boolean w = s.isBlacksTurn();
         if (four(f, w) > 0 || straightFour(f, w) > 0)
@@ -328,7 +328,7 @@ public class MinimaxAgent extends Agent {
 
     @Override
     public Action getAction(State s) {
-        initAnalysis();
+        // initAnalysis();
         if (!s.isTurn(isBlack))
             throw new RuntimeException("not my turn");
         Node retval = null;
@@ -341,5 +341,4 @@ public class MinimaxAgent extends Agent {
         s.unhighlight();
         return retval.a;
     }
-
 }

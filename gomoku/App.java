@@ -36,7 +36,7 @@ public class App {
     private static boolean isBlacksTurn = true;
     private static JButton[][] ref;
     private static State state = new State();
-    private static MinimaxAgent agent = new MinimaxAgent(true);
+    private static Agent agent = new ParallelAgent(true);
     private static void sleep(long time) {
         try {
             Thread.sleep(time);
