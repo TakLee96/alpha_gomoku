@@ -139,4 +139,5 @@ public void onUnhighlight(Listener listener); // done thinking
   + Tune evaluation weights
   + Tune hyperparams: `maxDepth`, `maxBigDepth`, `bigDepthThreshold`, `branch`
 - Reduce redundant calculation
+- Style consistency computation (just aggressive vs just defensive)
 - Parallel computing

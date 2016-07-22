@@ -18,6 +18,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Set;
 
+/** Standalone Java Application
+ * @author TakLee96 */
 public class App {
     private static final int L = 50;
     private static final int N = State.N;

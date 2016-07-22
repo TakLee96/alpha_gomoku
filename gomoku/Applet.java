@@ -17,6 +17,8 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.Set;
 
+/** HTML Embedded Java Applet
+ * @author TakLee96 */
 public class Applet extends JApplet {
     private static final int L = 50;
     private static final int N = State.N;
@@ -119,7 +121,6 @@ public class Applet extends JApplet {
                 @Override
                 public void digest(Set<Action> actions) {
                     int i = 0, j = 0;
-                    System.out.println("Considering: " + actions);
                     for (Action a : actions) {
                         i = a.x();
                         j = a.y();

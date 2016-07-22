@@ -97,16 +97,8 @@ public class State {
         if (ended())
             throw new RuntimeException("game has already ended");
         Counter diffFeatures = null;
-        try {
-            diffFeatures = Extractor.diffFeatures(this, x, y);
-            features.add(diffFeatures);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println(this + "@" + new Action(x, y) + "|" + isBlacksTurn());
-            System.out.println(diffFeatures);
-            System.out.println(history);
-            throw new RuntimeException("stop here");
-        }
+        diffFeatures = Extractor.diffFeatures(this, x, y);
+        features.add(diffFeatures);
         boolean who = isBlacksTurn();
         board[x][y].put(who);
         Action move = new Action(x, y);
@@ -249,13 +241,6 @@ public class State {
              highlight = null;
          }
      }
-
-    int blackMoves() {
-        return numMoves() / 2 + numMoves() % 2;
-    }
-    int whiteMoves() {
-        return numMoves() / 2;
-    }
 
     @Override
     public String toString() {

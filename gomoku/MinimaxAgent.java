@@ -20,13 +20,13 @@ public class MinimaxAgent extends Agent {
     // discount rate
     private static final double gamma = 0.99;
     // maximum search depth
-    private static final int maxDepth = 15;
+    private static final int maxDepth = 16;
     // maximum big search depth
-    private static final int maxBigDepth = 5;
+    private static final int maxBigDepth = 6;
     // separate big depth and normal depth
-    private static final int bigDepthThreshold = 5;
+    private static final int bigDepthThreshold = 6;
     // branching factor
-    private static final int branch = 15;
+    private static final int branch = 21;
 
     /**********************
      *** HELPER CLASSES ***
@@ -55,21 +55,15 @@ public class MinimaxAgent extends Agent {
     }
 
     private static Comparator<Node> blackComparator = new Comparator<Node>(){
-        public int compare(Node a, Node b) { return (int) (b.v - a.v); }
+        @Override public int compare(Node a, Node b) { return (int) (b.v - a.v); }
     };
     private static Comparator<Node> whiteComparator = new Comparator<Node>(){
-        public int compare(Node a, Node b) { return (int) (a.v - b.v); }
+        @Override public int compare(Node a, Node b) { return (int) (a.v - b.v); }
     };
 
     /***************************
      *** INSTANCE ATTRIBUTES ***
      ***************************/
-    // weights for evaluating states where black plays next
-    private Counter blackWeights;
-    // weights for evaluating states where white plays next
-    private Counter whiteWeights;
-    // total time for thinking
-    private long thinking;
     // a cache for storing responses and evaluation scores
     private HashMap<Set<Move>, Node> memo;
 
@@ -78,19 +72,34 @@ public class MinimaxAgent extends Agent {
      *******************/
     public MinimaxAgent(boolean isBlack) {
         super(isBlack);
-        blackWeights = new Counter();
-        whiteWeights = new Counter();
-        thinking = 0;
-        Counter.read(blackWeights, whiteWeights);
         memo = new HashMap<Set<Move>, Node>();
     }
 
     /********************
      *** CORE UTILITY ***
      ********************/
-    private double value(State s) {
-        if (s.isBlacksTurn()) return blackWeights.mul(s.extractFeatures());
-        return whiteWeights.mul(s.extractFeatures());
+    private double evaluate(State s) {
+        if (s.isBlacksTurn())
+            return Weights.blackEval.mul(s.extractFeatures());
+        return Weights.whiteEval.mul(s.extractFeatures());
+    }
+
+    // ANALYSIS
+    static int numInstantEval  = 0;
+    static int numDepthEval    = 0;
+    static int totalEvalDepth  = 0;
+    static int numCacheHit     = 0;
+    static int numCacheMiss    = 0;
+    static int totalBranchSize = 0;
+    static int numRecursion    = 0;
+    static void initAnalysis() {
+        numInstantEval  = 0;
+        numDepthEval    = 0;
+        totalEvalDepth  = 0;
+        numCacheHit     = 0;
+        numCacheMiss    = 0;
+        totalBranchSize = 0;
+        numRecursion    = 0;       
     }
 
     private Node maxvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
@@ -113,7 +122,6 @@ public class MinimaxAgent extends Agent {
         if (maxaction == null) throw new RuntimeException("everybody is too small");
         return new Node(maxaction, maxvalue);
     }
-
     private Node minvalue(State s, double alpha, double beta, int depth, int bigDepth, Set<Action> actions) {
         Action minaction = null; double minvalue = infinity, val = 0;
         Rewinder rewinder = null;
@@ -134,22 +142,40 @@ public class MinimaxAgent extends Agent {
         if (minaction == null) throw new RuntimeException("everybody is too large");
         return new Node(minaction, minvalue);
     }
-
     private Node value(State s, double alpha, double beta, int depth, int bigDepth) {
+        if (s.ended())
+            // ANALYSIS: instant eval
+            numInstantEval += 1;
         if (s.win(true))
             return new Node(null, infinity);
         if (s.win(false))
             return new Node(null, -infinity);
         if (s.ended())
             return new Node(null, 0.0);
-        if (depth == maxDepth || bigDepth == maxBigDepth)
-            return new Node(null, value(s));
+        if (depth == maxDepth || bigDepth == maxBigDepth) {
+            // ANALYSIS: max depth eval
+            numDepthEval += 1;
+            totalEvalDepth += depth;
+            return new Node(null, evaluate(s));
+        }
+
+        // ANALYSIS: num recursion
+        numRecursion += 1;
 
         Set<Move> prev = s.previousMoves(depth);
         Node memoized = memo.get(prev);
-        if (memoized != null) return memoized;
+        if (memoized != null) {
+            // ANALYSIS: cache hit
+            numCacheHit += 1;
+            return memoized;
+        } else {
+            // ANALYSIS: cache miss
+            numCacheMiss += 1;
+        }
 
         Set<Action> actions = getActions(s);
+        // ANALYSIS: branch size
+        totalBranchSize += actions.size();
         if (actions.size() == 0)
             return new Node(s.randomAction(), (s.isBlacksTurn()) ? -infinity : infinity);
         if (actions.size() > bigDepthThreshold)
@@ -236,6 +262,7 @@ public class MinimaxAgent extends Agent {
         }
         return result;
     }
+
     private Set<Action> movesBestGrowth(State s, Counter features) {
         Action[] actions = s.getLegalActions();
         Set<Action> result = new HashSet<Action>();
@@ -253,7 +280,7 @@ public class MinimaxAgent extends Agent {
         nodes = new Node[actions.length]; Rewinder r = null;
         for (int i = 0; i < actions.length; i++) {
             r = s.move(actions[i]);
-            nodes[i] = new Node(actions[i], value(s));
+            nodes[i] = new Node(actions[i], evaluate(s));
             s.rewind(r);
         }
         Arrays.sort(nodes, (w) ? blackComparator : whiteComparator);
@@ -265,7 +292,7 @@ public class MinimaxAgent extends Agent {
         s.makeDangerousNullMove();
         for (int i = 0; i < actions.length; i++) {
             r = s.move(actions[i]);
-            nodes[i] = new Node(actions[i], value(s));
+            nodes[i] = new Node(actions[i], evaluate(s));
             s.rewind(r);
         }
         s.rewindDangerousNullMove();
@@ -275,7 +302,6 @@ public class MinimaxAgent extends Agent {
 
         return result;
     }
-
     private int heuristic(State s, Action a) {
         Counter diff = Extractor.diffFeatures(s, a);
         int score = 0;
@@ -302,9 +328,9 @@ public class MinimaxAgent extends Agent {
 
     @Override
     public Action getAction(State s) {
+        initAnalysis();
         if (!s.isTurn(isBlack))
             throw new RuntimeException("not my turn");
-        long time = System.currentTimeMillis();
         Node retval = null;
         if (!s.started()) {
             retval = new Node(s.start, 0);
@@ -312,25 +338,8 @@ public class MinimaxAgent extends Agent {
             memo.clear();
             retval = value(s, -infinity, infinity, 0, 0);
         }
-
-        // For debug purposes
-        time = System.currentTimeMillis() - time;
-        thinking += time;
-        String elapsed = time + "";
-        String value = (retval.v == 0) ? "None" : ("" + (long) retval.v);
         s.unhighlight();
-        System.out.println("Done: " + ((isBlack) ? "BLACK" : "WHITE") + " " +
-                         retval.a + " " + value + " [" + elapsed + "ms]");
-        if (retval.v > infinity / 10)
-            System.out.println("AI thinks BLACK is gonna win");
-        else if (retval.v < -infinity / 10)
-            System.out.println("AI thinks WHITE is gonna win");
         return retval.a;
     }
-
-    /*********************
-     *** DEBUG UTILITY ***
-     *********************/
-    public long thinking() { return thinking; }
 
 }

@@ -1,6 +1,6 @@
 package gomoku;
 
-/** Agent playing randomly for the game
+/** Agent interface playing randomly
  * @author TakLee96 */
 public class Agent {
 

@@ -5,6 +5,10 @@ all:
 	@echo "build - compile java files to class files"
 	@echo "clean - remove jar and class files"
 
+benchmark:
+	@echo "[make] running benchmark"
+	@java gomoku/Benchmark
+
 run:
 	@echo "[make] launching application"
 	@java gomoku/App
