@@ -77,7 +77,7 @@ public class State {
     public boolean isBlacksTurn() { return numMoves() % 2 == 0; }
     public boolean isTurn(boolean isBlack) { return !(isBlack ^ isBlacksTurn()); }
     public boolean canMove(Action a) { return a != null && canMove(a.x(), a.y()); }
-    public boolean canMove(int x, int y) { return !ended() && inBound(x, y) && board[x][y].isEmpty(); }
+    public boolean canMove(int x, int y) { return !ended() && inBound(x, y) && get(x, y).isEmpty(); }
     public Grid get(Action a) { return get(a.x(), a.y()); }
     public Grid get(int x, int y) { return board[x][y]; }
     public boolean ended() { return wins || numMoves() == N * N; }
@@ -100,7 +100,7 @@ public class State {
         diffFeatures = Extractor.diffFeatures(this, x, y);
         features.add(diffFeatures);
         boolean who = isBlacksTurn();
-        board[x][y].put(who);
+        get(x, y).put(who);
         Action move = new Action(x, y);
 
         ArrayDeque<Action> removedLegalActions = new ArrayDeque<Action>();
@@ -108,7 +108,7 @@ public class State {
         for (Action d : neighbors) {
             nx = x + d.x();
             ny = y + d.y();
-            if (inBound(nx, ny) && board[nx][ny].isEmpty()) {
+            if (inBound(nx, ny) && get(nx, ny).isEmpty()) {
                 a = new Action(nx, ny);
                 if (legalActions.add(a))
                     removedLegalActions.add(a);
@@ -121,12 +121,12 @@ public class State {
         if (wins) {
             nx = x; ny = y;
             nx += dx; ny += dy;
-            while (inBound(nx, ny) && board[nx][ny].is(who)) {
+            while (inBound(nx, ny) && get(nx, ny).is(who)) {
                 five.add(new Action(nx, ny));
                 nx += dx; ny += dy;
             }
             nx = x - dx; ny = y - dy;
-            while (inBound(nx, ny) && board[nx][ny].is(who)) {
+            while (inBound(nx, ny) && get(nx, ny).is(who)) {
                 five.add(new Action(nx, ny));
                 nx -= dx; ny -= dy;
             }
@@ -138,7 +138,7 @@ public class State {
     private int count(boolean isBlack, int x, int y, int dx, int dy) {
         int count = 0;
         x += dx; y += dy;
-        while (inBound(x, y) && board[x][y].is(isBlack)) {
+        while (inBound(x, y) && get(x, y).is(isBlack)) {
             count += 1;
             x += dx; y += dy;
         }
@@ -178,7 +178,7 @@ public class State {
         if (!started())
             throw new RuntimeException("rewind at the beginning");
         Action last = history.pollLast();
-        board[last.x()][last.y()].clean();
+        get(last.x(), last.y()).clean();
         for (Action a : rewinder.removedLegalActions)
             if (!legalActions.remove(a))
                 throw new RuntimeException("illegal rewinder");
@@ -263,9 +263,9 @@ public class State {
             }
             sb.append(" ");
             for (int j = 0; j < N; j++) {
-                if (board[i][j].isEmpty()) {
+                if (get(i, j).isEmpty()) {
                     sb.append("+ ");
-                } else if (board[i][j].isBlack()) {
+                } else if (get(i, j).isBlack()) {
                     sb.append("o ");
                 } else {
                     sb.append("x ");
