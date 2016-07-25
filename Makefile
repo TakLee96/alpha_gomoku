@@ -22,11 +22,11 @@ jar:
 	@echo "[make] gomoku.jar created"
 
 clean-class:
-	@rm gomoku/*.class
+	@rm -f gomoku/*.class
 	@echo "[make] class files cleaned"
 
 clean-jar:
-	@rm gomoku.jar
+	@rm -f gomoku.jar
 	@echo "[make] jar file cleaned"
 
 clean: clean-class clean-jar

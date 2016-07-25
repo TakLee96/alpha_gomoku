@@ -224,7 +224,6 @@ public class State {
          evaluateListener = listener;
      }
      public void evaluate(Action a) {
-         System.out.println(Thread.currentThread().getId() + " is evaluating " + a);
          if (evaluateListener != null) {
              Set<Action> set = new HashSet<Action>(1);
              set.add(a);

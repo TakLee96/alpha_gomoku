@@ -3,8 +3,10 @@ package gomoku;
 import java.util.Set;
 import java.util.List;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+
+import javax.swing.SwingUtilities;
 
 /** Parallel MinimaxAgent
  * @author TakLee96 */
@@ -12,9 +14,16 @@ public class ParallelAgent extends MinimaxAgent {
 
     private static final int NUM_THREADS = 3;
 
-    public ParallelAgent(boolean isBlack) {
-        super(isBlack);
-        memo = new ConcurrentHashMap<Set<Move>, Node>();
+    private static class AsyncMap<K, V> extends HashMap<K, V> {
+        @Override public V put(K key, V val) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    AsyncMap.super.put(key, val);
+                }
+            });
+            return null;
+        }  
     }
 
     private class DelegateAgent implements Runnable {
@@ -28,12 +37,15 @@ public class ParallelAgent extends MinimaxAgent {
         }
         @Override
         public void run() {
-            System.out.println(Thread.currentThread().getId() + " is running on " + actions);
             boolean who = state.isBlacksTurn();
             if (who) node = maxvalue(state, -infinity, infinity, 1, 0, actions);
             else     node = minvalue(state, -infinity, infinity, 1, 0, actions);
-            System.out.println(Thread.currentThread().getId() + " is done");
         }
+    }
+
+    public ParallelAgent(boolean isBlack) {
+        super(isBlack);
+        memo = new AsyncMap<Set<Move>, Node>();
     }
 
     @Override
@@ -71,7 +83,6 @@ public class ParallelAgent extends MinimaxAgent {
                 }
                 try { Thread.sleep(100); } catch (Exception e) {}
             }
-            System.out.println("all done");
             if (isBlack) {
                 retval = agents[0].node;
                 for (int i = 1; i < NUM_THREADS; i++)

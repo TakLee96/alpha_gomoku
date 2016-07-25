@@ -141,3 +141,5 @@ public void onUnhighlight(Listener listener); // done thinking
 - Reduce redundant calculation
 - Style consistency computation (just aggressive vs just defensive)
 - Parallel computing
+  + ConcurrentHashMap might be blocking performance
+  + Could let each thread use its own cache

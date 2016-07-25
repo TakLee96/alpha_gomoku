@@ -36,7 +36,7 @@ public class App {
     private static boolean isBlacksTurn = true;
     private static JButton[][] ref;
     private static State state = new State();
-    private static Agent agent = new ParallelAgent(true);
+    private static Agent agent = null; // declared below
     private static void sleep(long time) {
         try {
             Thread.sleep(time);
@@ -110,6 +110,14 @@ public class App {
     }
 
     public static void main(String[] args) {
+        if (args != null && args.length > 0 && args[0].equals("parallel")) {
+            System.out.println("[AI] Using ParallelAgent");
+            agent = new ParallelAgent(true);
+        } else {
+            System.out.println("[AI] Using MinimaxAgent");
+            agent = new MinimaxAgent(true);
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -162,9 +170,13 @@ public class App {
         while (!uiready) {
             sleep(100);
         }
+        long time = 0;
         while (!state.ended()) {
             if (isBlacksTurn) {
+                time = System.currentTimeMillis();
                 click(agent.getAction(state));
+                System.out.println("[AI] Done. Elapsed: " +
+                    (System.currentTimeMillis() - time) + "ms.");
             }
             sleep(100);
         }
