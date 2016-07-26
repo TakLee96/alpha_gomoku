@@ -12,7 +12,6 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import java.net.URL;
 import java.util.Set;
@@ -64,7 +63,7 @@ public class Applet extends JApplet {
             }
         }
     }
-    private class ButtonListener implements ActionListener {
+    private class ButtonListener implements java.awt.event.ActionListener {
         private int i, j;
         public ButtonListener(int x, int y) { i = x; j = y; }
         @Override
@@ -117,9 +116,8 @@ public class Applet extends JApplet {
     private class AIRunner implements Runnable {
         @Override
         public void run() {
-            state.onHighlight(new Listener() {
-                @Override
-                public void digest(Set<Action> actions) {
+            state.onHighlight(new ActionsListener() {
+                @Override public void digest(Set<Action> actions) {
                     int i = 0, j = 0;
                     for (Action a : actions) {
                         i = a.x();
@@ -128,9 +126,8 @@ public class Applet extends JApplet {
                     }
                 }
             });
-            state.onUnhighlight(new Listener() {
-                @Override
-                public void digest(Set<Action> actions) {
+            state.onUnhighlight(new ActionsListener() {
+                @Override public void digest(Set<Action> actions) {
                     int i = 0, j = 0;
                     for (Action a : actions) {
                         i = a.x();
@@ -139,15 +136,14 @@ public class Applet extends JApplet {
                     }
                 }
             });
-            state.onEvaluate(new Listener() {
-                @Override
-                public void digest(Set<Action> actions) {
-                    int i = 0, j = 0;
-                    for (Action a : actions) {
-                        i = a.x();
-                        j = a.y();
-                        ref[i][j].setIcon(red);
-                    }
+            state.onEvaluate(new ActionListener() {
+                @Override public void digest(Action action) {
+                    ref[action.x()][action.y()].setIcon(red);
+                }
+            });
+            state.onDetermineMove(new ActionListener() {
+                @Override public void digest(Action action) {
+                    click(action);
                 }
             });
             while (!uiready) {
@@ -155,7 +151,7 @@ public class Applet extends JApplet {
             }
             while (!state.ended()) {
                 if (isBlacksTurn) {
-                    click(agent.getAction(state));
+                    agent.getAction(state);
                 }
                 sleep(100);
             }

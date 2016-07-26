@@ -13,7 +13,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import java.io.File;
 import java.util.Set;
@@ -66,7 +65,7 @@ public class App {
             }
         }
     }
-    private static class ButtonListener implements ActionListener {
+    private static class ButtonListener implements java.awt.event.ActionListener {
         private int i, j;
         public ButtonListener(int x, int y) { i = x; j = y; }
         @Override
@@ -119,8 +118,7 @@ public class App {
         }
 
         SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
+            @Override public void run() {
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.setResizable(false);
                 Container main = frame.getContentPane();
@@ -133,9 +131,8 @@ public class App {
             }
         });
 
-        state.onHighlight(new Listener() {
-            @Override
-            public void digest(Set<Action> actions) {
+        state.onHighlight(new ActionsListener() {
+            @Override public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
                 for (Action a : actions) {
                     i = a.x();
@@ -144,9 +141,13 @@ public class App {
                 }
             }
         });
-        state.onUnhighlight(new Listener() {
-            @Override
-            public void digest(Set<Action> actions) {
+        state.onEvaluate(new ActionListener() {
+            @Override public void digest(Action action) {
+                ref[action.x()][action.y()].setIcon(red);
+            }
+        });
+        state.onUnhighlight(new ActionsListener() {
+            @Override public void digest(Set<Action> actions) {
                 int i = 0, j = 0;
                 for (Action a : actions) {
                     i = a.x();
@@ -155,15 +156,9 @@ public class App {
                 }
             }
         });
-        state.onEvaluate(new Listener() {
-            @Override
-            public void digest(Set<Action> actions) {
-                int i = 0, j = 0;
-                for (Action a : actions) {
-                    i = a.x();
-                    j = a.y();
-                    ref[i][j].setIcon(red);
-                }
+        state.onDetermineMove(new ActionListener() {
+            @Override public void digest(Action action) {
+                click(action);
             }
         });
 
@@ -174,7 +169,7 @@ public class App {
         while (!state.ended()) {
             if (isBlacksTurn) {
                 time = System.currentTimeMillis();
-                click(agent.getAction(state));
+                agent.getAction(state);
                 System.out.println("[AI] Done. Elapsed: " +
                     (System.currentTimeMillis() - time) + "ms.");
             }

@@ -206,42 +206,50 @@ public class State {
     /*********************
      *** DEBUG UTILITY ***
      *********************/
-     private Set<Action> highlight = null;
-     private Listener highlightListener = null;
-     public void onHighlight(Listener listener) {
-         highlightListener = listener;
-     }
-     public void highlight(Set<Action> actions) {
-         if (highlight == null) {
-             highlight = actions;
-             if (highlightListener != null)
-                 highlightListener.digest(actions);
-         }
-     }
+    private Set<Action> highlight = null;
+    private ActionsListener highlightListener = null;
+    public void onHighlight(ActionsListener listener) {
+        highlightListener = listener;
+    }
+    public void highlight(Set<Action> actions) {
+        if (highlight == null) {
+            highlight = actions;
+            if (highlightListener != null)
+                highlightListener.digest(actions);
+        }
+    }
 
-     private Listener evaluateListener = null;
-     public void onEvaluate(Listener listener) {
-         evaluateListener = listener;
-     }
-     public void evaluate(Action a) {
-         if (evaluateListener != null) {
-             Set<Action> set = new HashSet<Action>(1);
-             set.add(a);
-             evaluateListener.digest(set);
-         }
-     }
+    private ActionListener evaluateListener = null;
+    public void onEvaluate(ActionListener listener) {
+        evaluateListener = listener;
+    }
+    public void evaluate(Action a) {
+        if (evaluateListener != null) {
+            evaluateListener.digest(a);
+        }
+    }
 
-     private Listener unhighlightListener = null;
-     public void onUnhighlight(Listener listener) {
-         unhighlightListener = listener;
-     }
-     public void unhighlight() {
-         if (highlight != null) {
-             if (unhighlightListener != null)
-                 unhighlightListener.digest(highlight);
-             highlight = null;
-         }
-     }
+    private ActionsListener unhighlightListener = null;
+    public void onUnhighlight(ActionsListener listener) {
+        unhighlightListener = listener;
+    }
+    public void unhighlight() {
+        if (highlight != null) {
+            if (unhighlightListener != null)
+                unhighlightListener.digest(highlight);
+            highlight = null;
+        }
+    }
+
+    private ActionListener determineMoveListener = null;
+    public void onDetermineMove(ActionListener listener) {
+        determineMoveListener = listener;
+    }
+    public void determineMove(Action move) {
+        if (determineMoveListener != null) {
+            determineMoveListener.digest(move);
+        }
+    }
 
     @Override
     public String toString() {

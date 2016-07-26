@@ -339,6 +339,7 @@ public class MinimaxAgent extends Agent {
             retval = value(s, -infinity, infinity, 0, 0);
         }
         s.unhighlight();
+        s.determineMove(retval.a);
         return retval.a;
     }
 }
