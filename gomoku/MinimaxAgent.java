@@ -23,6 +23,8 @@ public class MinimaxAgent extends Agent {
     protected static final int maxDepth = 15;
     // maximum big search depth
     protected static final int maxBigDepth = 5;
+    // maximum cache depth
+    protected static final int maxCacheDepth = 5;
     // separate big depth and normal depth
     protected static final int bigDepthThreshold = 5;
     // branching factor
@@ -161,18 +163,19 @@ public class MinimaxAgent extends Agent {
 
         // ANALYSIS: num recursion
         // numRecursion += 1;
-
-        Set<Move> prev = s.previousMoves(depth);
-        Node memoized = memo.get(prev);
-        if (memoized != null) {
-            // ANALYSIS: cache hit
-            // numCacheHit += 1;
-            return memoized;
-        } else {
-            // ANALYSIS: cache miss
-            // numCacheMiss += 1;
+        Set<Move> prev = null;
+        if (depth <= maxCacheDepth) {
+            prev = s.previousMoves(depth);
+            Node memoized = memo.get(prev);
+            if (memoized != null) {
+                // ANALYSIS: cache hit
+                // numCacheHit += 1;
+                return memoized;
+            } else {
+                // ANALYSIS: cache miss
+                // numCacheMiss += 1;
+            }
         }
-
         Set<Action> actions = getActions(s);
         // ANALYSIS: branch size
         // totalBranchSize += actions.size();
@@ -188,11 +191,10 @@ public class MinimaxAgent extends Agent {
                     return new Node(a, 0);
         }
 
-        depth += 1;
         Node node = null; boolean who = s.isBlacksTurn();
-        if (who) node = maxvalue(s, alpha, beta, depth, bigDepth, actions);
-        else     node = minvalue(s, alpha, beta, depth, bigDepth, actions);
-        memo.put(prev, node);
+        if (who) node = maxvalue(s, alpha, beta, depth + 1, bigDepth, actions);
+        else     node = minvalue(s, alpha, beta, depth + 1, bigDepth, actions);
+        if (depth <= maxCacheDepth) memo.put(prev, node);
         return node;
     }
 
