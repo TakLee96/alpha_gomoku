@@ -23,7 +23,7 @@ public class ParallelAgent extends MinimaxAgent {
                 }
             });
             return null;
-        }  
+        }
     }
 
     private class DelegateAgent implements Runnable {

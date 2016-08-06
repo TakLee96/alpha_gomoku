@@ -15,12 +15,13 @@ and about [Java API](https://github.com/TakLee96/alpha_gomoku/wiki/Java-API) you
 ## To install and play
 
 Have JRE 8 installed and then (choose your way):
+
 1. Run in terminal or cmd `java -jar gomoku.jar`
-2. Double click `gomoku.jar`
-3. Or start a static server and navigate to **http://localhost:8000**
+1. Double click `gomoku.jar`
+1. Or start a static server and navigate to **http://localhost:8000**
   + `python -m SimpleHTTPServer 8000`
   + `python3 -m http.server 8000`
-4. Have JDK 8 installed and run in terminal `make build run`
+1. Have JDK 8 installed and run in terminal `make build run`
 
 ## Old version
 
@@ -35,7 +36,7 @@ Have JRE 8 installed and then (choose your way):
 - Fine tune parameters
   + Design action picking weights
   + Tune evaluation weights
-  + Tune hyperparams: `maxDepth`, `maxBigDepth`, `bigDepthThreshold`, `branch`
+  + Tune hyperparams: `maxDepth`, `maxBigDepth`, `bigDepthThreshold`, `branch`, `maxCacheDepth`
 - Reduce redundant calculation
 - Style consistency computation (just aggressive vs just defensive)
 - Parallel computing
