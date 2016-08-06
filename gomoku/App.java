@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import java.io.File;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class App {
             }
         }
     }
-    private static class ButtonListener implements java.awt.event.ActionListener {
+    private static class ButtonListener implements ActionListener {
         private int i, j;
         public ButtonListener(int x, int y) { i = x; j = y; }
         @Override
@@ -117,49 +118,39 @@ public class App {
             agent = new MinimaxAgent(true);
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override public void run() {
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.setResizable(false);
-                Container main = frame.getContentPane();
-                Dimension dim = new Dimension(S, S);
-                main.setPreferredSize(dim);
-                init(frame.getContentPane());
-                frame.pack();
-                frame.setVisible(true);
-                uiready = true;
-            }
+        SwingUtilities.invokeLater(() -> {
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setResizable(false);
+            Container main = frame.getContentPane();
+            Dimension dim = new Dimension(S, S);
+            main.setPreferredSize(dim);
+            init(frame.getContentPane());
+            frame.pack();
+            frame.setVisible(true);
+            uiready = true;
         });
 
-        state.onHighlight(new ActionsListener() {
-            @Override public void digest(Set<Action> actions) {
-                int i = 0, j = 0;
-                for (Action a : actions) {
-                    i = a.x();
-                    j = a.y();
-                    ref[i][j].setIcon(yellow);
-                }
+        state.onHighlight((Set<Action> actions) -> {
+            int i = 0, j = 0;
+            for (Action a : actions) {
+                i = a.x();
+                j = a.y();
+                ref[i][j].setIcon(yellow);
             }
         });
-        state.onEvaluate(new ActionListener() {
-            @Override public void digest(Action action) {
-                ref[action.x()][action.y()].setIcon(red);
+        state.onEvaluate((Action action) -> {
+            ref[action.x()][action.y()].setIcon(red);
+        });
+        state.onUnhighlight((Set<Action> actions) -> {
+            int i = 0, j = 0;
+            for (Action a : actions) {
+                i = a.x();
+                j = a.y();
+                ref[i][j].setIcon(empty);
             }
         });
-        state.onUnhighlight(new ActionsListener() {
-            @Override public void digest(Set<Action> actions) {
-                int i = 0, j = 0;
-                for (Action a : actions) {
-                    i = a.x();
-                    j = a.y();
-                    ref[i][j].setIcon(empty);
-                }
-            }
-        });
-        state.onDetermineMove(new ActionListener() {
-            @Override public void digest(Action action) {
-                click(action);
-            }
+        state.onDetermineMove((Action action) -> {
+            click(action);
         });
 
         while (!uiready) {

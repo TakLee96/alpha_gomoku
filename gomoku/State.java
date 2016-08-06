@@ -4,8 +4,11 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
+
+import java.util.function.Consumer;
 
 /** Gomoku GameState Object
  * @author TakLee96 */
@@ -31,9 +34,9 @@ public class State {
     // the direction of the five generated
     private int dx, dy;
     // helper structure to store the winning moves
-    public ArrayDeque<Action> five;
+    public Deque<Action> five;
     // game history
-    private ArrayDeque<Action> history;
+    private Deque<Action> history;
     // data structure for easy generation of legal actions
     private HashSet<Action> legalActions;
     // did any one win the game?
@@ -91,7 +94,7 @@ public class State {
     public Counter extractFeatures() { return features; }
     void makeDangerousNullMove() { history.addLast(new Action(-1, -1)); }
     void rewindDangerousNullMove() { history.pollLast(); }
-    public ArrayDeque<Action> history() { return new ArrayDeque<Action>(history); }
+    public Deque<Action> history() { return new ArrayDeque<Action>(history); }
 
     public Rewinder move(Action a) { return move(a.x(), a.y()); }
     public Rewinder move(int x, int y) {
@@ -207,47 +210,47 @@ public class State {
      *** DEBUG UTILITY ***
      *********************/
     private Set<Action> highlight = null;
-    private ActionsListener highlightListener = null;
-    public void onHighlight(ActionsListener listener) {
+    private Consumer<Set<Action>> highlightListener = null;
+    public void onHighlight(Consumer<Set<Action>> listener) {
         highlightListener = listener;
     }
     public void highlight(Set<Action> actions) {
         if (highlight == null) {
             highlight = actions;
             if (highlightListener != null)
-                highlightListener.digest(actions);
+                highlightListener.accept(actions);
         }
     }
 
-    private ActionListener evaluateListener = null;
-    public void onEvaluate(ActionListener listener) {
+    private Consumer<Action> evaluateListener = null;
+    public void onEvaluate(Consumer<Action> listener) {
         evaluateListener = listener;
     }
     public void evaluate(Action a) {
         if (evaluateListener != null) {
-            evaluateListener.digest(a);
+            evaluateListener.accept(a);
         }
     }
 
-    private ActionsListener unhighlightListener = null;
-    public void onUnhighlight(ActionsListener listener) {
+    private Consumer<Set<Action>> unhighlightListener = null;
+    public void onUnhighlight(Consumer<Set<Action>> listener) {
         unhighlightListener = listener;
     }
     public void unhighlight() {
         if (highlight != null) {
             if (unhighlightListener != null)
-                unhighlightListener.digest(highlight);
+                unhighlightListener.accept(highlight);
             highlight = null;
         }
     }
 
-    private ActionListener determineMoveListener = null;
-    public void onDetermineMove(ActionListener listener) {
+    private Consumer<Action> determineMoveListener = null;
+    public void onDetermineMove(Consumer<Action> listener) {
         determineMoveListener = listener;
     }
     public void determineMove(Action move) {
         if (determineMoveListener != null) {
-            determineMoveListener.digest(move);
+            determineMoveListener.accept(move);
         }
     }
 
