@@ -1,3 +1,5 @@
+![Demo Image](https://github.com/TakLee96/alpha_gomoku/blob/master/demo.png)
+
 # Alpha Gomoku
 
 - This is a gomoku game with Java GUI
