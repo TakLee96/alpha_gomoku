@@ -1,3 +1,5 @@
+""" Gomoku Game State """
+
 import numpy as np
 
 N = 15  # board size

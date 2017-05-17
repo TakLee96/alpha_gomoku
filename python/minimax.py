@@ -1,3 +1,15 @@
+""" Minimax Agent with Alpha-Beta pruning """
+
+class Agent():
+  def __init__(self, player, policy):
+    self.player = player
+    self.policy = policy
+
+  def get_action(self, state):
+    assert self.player == state.player
+    actions = self.policy(state.player * state.board)
+    return actions[0]
+
 
 class MinimaxAgent:
   def __init__(self, player, policy, value, depth=5)
