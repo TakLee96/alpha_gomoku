@@ -13,12 +13,28 @@ class Application(tk.Frame):
       tk.PhotoImage(file="img/empty.gif"),
       tk.PhotoImage(file="img/naught.gif"),
       tk.PhotoImage(file="img/yellow.gif"),
+      tk.PhotoImage(file="img/red.gif"),
       tk.PhotoImage(file="img/cross.gif"),
     ]
     self.pack()
     self.create_widgets()
-    self.x, self.y = self.interpret(session.run("Reshape_1:0", feed_dict={"x:0": (self.state.player * self.state.board).reshape((1, 225)), "y_:0": np.zeros(shape=(1, 225)), "is_training:0": False}))
-    self.button[self.x*15+self.y].config(image=self.image[2])
+    self.recommended_moves = self.recommend_moves()
+    for x, y in self.recommended_moves:
+      self.button[x*15+y].config(image=self.image[3])
+
+  def recommend_moves(self):
+    prob = session.run("Reshape_1:0", feed_dict={
+      "x:0": (self.state.player * self.state.board).reshape((1, 225)),
+      "y_:0": np.zeros(shape=(1, 225)),
+      "is_training:0": False}).reshape((15, 15))
+    maxv = prob.max()
+    moves = list()
+    location = (prob == maxv)
+    for i in range(15):
+      for j in range(15):
+        if location[i, j]:
+          moves.append((i, j))
+    return moves
 
   def interpret(self, reshaped):
     loc = reshaped.argmax()
@@ -35,11 +51,14 @@ class Application(tk.Frame):
       if not self.state.end and self.state.board[i, j] == 0:
         self.button[i*15+j].config(image=self.image[self.state.player])
         self.state.move(i, j)
-        self.button[self.x*15+self.y].config(image=self.image[self.state.board[self.x, self.y]])
-        self.x, self.y = self.interpret(session.run("Reshape_1:0", feed_dict={"x:0": (self.state.player * self.state.board).reshape((1, 225)), "y_:0": np.zeros(shape=(1, 225)), "is_training:0": False}))
-        self.button[self.x * 15 + self.y].config(image=self.image[2])
+        for x, y in self.recommended_moves:
+          self.button[x*15+y].config(image=self.image[self.state.board[x, y]])
         if self.state.end:
           self.highlight(i, j)
+        else:
+          self.recommended_moves = self.recommend_moves()
+          for x, y in self.recommended_moves:
+            self.button[x * 15 + y].config(image=self.image[3])
     return respond
 
   def create_widgets(self):
