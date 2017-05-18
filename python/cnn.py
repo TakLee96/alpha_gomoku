@@ -1,8 +1,10 @@
 """ Convolutional Neural Network for Policy and Value """
 import numpy as np
 import tensorflow as tf
+from os import mkdir
 from time import time
 from scipy.io import loadmat
+from sdknet import build_network
 
 """ Hyperparameters """
 LR = 1e-3
@@ -51,60 +53,19 @@ class GomokuData():
         y_b = self.y_v[which, :]
         return X_b, y_b
 
-def build_network():
-    x = tf.placeholder(tf.float32, shape=[None, 225], name="x")
-    y_ = tf.placeholder(tf.float32, shape=[None, 225], name="y_")
-    is_training = tf.placeholder(tf.bool, name="is_training")
-    board = tf.reshape(x, [-1, 15, 15, 1])
-
-    conv_layer_1 = tf.contrib.layers.conv2d(
-        inputs=board, num_outputs=64, kernel_size=7, stride=1, padding="VALID",
-        activation_fn=None, biases_initializer=None, trainable=True,
-        weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-        weights_regularizer=tf.contrib.layers.l2_regularizer(scale=LAMBDA))
-    norm_layer_1 = tf.contrib.layers.batch_norm(
-        inputs=conv_layer_1, decay=0.9, center=True, scale=True, epsilon=EPSILON,
-        is_training=is_training, activation_fn=tf.nn.relu, trainable=True)
-
-    conv_layer_2 = tf.contrib.layers.conv2d(
-        inputs=norm_layer_1, num_outputs=16, kernel_size=1, stride=1, padding="VALID",
-        activation_fn=None, biases_initializer=None, trainable=True,
-        weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-        weights_regularizer=tf.contrib.layers.l2_regularizer(scale=LAMBDA))
-    norm_layer_2 = tf.contrib.layers.batch_norm(
-        inputs=conv_layer_2, decay=0.9, center=True, scale=True, epsilon=EPSILON,
-        is_training=is_training, activation_fn=tf.nn.relu, trainable=True)
-
-    flatten = tf.reshape(norm_layer_2, [-1, 9 * 9 * 16])
-    fc_layer_3 = tf.contrib.layers.fully_connected(
-        inputs=flatten, num_outputs=256, activation_fn=None, trainable=True,
-        weights_initializer=tf.contrib.layers.xavier_initializer(),
-        weights_regularizer=tf.contrib.layers.l2_regularizer(scale=LAMBDA))
-    norm_layer_3 = tf.contrib.layers.batch_norm(
-        inputs=fc_layer_3, decay=0.9, center=True, scale=True, epsilon=EPSILON,
-        is_training=is_training, activation_fn=tf.nn.relu, trainable=True)
-
-    y = tf.contrib.layers.fully_connected(
-        inputs=norm_layer_3, num_outputs=225, activation_fn=None, trainable=True,
-        weights_initializer=tf.contrib.layers.xavier_initializer(),
-        weights_regularizer=tf.contrib.layers.l2_regularizer(scale=LAMBDA))
-
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y), name="loss")
-    tf.train.AdamOptimizer(LR).minimize(loss, name="train_step")
-    tf.reduce_mean(tf.cast(tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1)), tf.float32), name="accuracy")
-
 def train():
     with tf.Session() as sess:
         now = time()
-        build_network()
+        name = build_network(LAMBDA, EPSILON, LR)
         sess.run(tf.global_variables_initializer())
         data = GomokuData()
         s = tf.train.Saver()
-        s.export_meta_graph("model/version_one.meta", clear_devices=True)
+        mkdir("model/%s")
+        s.export_meta_graph("model/%s/%s.meta" % (name, name), clear_devices=True)
 
         train_step = lambda x, y: sess.run("train_step", feed_dict={"x:0": x, "y_:0": y, "is_training:0": True})
         accuracy = lambda x, y: sess.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y, "is_training:0": False})
-        save = lambda i: s.save(sess, "model/version_one", global_step=i, write_meta_graph=False)
+        save = lambda i: s.save(sess, "model/%s/%s" % (name, name), global_step=i, write_meta_graph=False)
 
         for i in xrange(MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
@@ -124,4 +85,29 @@ def train():
             rates[j] = accuracy(x_t, y_t)
         print "===> validation accuracy %g (model saved)" % rates.mean()
 
-train()
+def check():
+    with tf.Session() as session:
+        data = GomokuData()
+        saver = tf.train.import_meta_graph("model/sdknet/sdknet.meta", clear_devices=True)
+        # saver.restore(session, tf.train.latest_checkpoint("model/sdknet"))
+        saver.restore(session, "model/sdknet/sdknet-25000")
+        check_size = 10 * BATCH_SIZE
+        num_checks = data.m / check_size
+        accuracy = np.zeros(shape=num_checks, dtype=float)
+        print "===> begin a total of %d patches" % num_checks
+        for i in range(num_checks):
+            x_t = data.X_t[(i * check_size):min((i+1)*check_size, data.m), :]
+            y_t = data.y_t[(i * check_size):min((i+1)*check_size, data.m), :]
+            accuracy[i] = session.run("accuracy:0", feed_dict={"x:0": x_t, "y_:0": y_t, "is_training:0": False})
+            print "patch %d has accuracy %g" % (i, accuracy[i])
+        print "===> overall test accuracy %g" % np.mean(accuracy)
+
+check()
+
+"""
+21000: 0.464068
+22000: 0.462516
+23000: 0.465442
+24000: 0.465711
+25000: 
+"""

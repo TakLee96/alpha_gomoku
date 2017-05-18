@@ -2,13 +2,12 @@
 
 import numpy as np
 
-N = 15  # board size
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]
 
 class State:
   def __init__(self):
     self.player = 1  # 1 for black and -1 for white
-    self.board = np.zeros(shape=(N, N), dtype=np.int8)
+    self.board = np.zeros(shape=(15, 15), dtype=np.int8)
     self.history = list()
     self.end = False
 
@@ -23,6 +22,22 @@ class State:
         self._count(x - dx, y - dy, -dx, -dy) >= 4:
         return True
     return False
+
+  def _build(self, x, y, dx, dy, result):
+    if 0 <= x <= 14 and 0 <= y <= 14 and self.board[x, y] == self.player:
+      result.append((x, y))
+      self._build(x + dx, y + dy, dx, dy, result)
+
+  def highlight(self, x, y):
+    assert self.end
+    for dx, dy in DIRECTIONS:
+      if self._count(x + dx, y + dy, dx, dy) + \
+        self._count(x - dx, y - dy, -dx, -dy) >= 4:
+        break
+    result = [(x, y)]
+    self._build(x + dx, y + dy,  dx,  dy, result)
+    self._build(x - dx, y - dy, -dx, -dy, result)
+    return result
 
   def move(self, x, y):
     assert self.board[x, y] == 0 and not self.end
