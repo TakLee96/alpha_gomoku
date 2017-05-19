@@ -2,9 +2,11 @@
 import numpy as np
 import tensorflow as tf
 from os import path
+from sys import argv
 from time import time
 from scipy.io import loadmat
 from deepsdknet import build_network
+
 
 """ Hyperparameters """
 LR = 1e-3
@@ -53,41 +55,43 @@ class GomokuData():
         y_b = self.y_v[which, :]
         return X_b, y_b
 
+
 def train():
-    with tf.Session() as sess:
+    with tf.Session() as session:
         now = time()
         name = build_network(LAMBDA, EPSILON, LR)
-        sess.run(tf.global_variables_initializer())
+        session.run(tf.global_variables_initializer())
         data = GomokuData()
-        s = tf.train.Saver(max_to_keep=10)
-        s.export_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"), clear_devices=True)
-
-        train_step = lambda x, y: sess.run("train_step", feed_dict={"x:0": x, "y_:0": y})
-        accuracy = lambda x, y: sess.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
-        save = lambda i: s.save(sess, path.join(path.dirname(__file__), "model", name, name), global_step=i, write_meta_graph=False)
-
+        saver = tf.train.Saver(max_to_keep=10)
+        saver.export_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
+                                clear_devices=True)
+        train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y})
+        accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
+        save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
+                                    global_step=i, write_meta_graph=False)
         for i in xrange(MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
             if i % 100 == 0:
-                print "step %d accuracy %g [%g sec]" % (i, accuracy(x_b, y_b), time() - now)
+                print("step %d accuracy %g [%g sec]" % (i, accuracy(x_b, y_b), time() - now))
                 now = time()
             train_step(x_b, y_b)
             if i % 1000 == 0:
                 save(i)
                 x_t, y_t = data.random_test(10 * BATCH_SIZE)
-                print "===> validation accuracy %g (model saved)" % accuracy(x_t, y_t)
-        
+                print("===> validation accuracy %g (model saved)" % accuracy(x_t, y_t))
         save(MAX_STEPS)
         rates = np.zeros(shape=10, dtype=float)
         for j in xrange(10):
             x_t, y_t = data.random_test(10 * BATCH_SIZE)
             rates[j] = accuracy(x_t, y_t)
-        print "===> validation accuracy %g (model saved)" % rates.mean()
+        print("===> validation accuracy %g (model saved)" % rates.mean())
+
 
 def check(name, checkpoint=None):
     with tf.Session() as session:
         data = GomokuData()
-        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"), clear_devices=True)
+        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
+                                           clear_devices=True)
         if checkpoint is None:
           saver.restore(session, tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)))
         else:
@@ -95,12 +99,74 @@ def check(name, checkpoint=None):
         check_size = 10 * BATCH_SIZE
         num_checks = data.m / check_size
         accuracy = np.zeros(shape=num_checks, dtype=float)
-        print "===> begin a total of %d patches" % num_checks
+        print("===> begin a total of %d check patches for %s-%d" % (num_checks, name, checkpoint))
         for i in range(num_checks):
             x_t = data.X_t[(i * check_size):min((i+1)*check_size, data.m), :]
             y_t = data.y_t[(i * check_size):min((i+1)*check_size, data.m), :]
-            accuracy[i] = session.run("accuracy:0", feed_dict={"x:0": x_t, "y_:0": y_t, "is_training:0": False})
-            print "patch %d has accuracy %g" % (i, accuracy[i])
-        print "===> overall test accuracy %g" % np.mean(accuracy)
+            accuracy[i] = session.run("accuracy:0", feed_dict={"x:0": x_t, "y_:0": y_t})
+            print("patch %d has accuracy %g" % (i, accuracy[i]))
+        print("===> overall test accuracy %g" % np.mean(accuracy))
 
-train()
+
+def resume(name, checkpoint=None):
+    with tf.Session() as session:
+        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
+                                           clear_devices=True)
+        if checkpoint is None:
+            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name))[-5:])
+        saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
+        data = GomokuData()
+        now = time()
+        train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y})
+        accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
+        save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
+                                    global_step=i, write_meta_graph=False)
+        for i in xrange(checkpoint+1, MAX_STEPS):
+            x_b, y_b = data.next_batch(BATCH_SIZE)
+            if i % 100 == 0:
+                print("step %d accuracy %g [%g sec]" % (i, accuracy(x_b, y_b), time() - now))
+                now = time()
+            train_step(x_b, y_b)
+            if i % 1000 == 0:
+                save(i)
+                x_t, y_t = data.random_test(10 * BATCH_SIZE)
+                print("===> validation accuracy %g (model saved)" % accuracy(x_t, y_t))
+
+        save(MAX_STEPS)
+        rates = np.zeros(shape=10, dtype=float)
+        for j in xrange(10):
+            x_t, y_t = data.random_test(10 * BATCH_SIZE)
+            rates[j] = accuracy(x_t, y_t)
+        print("===> validation accuracy %g (model saved)" % rates.mean())
+
+
+def help():
+    print("Usage: python cnn.py [train/check/resume] [model] [checkpoint]")
+
+
+if __name__ == "__main__":
+    if 2 <= len(argv) <= 4:
+        cmd = argv[1]
+        if cmd == "train":
+            if len(argv) != 2:
+                print("modify the code to train another model")
+            else:
+                train()
+        elif cmd == "check":
+            if len(argv) == 3:
+                check(argv[2], None)
+            elif len(argv) == 4:
+                check(argv[2], int(argv[3]))
+            else:
+                help()
+        elif cmd == "resume":
+            if len(argv) == 3:
+                resume(argv[2], None)
+            elif len(argv) == 4:
+                resume(argv[2], int(argv[3]))
+            else:
+                help()
+        else:
+            help()
+    else:
+        help()
