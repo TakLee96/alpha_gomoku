@@ -2,19 +2,22 @@
 import Tkinter as tk
 import numpy as np
 import tensorflow as tf
+from os import path
 from gomoku import State
+
 
 class Application(tk.Frame):
   def __init__(self, session, master):
     tk.Frame.__init__(self, master)
     self.button = list()
     self.state = State()
+    root = path.join(path.dirname(__file__), "img")
     self.image = [
-      tk.PhotoImage(file="img/empty.gif"),
-      tk.PhotoImage(file="img/naught.gif"),
-      tk.PhotoImage(file="img/yellow.gif"),
-      tk.PhotoImage(file="img/red.gif"),
-      tk.PhotoImage(file="img/cross.gif"),
+      tk.PhotoImage(file=path.join(root, "empty.gif")),
+      tk.PhotoImage(file=path.join(root, "naught.gif")),
+      tk.PhotoImage(file=path.join(root, "yellow.gif")),
+      tk.PhotoImage(file=path.join(root, "red.gif")),
+      tk.PhotoImage(file=path.join(root, "corss.gif")),
     ]
     self.pack()
     self.create_widgets()
@@ -23,10 +26,11 @@ class Application(tk.Frame):
       self.button[x*15+y].config(image=self.image[3])
 
   def recommend_moves(self):
-    prob = session.run("Reshape_1:0", feed_dict={
+    # Reshape_1:0
+    prob = session.run("y", feed_dict={
       "x:0": (self.state.player * self.state.board).reshape((1, 225)),
       "y_:0": np.zeros(shape=(1, 225)),
-      "is_training:0": False}).reshape((15, 15))
+      "is_training:0": False})
     maxv = prob.max()
     moves = list()
     location = (prob == maxv)
@@ -71,8 +75,13 @@ class Application(tk.Frame):
 
 
 with tf.Session() as session:
-  saver = tf.train.import_meta_graph("model/sdknet/sdknet.meta", clear_devices=True)
-  saver.restore(session, "model/sdknet/sdknet-25000")
+  name = "sdknet"
+  checkpoint = 25000
+  root = path.join(path.dirname(__file__), "model", name)
+  saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
+  saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
   root = tk.Tk()
+  root.wm_title("Alpha Gomoku")
+  root.focus_force()
   app = Application(session, root)
   app.mainloop()

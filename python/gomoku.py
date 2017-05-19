@@ -50,7 +50,7 @@ class State:
     return self.end
 
   def rewind(self):
-    x, y = history.pop()
+    x, y = self.history.pop()
     self.board[x, y] = 0
     if self.end:
       self.end = False

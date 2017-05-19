@@ -1,10 +1,10 @@
 """ Convolutional Neural Network for Policy and Value """
 import numpy as np
 import tensorflow as tf
-from os import mkdir
+from os import path
 from time import time
 from scipy.io import loadmat
-from sdknet import build_network
+from deepsdknet import build_network
 
 """ Hyperparameters """
 LR = 1e-3
@@ -24,7 +24,7 @@ class GomokuData():
         return y_h
 
     def __init__(self):
-        mat = loadmat("data/formatted")
+        mat = loadmat(path.join(path.dirname(__file__), "data", "formatted"))
         self.X_t = mat["X_t"]
         self.y_t = self._one_hot(mat["y_t"][0])
         self.X_v = mat["X_v"]
@@ -59,13 +59,12 @@ def train():
         name = build_network(LAMBDA, EPSILON, LR)
         sess.run(tf.global_variables_initializer())
         data = GomokuData()
-        s = tf.train.Saver()
-        mkdir("model/%s")
-        s.export_meta_graph("model/%s/%s.meta" % (name, name), clear_devices=True)
+        s = tf.train.Saver(max_to_keep=10)
+        s.export_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"), clear_devices=True)
 
-        train_step = lambda x, y: sess.run("train_step", feed_dict={"x:0": x, "y_:0": y, "is_training:0": True})
-        accuracy = lambda x, y: sess.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y, "is_training:0": False})
-        save = lambda i: s.save(sess, "model/%s/%s" % (name, name), global_step=i, write_meta_graph=False)
+        train_step = lambda x, y: sess.run("train_step", feed_dict={"x:0": x, "y_:0": y})
+        accuracy = lambda x, y: sess.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
+        save = lambda i: s.save(sess, path.join(path.dirname(__file__), "model", name, name), global_step=i, write_meta_graph=False)
 
         for i in xrange(MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
@@ -85,12 +84,14 @@ def train():
             rates[j] = accuracy(x_t, y_t)
         print "===> validation accuracy %g (model saved)" % rates.mean()
 
-def check():
+def check(name, checkpoint=None):
     with tf.Session() as session:
         data = GomokuData()
-        saver = tf.train.import_meta_graph("model/sdknet/sdknet.meta", clear_devices=True)
-        # saver.restore(session, tf.train.latest_checkpoint("model/sdknet"))
-        saver.restore(session, "model/sdknet/sdknet-25000")
+        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"), clear_devices=True)
+        if checkpoint is None:
+          saver.restore(session, tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)))
+        else:
+          saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
         check_size = 10 * BATCH_SIZE
         num_checks = data.m / check_size
         accuracy = np.zeros(shape=num_checks, dtype=float)
@@ -102,12 +103,4 @@ def check():
             print "patch %d has accuracy %g" % (i, accuracy[i])
         print "===> overall test accuracy %g" % np.mean(accuracy)
 
-check()
-
-"""
-21000: 0.464068
-22000: 0.462516
-23000: 0.465442
-24000: 0.465711
-25000: 
-"""
+train()
