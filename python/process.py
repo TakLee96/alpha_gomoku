@@ -51,7 +51,7 @@ ordering = np.random.permutation(n)
 X = X[ordering, :]
 y = y[ordering]
 
-m = n / 10
+m = n // 10
 X_v = X[:m, :]
 y_v = y[:m]
 X_t = X[m:, :]

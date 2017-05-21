@@ -69,7 +69,7 @@ def train():
         accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
         save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
                                     global_step=i, write_meta_graph=False)
-        for i in xrange(MAX_STEPS):
+        for i in range(MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
             if i % 100 == 0:
                 print("step %d accuracy %g [%g sec]" % (i, accuracy(x_b, y_b), time() - now))
@@ -81,7 +81,7 @@ def train():
                 print("===> validation accuracy %g (model saved)" % accuracy(x_t, y_t))
         save(MAX_STEPS)
         rates = np.zeros(shape=10, dtype=float)
-        for j in xrange(10):
+        for j in range(10):
             x_t, y_t = data.random_test(10 * BATCH_SIZE)
             rates[j] = accuracy(x_t, y_t)
         print("===> validation accuracy %g (model saved)" % rates.mean())
@@ -93,12 +93,11 @@ def check(name, checkpoint=None):
         saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
                                            clear_devices=True)
         if checkpoint is None:
-          saver.restore(session, tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)))
-        else:
-          saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
+            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name))[-5:])
+        saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
         check_size = 10 * BATCH_SIZE
-        num_checks = data.m / check_size
-        accuracy = np.zeros(shape=num_checks, dtype=float)
+        num_checks = data.m // check_size
+        accuracy = np.zeros(shape=num_checks, dtype=np.float)
         print("===> begin a total of %d check patches for %s-%d" % (num_checks, name, checkpoint))
         for i in range(num_checks):
             x_t = data.X_t[(i * check_size):min((i+1)*check_size, data.m), :]
@@ -121,7 +120,7 @@ def resume(name, checkpoint=None):
         accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
         save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
                                     global_step=i, write_meta_graph=False)
-        for i in xrange(checkpoint+1, MAX_STEPS):
+        for i in range(checkpoint+1, MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
             if i % 100 == 0:
                 print("step %d accuracy %g [%g sec]" % (i, accuracy(x_b, y_b), time() - now))
@@ -134,7 +133,7 @@ def resume(name, checkpoint=None):
 
         save(MAX_STEPS)
         rates = np.zeros(shape=10, dtype=float)
-        for j in xrange(10):
+        for j in range(10):
             x_t, y_t = data.random_test(10 * BATCH_SIZE)
             rates[j] = accuracy(x_t, y_t)
         print("===> validation accuracy %g (model saved)" % rates.mean())

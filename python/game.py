@@ -1,5 +1,5 @@
 """ Game GUI """
-import Tkinter as tk
+import tkinter as tk
 import numpy as np
 import tensorflow as tf
 from os import path
@@ -38,12 +38,6 @@ class Application(tk.Frame):
                 if location[i, j]:
                     moves.append((i, j))
         return moves
-
-    def interpret(self, reshaped):
-        loc = reshaped.argmax()
-        x = loc / 15
-        y = loc % 15
-        return x, y
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
