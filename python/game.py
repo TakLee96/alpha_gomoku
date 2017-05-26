@@ -1,9 +1,9 @@
-""" Game GUI """
+""" battle between agent and human """
 import tkinter as tk
 import numpy as np
 import tensorflow as tf
-from os import path
-from gomoku import State
+from os import path, system
+from state import State
 
 
 changes = [
@@ -66,10 +66,7 @@ class Application(tk.Frame):
     def draw_probability(self):
         max_prob = self.recommended_moves[0][2]
         for x, y, p in self.recommended_moves:
-            if np.isclose(p, max_prob):
-                color = "red"
-            else:
-                color = "yellow"
+            color = "red" if np.isclose(p, max_prob) else "yellow"
             self.button[x * 15 + y].config(image="", text="%.2f" % p, bg=color)
 
     def highlight(self, x, y):
@@ -105,14 +102,14 @@ class Application(tk.Frame):
 
 def run():
     with tf.Session() as session:
-        name = "deepsdknet"
-        checkpoint = 30000
+        name = "godsdknet"
+        checkpoint = 17000
         root = path.join(path.dirname(__file__), "model", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
         root = tk.Tk()
         root.wm_title("Alpha Gomoku")
-        root.focus_force()
+        root.attributes("-topmost", True)
         app = Application(session, root)
         app.mainloop()
 

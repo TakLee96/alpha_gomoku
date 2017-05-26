@@ -1,11 +1,11 @@
-""" Convolutional Neural Network for Policy and Value """
+""" neural network training """
 import numpy as np
 import tensorflow as tf
 from os import path
 from sys import argv
 from time import time
 from scipy.io import loadmat
-from deepsdknet import build_network
+from network.policy.deepsdknet import build_network
 
 
 """ Hyperparameters """
@@ -93,7 +93,7 @@ def check(name, checkpoint=None):
         saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
                                            clear_devices=True)
         if checkpoint is None:
-            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name))[-5:])
+            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)).split("-")[-1])
         saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
         check_size = 10 * BATCH_SIZE
         num_checks = data.m // check_size
@@ -112,7 +112,7 @@ def resume(name, checkpoint=None):
         saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
                                            clear_devices=True)
         if checkpoint is None:
-            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name))[-5:])
+            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)).split("-")[-1])
         saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
         data = GomokuData()
         now = time()
@@ -140,7 +140,7 @@ def resume(name, checkpoint=None):
 
 
 def help():
-    print("Usage: python cnn.py [train/check/resume] [model] [checkpoint]")
+    print("Usage: python train.py [train/check/resume] [model] [checkpoint]")
 
 
 if __name__ == "__main__":
