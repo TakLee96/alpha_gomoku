@@ -1,5 +1,6 @@
 """ gomoku game state representation """
 import numpy as np
+from feature import diff, defaultdict
 
 
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]
@@ -10,6 +11,7 @@ class State:
         self.player = 1    # 1 for black and -1 for white
         self.board = np.zeros(shape=(15, 15), dtype=np.int8)
         self.history = list()
+        self.features = defaultdict()
         self.end = False
 
     def _count(self, x, y, dx, dy):
@@ -40,8 +42,12 @@ class State:
         self._build(x - dx, y - dy, -dx, -dy, result)
         return result
 
+    def features(self):
+        return self.features
+
     def move(self, x, y):
         assert self.board[x, y] == 0 and not self.end
+        self.features.add(diff(self, x, y))
         self.board[x, y] = self.player
         self.history.append((x, y))
         if self._win(x, y):
@@ -53,6 +59,7 @@ class State:
     def rewind(self):
         x, y = self.history.pop()
         self.board[x, y] = 0
+        self.features.sub(diff(self, x, y))
         if self.end:
             self.end = False
         else:
