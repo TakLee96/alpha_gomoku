@@ -81,7 +81,7 @@ def check(state, x, y, dx, dy, features):
     elif state.board[posX, posY] == who and state.board[negX, negY] == who:
         check_connection(state, x, y, dx, dy, features)
     elif state.board[posX, posY] == (-who) and state.board[negX, negY] == (-who):
-        check_disconnection(state, x, y, dx, dy, count)
+        check_disconnection(state, x, y, dx, dy, features)
     elif (state.board[posX, posY] == who and state.board[negX, negY] == (-who)) or \
          (state.board[posX, posY] == (-who) and state.board[negX, negY] == who):
         check_only(state, x, y, dx, dy, features)
@@ -226,7 +226,7 @@ def check_connection(state, x, y, dx, dy, features):
 def check_disconnection(state, x, y, dx, dy, features):
     left = left_helper(state, x, y, dx, dy)
     right = right_helper(state, x, y, dx, dy)
-    one = "o" if who > 0 else "x"
+    one = "o" if state.player > 0 else "x"
     old = format(left + "-" + right)
     features[old] -= 1
     new_left = format(left + one)

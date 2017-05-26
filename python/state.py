@@ -21,8 +21,16 @@ class State:
 
     def _win(self, x, y):
         for dx, dy in DIRECTIONS:
+            count = self._count(x + dx, y + dy, dx, dy) + \
+                self._count(x - dx, y - dy, -dx, -dy)
+            if count == 4 or (count > 4 and self.player == -1):
+                return True
+        return False
+
+    def _long(self, x, y):
+        for dx, dy in DIRECTIONS:
             if self._count(x + dx, y + dy, dx, dy) + \
-                self._count(x - dx, y - dy, -dx, -dy) >= 4:
+                self._count(x - dx, y - dy, -dx, -dy) > 4:
                 return True
         return False
 
@@ -38,21 +46,22 @@ class State:
                 self._count(x - dx, y - dy, -dx, -dy) >= 4:
                 break
         result = [(x, y)]
-        self._build(x + dx, y + dy,    dx,    dy, result)
+        self._build(x + dx, y + dy,  dx,  dy, result)
         self._build(x - dx, y - dy, -dx, -dy, result)
         return result
 
-    def features(self):
-        return self.features
-
     def move(self, x, y):
         assert self.board[x, y] == 0 and not self.end
-        self.features.add(diff(self, x, y))
+        new = diff(self, x, y)
+        self.features.add(new)
         self.board[x, y] = self.player
         self.history.append((x, y))
         if self._win(x, y):
             self.end = True
         else:
+            if new["-o-oo-"] + new["-ooo-"] >= 2 or \
+                new["four-o"] + new["-oooo-"] >= 2 or self._long(x, y):
+                self.end = True
             self.player = -self.player
         return self.end
 

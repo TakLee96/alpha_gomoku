@@ -5,6 +5,7 @@ import tensorflow as tf
 import multiprocessing as mp
 from os import path
 from state import State
+from feature import diff
 
 
 changes = [
@@ -54,37 +55,47 @@ class Agent(mp.Process):
                         prob = reverses[i](np.exp(prob - prob.max())) * (state.board == 0)
                         prob = prob / prob.sum()
                         mean += prob.reshape(225)
+                    if state.player == 1:
+                        for i in range(15):
+                            for j in range(15):
+                                new = diff(state, i, j)
+                                if new["-o-oo-"] + new["-ooo-"] >= 2 or \
+                                    new["four-o"] + new["-oooo-"] >= 2 or state._long(i, j):
+                                    mean[i*15+j] = 0
                     mean = mean / mean.sum()
                     action = np.unravel_index(np.random.choice(225, p=mean), (15, 15))
                     self.action_queue.put(action)
 
 
 if __name__ == "__main__":
-    states = [None, mp.Queue(), mp.Queue()]
-    names = [None, "deepsdknet", "godsdknet"]
-    print("black: " + names[1])
-    print("white: " + names[-1])
-    actions = mp.Queue()
-    players = [Agent(states[i], actions, names[i], "y:0") for i in [1, -1]]
-    for player in players:
-        player.start()
-    win_count = [0, 0, 0]
-    end_symbl = ["v", "o", "x"]
-    for _ in range(100):
-        state = State()
-        while not state.end and len(state.history) != 225:
-            states[state.player].put(state)
-            x, y = actions.get()
-            state.move(x, y)
-            sys.stdout.write(".")
-        if state.end:
-            win_count[state.player] += 1
-            print(end_symbl[state.player])
-        else:
-            win_count[0] += 1
-            print(end_symbl[0])
-    states[1].put(None)
-    states[-1].put(None)
-    print("black wins %d games" % win_count[1])
-    print("white wins %d games" % win_count[-1])
-    print("there are %d draws" % win_count[0])
+    if len(sys.argv) != 3:
+        print("Usage: python battle.py [black] [white]")
+    else:
+        states = [None, mp.Queue(), mp.Queue()]
+        names = [None, sys.argv[1], sys.argv[2]]
+        print("black: " + names[1])
+        print("white: " + names[-1])
+        actions = mp.Queue()
+        players = [Agent(states[i], actions, names[i], "y:0") for i in [1, -1]]
+        for player in players:
+            player.start()
+        win_count = [0, 0, 0]
+        end_symbl = ["v", "o", "x"]
+        for _ in range(100):
+            state = State()
+            while not state.end and len(state.history) != 225:
+                states[state.player].put(state)
+                x, y = actions.get()
+                state.move(x, y)
+                sys.stdout.write(".")
+            if state.end:
+                win_count[state.player] += 1
+                print(end_symbl[state.player])
+            else:
+                win_count[0] += 1
+                print(end_symbl[0])
+        states[1].put(None)
+        states[-1].put(None)
+        print("black wins %d games" % win_count[1])
+        print("white wins %d games" % win_count[-1])
+        print("there are %d draws" % win_count[0])

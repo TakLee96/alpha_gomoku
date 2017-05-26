@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from os import path, system
 from state import State
+from feature import diff
 
 
 changes = [
@@ -55,6 +56,13 @@ class Application(tk.Frame):
             prob = reverses[i](np.exp(prob - prob.max())) * (self.state.board == 0)
             prob = prob / prob.sum()
             mean += prob.reshape(225)
+        if self.state.player == 1:
+            for i in range(15):
+                for j in range(15):
+                    new = diff(self.state, i, j)
+                    if new["-o-oo-"] + new["-ooo-"] >= 2 or \
+                        new["four-o"] + new["-oooo-"] >= 2 or self.state._long(i, j):
+                        mean[i*15+j] = 0
         mean = mean / mean.sum()
         moves = mean.argsort()[::-1]
         result = list()
@@ -71,7 +79,7 @@ class Application(tk.Frame):
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
-            self.frames[i*15+j].config(padx=1, pady=1, bg="green")
+            self.frames[i*15+j].config(padx=1, pady=1, bg="blue")
 
     def click(self, i, j):
         def respond(e):
@@ -81,7 +89,10 @@ class Application(tk.Frame):
                 for x, y, _ in self.recommended_moves:
                     self.button[x*15+y].config(image=self.image[self.state.board[x, y]])
                 if self.state.end:
-                    self.highlight(i, j)
+                    if self.state._win(i, j):
+                        self.highlight(i, j)
+                    else:
+                        self.frames[i*15+j].config(padx=1, pady=1, bg="red")
                 else:
                     self.recommended_moves = self.recommend_moves()
                     self.draw_probability()
