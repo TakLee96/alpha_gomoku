@@ -63,8 +63,8 @@ class Application(tk.Frame):
 def run():
     with tf.Session() as session:
         name = "qbtnet-black"
-        checkpoint = 16000
-        root = path.join(path.dirname(__file__), "model", name)
+        checkpoint = 4000
+        root = path.join(path.dirname(__file__), "model", "value", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
         root = tk.Tk()

@@ -63,12 +63,11 @@ def train():
         session.run(tf.global_variables_initializer())
         data = GomokuData()
         saver = tf.train.Saver(max_to_keep=10)
-        saver.export_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
-                                clear_devices=True)
+        root = path.join(path.dirname(__file__), "model", "policy", name)
+        saver.export_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y})
         accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
-        save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
-                                    global_step=i, write_meta_graph=False)
+        save = lambda i: saver.save(session, path.join(root, name), global_step=i, write_meta_graph=False)
         for i in range(MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
             if i % 100 == 0:
@@ -90,11 +89,11 @@ def train():
 def check(name, checkpoint=None):
     with tf.Session() as session:
         data = GomokuData()
-        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
-                                           clear_devices=True)
+        root = path.join(path.dirname(__file__), "model", "policy", name)
+        saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
-            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)).split("-")[-1])
-        saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
+            checkpoint = int(tf.train.latest_checkpoint(root).split("-")[-1])
+        saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
         check_size = 10 * BATCH_SIZE
         num_checks = data.m // check_size
         accuracy = np.zeros(shape=num_checks, dtype=np.float)
@@ -109,17 +108,16 @@ def check(name, checkpoint=None):
 
 def resume(name, checkpoint=None):
     with tf.Session() as session:
-        saver = tf.train.import_meta_graph(path.join(path.dirname(__file__), "model", name, name + ".meta"),
-                                           clear_devices=True)
+        root = path.join(path.dirname(__file__), "model", "policy", name)
+        saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
-            checkpoint = int(tf.train.latest_checkpoint(path.join(path.dirname(__file__), "model", name)).split("-")[-1])
-        saver.restore(session, path.join(path.dirname(__file__), "model", name, name + "-" + str(checkpoint)))
+            checkpoint = int(tf.train.latest_checkpoint(root).split("-")[-1])
+        saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
         data = GomokuData()
         now = time()
         train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y})
         accuracy = lambda x, y: session.run("accuracy:0", feed_dict={"x:0": x, "y_:0": y})
-        save = lambda i: saver.save(session, path.join(path.dirname(__file__), "model", name, name),
-                                    global_step=i, write_meta_graph=False)
+        save = lambda i: saver.save(session, path.join(root, name), global_step=i, write_meta_graph=False)
         for i in range(checkpoint+1, MAX_STEPS):
             x_b, y_b = data.next_batch(BATCH_SIZE)
             if i % 100 == 0:
@@ -140,7 +138,7 @@ def resume(name, checkpoint=None):
 
 
 def help():
-    print("Usage: python classify.py [train/check/resume] [model] [checkpoint]")
+    print("Usage: python policy.py [train/check/resume] [model] [checkpoint]")
 
 
 if __name__ == "__main__":

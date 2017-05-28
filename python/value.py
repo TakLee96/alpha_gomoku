@@ -49,7 +49,7 @@ def train(which):
         name = build_network(LAMBDA, LR) + "-" + which
         session.run(tf.global_variables_initializer())
         data = GameData(which)
-        root = path.join(path.dirname(__file__), "model", name)
+        root = path.join(path.dirname(__file__), "model", "value", name)
         saver = tf.train.Saver(max_to_keep=10)
         saver.export_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y.reshape((len(y), 1))})
@@ -72,25 +72,27 @@ def train(which):
 def check(which, name, checkpoint=None):
     with tf.Session() as session:
         data = GameData(which)
-        root = path.join(path.dirname(__file__), "model", name)
+        name = name + "-" + which
+        root = path.join(path.dirname(__file__), "model", "value", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
             checkpoint = int(tf.train.latest_checkpoint(root).split("-")[-1])
         saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
-        loss = session.run("loss:0", feed_dict={"x:0": data.X_v, "y_:0": y_v})
-        print("===> validation loss %g (model saved)" % loss)
+        loss = lambda x, y: session.run("loss:0", feed_dict={"x:0": x, "y_:0": y.reshape((len(y), 1))})
+        print("===> validation loss %g (model saved)" % loss(data.X_v, data.y_v))
 
 
 def resume(which, name, checkpoint=None):
     with tf.Session() as session:
-        root = path.join(path.dirname(__file__), "model", name)
+        name = name + "-" + which
+        root = path.join(path.dirname(__file__), "model", "value", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
             checkpoint = int(tf.train.latest_checkpoint(root).split("-")[-1])
         saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
         data = GameData(which)
-        train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y})
-        loss = lambda x, y: session.run("loss:0", feed_dict={"x:0": x, "y_:0": y})
+        train_step = lambda x, y: session.run("train_step", feed_dict={"x:0": x, "y_:0": y.reshape((len(y), 1))})
+        loss = lambda x, y: session.run("loss:0", feed_dict={"x:0": x, "y_:0": y.reshape((len(y), 1))})
         save = lambda i: saver.save(session, path.join(root, name), global_step=i, write_meta_graph=False)
         now = time()
         for i in range(checkpoint+1, MAX_STEPS):
@@ -107,7 +109,7 @@ def resume(which, name, checkpoint=None):
 
 
 def help():
-    print("Usage: python regression.py [train/check/resume] [black/white] [model] [checkpoint]")
+    print("Usage: python value.py [train/check/resume] [black/white] [model] [checkpoint]")
 
 
 if __name__ == "__main__":
@@ -115,7 +117,7 @@ if __name__ == "__main__":
         cmd = argv[1]
         if cmd == "train":
             if len(argv) != 3:
-                print("Usage: python regression.py train [black/white]")
+                print("Usage: python value.py train [black/white]")
             else:
                 train(argv[2])
         elif cmd == "check":
