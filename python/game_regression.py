@@ -7,28 +7,6 @@ from state import State
 from feature import diff
 
 
-changes = [
-    lambda b: b,
-    lambda b: b.T,
-    lambda b: b[:, ::-1],
-    lambda b: b[::-1, :],
-    lambda b: b[::-1, ::-1],
-    lambda b: b.T[:, ::-1],
-    lambda b: b.T[::-1, :],
-    lambda b: b.T[::-1, ::-1],
-]
-reverses = [
-    lambda p: p,
-    lambda p: p.T,
-    lambda p: p[:, ::-1],
-    lambda p: p[::-1, :],
-    lambda p: p[::-1, ::-1],
-    lambda p: p[:, ::-1].T,
-    lambda p: p[::-1, :].T,
-    lambda p: p[::-1, ::-1].T,
-]
-
-
 class Application(tk.Frame):
     def __init__(self, session, master):
         tk.Frame.__init__(self, master)
@@ -44,38 +22,12 @@ class Application(tk.Frame):
         self.session = session
         self.pack()
         self.create_widgets()
-        self.recommended_moves = self.recommend_moves()
         self.draw_probability()
 
-    def recommend_moves(self):
-        mean = np.zeros(shape=225, dtype=float)
-        for i in range(8):
-            prob = self.session.run(tensor_name, feed_dict={
-                "x:0": changes[i](self.state.player * self.state.board).reshape((1, 225)),
-                "y_:0": np.zeros(shape=(1, 225))}).reshape((15, 15))
-            prob = reverses[i](np.exp(prob - prob.max())) * (self.state.board == 0)
-            prob = prob / prob.sum()
-            mean += prob.reshape(225)
-        if self.state.player == 1:
-            for i in range(15):
-                for j in range(15):
-                    new = diff(self.state, i, j)
-                    if new["-o-oo-"] + new["-ooo-"] >= 2 or \
-                        new["four-o"] + new["-oooo-"] >= 2 or self.state._long(i, j):
-                        mean[i*15+j] = 0
-        mean = mean / mean.sum()
-        moves = mean.argsort()[::-1]
-        result = list()
-        while mean[moves[len(result)]] > 0.01:
-            x, y = np.unravel_index(moves[len(result)], (15, 15))
-            result.append((x, y, mean[moves[len(result)]]))
-        return result
-
     def draw_probability(self):
-        max_prob = self.recommended_moves[0][2]
-        for x, y, p in self.recommended_moves:
-            color = "red" if np.isclose(p, max_prob) else "yellow"
-            self.button[x * 15 + y].config(image="", text="%.2f" % p, bg=color)
+        if self.state.player == 1:
+            y = self.session.run("y:0", feed_dict={"x:0": self.state.board.reshape((1, 225)), "y_:0": np.zeros(shape=(1, 1))})
+            print("winning probability for black: {0}%".format((y[0, 0] + 1) * 50))
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
@@ -86,15 +38,12 @@ class Application(tk.Frame):
             if not self.state.end and self.state.board[i, j] == 0:
                 self.button[i*15+j].config(image=self.image[self.state.player])
                 self.state.move(i, j)
-                for x, y, _ in self.recommended_moves:
-                    self.button[x*15+y].config(image=self.image[self.state.board[x, y]])
                 if self.state.end:
                     if self.state._win(i, j):
                         self.highlight(i, j)
                     else:
                         self.frames[i*15+j].config(padx=1, pady=1, bg="red")
                 else:
-                    self.recommended_moves = self.recommend_moves()
                     self.draw_probability()
         return respond
 
@@ -113,8 +62,8 @@ class Application(tk.Frame):
 
 def run():
     with tf.Session() as session:
-        name = "widesdknet"
-        checkpoint = 10000
+        name = "qbtnet-black"
+        checkpoint = 16000
         root = path.join(path.dirname(__file__), "model", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         saver.restore(session, path.join(root, name + "-" + str(checkpoint)))
@@ -125,5 +74,4 @@ def run():
         app.mainloop()
 
 
-tensor_name = "y:0"  # "Reshape_1:0" for sdknet
 run()

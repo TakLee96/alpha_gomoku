@@ -1,6 +1,7 @@
 """ visualize games from dataset """
 import tkinter as tk
 import codecs
+import pickle
 from os import path
 from sys import argv
 from state import State
@@ -61,14 +62,20 @@ def get_move(string):
   return (convert(string[2]), convert(string[3]))
 
 if __name__ == "__main__":
-    if len(argv) != 2:
-        print("Usage: python visualize.py [game number]")
+    if len(argv) != 3:
+        print("Usage: python visualize.py [folder] [number]")
     else:
-        directory = path.join(path.dirname(__file__), "data", "raw")
-        with codecs.open(path.join(directory, "%.04d.sgf" % int(argv[1])), "r", encoding='utf-8', errors='ignore') as file:
-            string = file.read().strip()
-            index = string.find(";B[")
-            moves = list(map(get_move, string[(index+1):-2].split(";")))
+        directory = path.join(path.dirname(__file__), "data", argv[1])
+        if argv[1] == "raw":
+            with codecs.open(path.join(directory, "%.04d.sgf" % int(argv[2])), "r", encoding='utf-8', errors='ignore') as file:
+                string = file.read().strip()
+                index = string.find(";B[")
+                moves = list(map(get_move, string[(index+1):-2].split(";")))
+        elif argv[1] == "godsdknet":
+            with open(path.join(directory, "%.04d.pkl" % int(argv[2])), "rb") as file:
+                moves = pickle.load(file)["history"]
+        else:
+            raise Exception("raw or godsdknet")
         root = tk.Tk()
         root.wm_title("Game " + argv[1])
         root.attributes("-topmost", True)

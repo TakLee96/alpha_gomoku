@@ -1,5 +1,6 @@
 """ battle between agents """
 import sys
+import pickle
 import numpy as np
 import tensorflow as tf
 import multiprocessing as mp
@@ -68,11 +69,11 @@ class Agent(mp.Process):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python battle.py [black] [white]")
+    if len(sys.argv) != 5 or sys.argv[1] not in ("fight", "save"):
+        print("Usage: python battle.py [fight/save] [iterations] [black] [white]")
     else:
         states = [None, mp.Queue(), mp.Queue()]
-        names = [None, sys.argv[1], sys.argv[2]]
+        names = [None, sys.argv[3], sys.argv[4]]
         print("black: " + names[1])
         print("white: " + names[-1])
         actions = mp.Queue()
@@ -81,8 +82,9 @@ if __name__ == "__main__":
             player.start()
         win_count = [0, 0, 0]
         end_symbl = ["v", "o", "x"]
-        for _ in range(100):
+        for j in range(int(sys.argv[2])):
             state = State()
+            sys.stdout.write("%.4d " % j)
             while not state.end and len(state.history) != 225:
                 states[state.player].put(state)
                 x, y = actions.get()
@@ -94,8 +96,16 @@ if __name__ == "__main__":
             else:
                 win_count[0] += 1
                 print(end_symbl[0])
+            if sys.argv[1] == "save":
+                with open(path.join(path.dirname(__file__), "data", names[1], "%.4d.pkl" % j), "wb") as out:
+                    pickle.dump({
+                        "history": state.history,
+                        "winner": state.player if state.end else 0 }, out)
+
         states[1].put(None)
         states[-1].put(None)
+        print("black: " + names[1])
+        print("white: " + names[-1])
         print("black wins %d games" % win_count[1])
         print("white wins %d games" % win_count[-1])
         print("there are %d draws" % win_count[0])

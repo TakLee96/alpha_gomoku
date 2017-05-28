@@ -140,7 +140,7 @@ def resume(name, checkpoint=None):
 
 
 def help():
-    print("Usage: python train.py [train/check/resume] [model] [checkpoint]")
+    print("Usage: python classify.py [train/check/resume] [model] [checkpoint]")
 
 
 if __name__ == "__main__":
