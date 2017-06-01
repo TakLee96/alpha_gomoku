@@ -27,20 +27,20 @@ class Application(tk.Frame):
         self.draw_probability()
 
     def draw_probability(self):
-        # for i in range(15):
-        #     for j in range(15):
-        #         if self.state.board[i, j] == 0:
-        #             new = diff(self.state, i, j)
-        #             if new["-o-oo-"] + new["-ooo-"] >= 2 or \
-        #                 new["four-o"] + new["-oooo-"] >= 2 or self.state._long(i, j):
-        #                 self.button[i * 15 + j].config(image="", text="%.2f" % -1)
-        #             else:
-        #                 self.state.move(i, j)
-        #                 self.state_queue[self.state.player].put(self.state)
-        #                 self.button[i * 15 + j].config(image="", text="%.2f" % self.value_queue.get())
-        #                 self.state.rewind()
-        self.state_queue[self.state.player].put(self.state)
-        print(self.value_queue.get()[0, 0])
+        for i in range(15):
+            for j in range(15):
+                if self.state.board[i, j] == 0:
+                    new = diff(self.state, i, j)
+                    if new["-o-oo-"] + new["-ooo-"] >= 2 or \
+                        new["four-o"] + new["-oooo-"] >= 2 or self.state._long(i, j):
+                        self.button[i * 15 + j].config(image="", text="%.2f" % -1)
+                    else:
+                        self.state.move(i, j)
+                        self.state_queue[self.state.player].put(self.state)
+                        self.button[i * 15 + j].config(image="", text="%.2f" % self.value_queue.get())
+                        self.state.rewind()
+        # self.state_queue[self.state.player].put(self.state)
+        # print(self.value_queue.get()[0, 0])
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):

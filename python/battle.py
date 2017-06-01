@@ -41,7 +41,7 @@ class Agent(mp.Process):
 
     def run(self):
         with tf.Session() as session:
-            root = path.join(path.dirname(__file__), "model", "policy" self.name)
+            root = path.join(path.dirname(__file__), "model", "policy", self.name)
             saver = tf.train.import_meta_graph(path.join(root, self.name + ".meta"), clear_devices=True)
             saver.restore(session, tf.train.latest_checkpoint(root))
             while True:
