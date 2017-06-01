@@ -74,8 +74,11 @@ if __name__ == "__main__":
         elif argv[1] == "godsdknet":
             with open(path.join(directory, "%.04d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
+        elif argv[1] == "reinforce":
+            with open(path.join(directory, "%d.pkl" % int(argv[2])), "rb") as file:
+                moves = pickle.load(file)["history"]
         else:
-            raise Exception("raw or godsdknet")
+            raise Exception("raw or godsdknet or reinforce")
         root = tk.Tk()
         root.wm_title("Game " + argv[1])
         root.attributes("-topmost", True)
