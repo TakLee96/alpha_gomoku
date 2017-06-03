@@ -98,7 +98,7 @@ class Agent(mp.Process):
 def run():
     states = [None, mp.Queue(), mp.Queue()]
     values = mp.Queue()
-    players = [Agent(states[1], values, "qbtnet-black"), Agent(states[-1], values, "qbtnet-white")]
+    players = [Agent(states[1], values, "qbtnet-new-black"), Agent(states[-1], values, "qbtnet-new-white")]
     for player in players:
         player.start()
     root = tk.Tk()

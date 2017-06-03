@@ -2,9 +2,15 @@ import pickle
 import numpy as np
 import tensorflow as tf
 import multiprocessing as mp
+from sys import argv
 from state import State
 from itertools import count
 from os import path, listdir
+
+
+GAMES_PER_SAVE = 50
+BUFFER_SIZE = 10000
+BATCH_SIZE = 50
 
 
 class TFRunner(mp.Process):
@@ -19,7 +25,6 @@ class TFRunner(mp.Process):
             root = path.join(path.dirname(__file__), "model", "reinforce", self.name)
             saver = tf.train.import_meta_graph(path.join(root, self.name + ".meta"), clear_devices=True)
             saver.restore(session, tf.train.latest_checkpoint(root))
-            saver = tf.train.Saver(max_to_keep=100)
             while True:
                 state = self.state_queue.get()
                 if state is None:
@@ -91,29 +96,29 @@ def game_status(state):
 
 class ReplayBuffer:
     def __init__(self):
-        self.black_board_buffer = np.ndarray(shape=(50000, 225), dtype=float)
-        self.white_board_buffer = np.ndarray(shape=(50000, 225), dtype=float)
-        self.black_score_buffer = np.ndarray(shape=(50000, 1), dtype=float)
-        self.white_score_buffer = np.ndarray(shape=(50000, 1), dtype=float)
+        self.black_board_buffer = np.ndarray(shape=(BUFFER_SIZE, 225), dtype=float)
+        self.white_board_buffer = np.ndarray(shape=(BUFFER_SIZE, 225), dtype=float)
+        self.black_score_buffer = np.ndarray(shape=(BUFFER_SIZE, 1), dtype=float)
+        self.white_score_buffer = np.ndarray(shape=(BUFFER_SIZE, 1), dtype=float)
         self.black_size = 0
         self.white_size = 0
         self.black_index = 0
         self.white_index = 0
 
     def ready(self):
-        return self.black_size >= 50000 and self.white_size >= 50000
+        return self.black_size >= BUFFER_SIZE and self.white_size >= BUFFER_SIZE
 
     def _black_append(self, board, score):
         self.black_board_buffer[self.black_index] = board.reshape(225)
         self.black_score_buffer[self.black_index] = score
         self.black_size += 1
-        self.black_index = (self.black_index + 1) % 50000
+        self.black_index = (self.black_index + 1) % BUFFER_SIZE
 
     def _white_append(self, board, score):
         self.white_board_buffer[self.white_index] = board.reshape(225)
         self.white_score_buffer[self.white_index] = score
         self.white_size += 1
-        self.white_index = (self.white_index + 1) % 50000
+        self.white_index = (self.white_index + 1) % BUFFER_SIZE
 
     def _add(self, moves, winner):
         state = State()
@@ -121,16 +126,10 @@ class ReplayBuffer:
         for i, (x, y) in enumerate(moves):
             state.move(x, y)
             board = np.copy(state.board)
-            if winner == 0:
-                score = 0
-            elif i == len(moves) - 1 or i == len(moves) - 2:
-                score = winner
+            if i % 2 == 1:
+                self._black_append(board, winner)
             else:
-                score = winner * (0.9 ** (len(moves) - 2 - i))
-            if state.player == 1:
-                self._black_append(board, score)
-            else:
-                self._white_append(board, score)
+                self._white_append(board, winner)
 
     def add(self, state):
         moves = state.history
@@ -138,8 +137,8 @@ class ReplayBuffer:
         self._add(moves, winner)
 
     def sample(self):
-        which_black = np.random.choice(50000, 500, replace=False)
-        which_white = np.random.choice(50000, 500, replace=False)
+        which_black = np.random.choice(BUFFER_SIZE, BATCH_SIZE, replace=False)
+        which_white = np.random.choice(BUFFER_SIZE, BATCH_SIZE, replace=False)
         black_X = self.black_board_buffer[which_black, :]
         black_y = self.black_score_buffer[which_black, :]
         white_X = self.white_board_buffer[which_white, :]
@@ -150,7 +149,7 @@ class ReplayBuffer:
 def train(buff=ReplayBuffer(), start=0):
     agent = Agent()
     for i in count(start):
-        if buff.ready() and i % 50 == 0:
+        if buff.ready() and i % GAMES_PER_SAVE == 0:
             agent.save(i)
             print("model checkpoint %d" % i)
         state = State()
@@ -186,4 +185,16 @@ def resume():
     train(buff, max_iter+1)
 
 
-resume()
+def help():
+    print("Usage: python reinforce_value.py [train/resume]")
+
+
+if __name__ == "__main__":
+    if len(argv) != 2 or argv[1] not in ("train", "resume"):
+        print("Usage: python reinforce_value.py [train/resume]")
+    elif argv[1] == "train":
+        train()
+    elif argv[1] == "resume":
+        resume()
+    else:
+        raise Exception("implementation error")

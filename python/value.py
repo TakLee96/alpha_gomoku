@@ -11,7 +11,7 @@ from network.value.qbtnet import build_network
 """ Hyperparameters """
 LR = 1e-3
 LAMBDA = 1e-3
-MAX_STEPS = 30000
+MAX_STEPS = 12000
 BATCH_SIZE = 500
 
 
@@ -46,7 +46,7 @@ class GameData():
 
 def train(which):
     with tf.Session() as session:
-        name = build_network(LAMBDA, LR) + "-" + which
+        name = build_network(LAMBDA, LR) + "-new-" + which
         session.run(tf.global_variables_initializer())
         data = GameData(which)
         root = path.join(path.dirname(__file__), "model", "value", name)

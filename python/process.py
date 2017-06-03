@@ -85,10 +85,10 @@ def godsdknet():
                 state.move(x, y)
                 if i % 2 == 0:
                     white_boards.append(np.copy(state.board.reshape(225)))
-                    white_scores.append(winner * (0.9 ** (len(moves) - i - 1)))
+                    white_scores.append(winner)
                 else:
                     black_boards.append(np.copy(state.board.reshape(225)))
-                    black_scores.append(winner * (0.9 ** (len(moves) - i - 1)))
+                    black_scores.append(winner)
     black_boards = np.array(black_boards)
     black_scores = np.array(black_scores)
     white_boards = np.array(white_boards)

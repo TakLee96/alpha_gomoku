@@ -68,10 +68,9 @@ class State:
     def rewind(self):
         x, y = self.history.pop()
         self.board[x, y] = 0
-        self.features.sub(diff(self, x, y))
-        if self.end:
-            self.end = False
         self.player = 1 if len(self.history) % 2 == 0 else -1
+        self.features.sub(diff(self, x, y))
+        self.end = False
 
     def __str__(self):
         return str(self.board).replace("-1", "x").replace(" 1", "o").replace(" 0", "+")
