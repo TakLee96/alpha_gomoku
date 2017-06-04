@@ -5,12 +5,12 @@ from os import path
 from sys import argv
 from time import time
 from scipy.io import loadmat
-from network.policy.deepsdknet import build_network
+from network.policy.gonet import build_network
 
 
 """ Hyperparameters """
 LR = 1e-3
-LAMBDA = 1e-3
+LAMBDA = 1e-6
 EPSILON = 1e-7
 MAX_STEPS = 30000
 BATCH_SIZE = 500
@@ -25,8 +25,8 @@ class GomokuData():
             y_h[i, y[i]] = 1.0
         return y_h
 
-    def __init__(self):
-        mat = loadmat(path.join(path.dirname(__file__), "data", "formatted"))
+    def __init__(self, which):
+        mat = loadmat(path.join(path.dirname(__file__), "data", "policy_" + which))
         self.X_t = mat["X_t"]
         self.y_t = self._one_hot(mat["y_t"][0])
         self.X_v = mat["X_v"]
@@ -56,12 +56,12 @@ class GomokuData():
         return X_b, y_b
 
 
-def train():
+def train(which):
     with tf.Session() as session:
         now = time()
-        name = build_network(LAMBDA, EPSILON, LR)
+        name = build_network(LAMBDA, EPSILON, LR) + "-" + which
         session.run(tf.global_variables_initializer())
-        data = GomokuData()
+        data = GomokuData(which)
         saver = tf.train.Saver(max_to_keep=10)
         root = path.join(path.dirname(__file__), "model", "policy", name)
         saver.export_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
@@ -86,9 +86,10 @@ def train():
         print("===> validation accuracy %g (model saved)" % rates.mean())
 
 
-def check(name, checkpoint=None):
+def check(which, name, checkpoint=None):
     with tf.Session() as session:
-        data = GomokuData()
+        data = GomokuData(which)
+        name = name + "-" + which
         root = path.join(path.dirname(__file__), "model", "policy", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
@@ -106,8 +107,9 @@ def check(name, checkpoint=None):
         print("===> overall test accuracy %g" % np.mean(accuracy))
 
 
-def resume(name, checkpoint=None):
+def resume(which, name, checkpoint=None):
     with tf.Session() as session:
+        name = name + "-" + which
         root = path.join(path.dirname(__file__), "model", "policy", name)
         saver = tf.train.import_meta_graph(path.join(root, name + ".meta"), clear_devices=True)
         if checkpoint is None:
@@ -138,29 +140,32 @@ def resume(name, checkpoint=None):
 
 
 def help():
-    print("Usage: python policy.py [train/check/resume] [model] [checkpoint]")
+    print("Usage: python policy.py [train/check/resume] [black/white] [model] [checkpoint]")
 
 
 if __name__ == "__main__":
-    if 2 <= len(argv) <= 4:
+    if 3 <= len(argv) <= 5:
         cmd = argv[1]
-        if cmd == "train":
-            if len(argv) != 2:
+        which = argv[2]
+        if which not in ("black", "white"):
+            help()
+        elif cmd == "train":
+            if len(argv) != 3:
                 print("modify the code to train another model")
             else:
-                train()
+                train(argv[2])
         elif cmd == "check":
-            if len(argv) == 3:
-                check(argv[2], None)
-            elif len(argv) == 4:
-                check(argv[2], int(argv[3]))
+            if len(argv) == 4:
+                check(argv[2], argv[3], None)
+            elif len(argv) == 5:
+                check(argv[2], argv[3], int(argv[4]))
             else:
                 help()
         elif cmd == "resume":
-            if len(argv) == 3:
-                resume(argv[2], None)
-            elif len(argv) == 4:
-                resume(argv[2], int(argv[3]))
+            if len(argv) == 4:
+                resume(argv[2], argv[3], None)
+            elif len(argv) == 5:
+                resume(argv[2], argv[3], int(argv[4]))
             else:
                 help()
         else:
