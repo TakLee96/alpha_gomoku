@@ -10,7 +10,7 @@ from network.policy.gonet import build_network
 
 """ Hyperparameters """
 LR = 1e-3
-LAMBDA = 1e-6
+LAMBDA = 1e-7
 EPSILON = 1e-7
 MAX_STEPS = 30000
 BATCH_SIZE = 500
