@@ -11,29 +11,31 @@ from os import path, listdir
 
 GAMES_PER_SAVE = 100
 BUFFER_SIZE = 10000
-BATCH_SIZE = 5
+BATCH_SIZE = 500
 
 
 class TFRunner(mp.Process):
-    def __init__(self, name, cmd_queue, action_queue, random=False):
+    def __init__(self, name, cmd_queue, action_queue, opponent=False):
         mp.Process.__init__(self)
         self.name = name
         self.cmd_queue = cmd_queue
         self.action_queue = action_queue
-        self.random = random
+        self.opponent = opponent
 
     def run(self):
         with tf.Session() as session:
             root = path.join(path.dirname(__file__), "model", "reinforce", self.name)
             saver = tf.train.import_meta_graph(path.join(root, self.name + ".meta"), clear_devices=True)
             checkpoint = tf.train.latest_checkpoint(root)
-            number = int(checkpoint.split("-")[-1]) / GAMES_PER_SAVE
-            if self.random and number >= 9:
-                number = np.random.randint(number - 9, number + 1) * GAMES_PER_SAVE
-                checkpoint = "-".join(checkpoint.split("-")[:-1] + [str(number)])
+            if self.opponent:
+                number = int(checkpoint.split("-")[-1]) / GAMES_PER_SAVE
+                if number > 0:
+                    number = np.random.randint(number + 1) * GAMES_PER_SAVE
+                    checkpoint = "-".join(checkpoint.split("-")[:-1] + [str(number)])
             saver.restore(session, checkpoint)
-            saver._max_to_keep = 10000000
             print("[TFRunner] %s loaded" % checkpoint.split("/")[-1])
+            if not self.opponent:
+                saver = tf.train.Saver(max_to_keep=99999999)
             cmd = self.cmd_queue.get()
             while cmd is not None:
                 if "step" in cmd:
@@ -42,21 +44,45 @@ class TFRunner(mp.Process):
                     session.run("train_step", feed_dict=cmd)
                 elif "state" in cmd:
                     state = cmd["state"]
-                    prob = session.run("y:0", feed_dict={
-                        "x:0": state.board.reshape(1, 225),
-                        "y_:0": np.zeros(shape=(1, 225))
-                    }).reshape(15, 15)
-                    prob = np.exp(prob)
-                    prob[state.board != 0] = 0
-                    for j in range(15):
-                        for k in range(15):
-                            new = diff(state, j, k)
-                            if new["-o-oo-"] + new["-ooo-"] >= 2 or \
-                                new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or state._long(j, k):
-                                prob[j, k] = 0
-                    prob = (prob / prob.sum()).reshape(225)
-                    action = np.unravel_index(np.random.choice(225, p=prob), (15, 15))
-                    self.action_queue.put(action)
+                    if len(state.history) == 0:
+                        self.action_queue.put((7, 7))
+                    else:
+                        prob = session.run("y:0", feed_dict={
+                            "x:0": state.board.reshape(1, 225),
+                            "y_:0": np.zeros(shape=(1, 225))
+                        }).reshape(15, 15)
+                        prob = np.exp(prob)
+                        prob = prob / prob.sum()
+                        four_x_count = state.features["four-x"] + state.features["-xxxxo"]
+                        three_x_count = state.features["-x-xx-"] + state.features["-xxx-"]
+                        four_o_count = state.features["four-o"] + state.features["-oooox"]
+                        three_o_count = state.features["-o-oo-"] + state.features["-ooo-"]
+                        for j in range(15):
+                            for k in range(15):
+                                new = diff(state, j, k)
+                                if state.board[j, k] != 0 or new["-o-oo-"] + new["-ooo-"] >= 2 or \
+                                    new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or state._long(j, k):
+                                    prob[j, k] = 0
+                                elif new["win-o"] > 0 or new["win-x"] > 0:
+                                    prob[j, k] = 10000 * prob[j, k]
+                                else:
+                                    if state.player == 1:
+                                        if four_x_count > 0 and four_x_count + new["four-x"] + new["-xxxxo"] <= 0:
+                                            prob[j, k] = 1000 * prob[j, k]
+                                        elif new["-oooo-"] > 0:
+                                            prob[j, k] = 100 * prob[j, k]
+                                        elif three_x_count > 0 and three_x_count + new["-x-xx-"] + new["-xxx-"] <= 0:
+                                            prob[j, k] = 10 * prob[j, k]
+                                    else:
+                                        if four_o_count > 0 and four_o_count + new["four-o"] + new["-oooox"] <= 0:
+                                            prob[j, k] = 1000 * prob[j, k]
+                                        elif new["-xxxx-"] > 0:
+                                            prob[j, k] = 100 * prob[j, k]
+                                        elif three_o_count > 0 and three_o_count + new["-o-oo-"] + new["-ooo-"] <= 0:
+                                            prob[j, k] = 10 * prob[j, k]
+                        prob = (prob / prob.sum()).reshape(225)
+                        action = np.unravel_index(np.random.choice(225, p=prob), (15, 15))
+                        self.action_queue.put(action)
                 else:
                     raise Exception("unknown command %r" % cmd)
                 cmd = self.cmd_queue.get()
@@ -64,12 +90,13 @@ class TFRunner(mp.Process):
 
 
 class Agent():
-    def __init__(self):
+    def __init__(self, opponent=False):
+        self.opponent = opponent
         self.black_cmd = mp.Queue()
         self.white_cmd = mp.Queue()
         self.action_queue = mp.Queue()
-        self.black_runner = TFRunner("gonet-black", self.black_cmd, self.action_queue)
-        self.white_runner = TFRunner("gonet-white", self.white_cmd, self.action_queue)
+        self.black_runner = TFRunner("gonet-black", self.black_cmd, self.action_queue, self.opponent)
+        self.white_runner = TFRunner("gonet-white", self.white_cmd, self.action_queue, self.opponent)
         self.black_runner.start()
         self.white_runner.start()
 
@@ -94,8 +121,8 @@ class Agent():
         self.white_cmd.put(None)
         self.black_cmd = mp.Queue()
         self.white_cmd = mp.Queue()
-        self.black_runner = TFRunner("gonet-black", self.black_cmd, self.action_queue, random=True)
-        self.white_runner = TFRunner("gonet-white", self.white_cmd, self.action_queue, random=True)
+        self.black_runner = TFRunner("gonet-black", self.black_cmd, self.action_queue, self.opponent)
+        self.white_runner = TFRunner("gonet-white", self.white_cmd, self.action_queue, self.opponent)
         self.black_runner.start()
         self.white_runner.start()        
 
@@ -176,16 +203,22 @@ class ReplayBuffer:
 
 def train(buff=ReplayBuffer(), start=0):
     agent = Agent()
-    opponent = Agent()
+    opponent = Agent(opponent=True)
     if start % GAMES_PER_SAVE != 0:
         opponent.refresh()
+    bw_stat = [0, 0, 0]
+    ao_stat = {"agent": 0, "oppon": 0, "the": 0}
+    black_win, white_win, agent_win, oppon_win = [0] * 4
     for i in count(start):
         if i != 0 and i % GAMES_PER_SAVE == 0:
+            print("[Stat] past %d games: [black %d white %d] [agent %d oppon %d]" % \
+                (GAMES_PER_SAVE, bw_stat[1], bw_stat[-1], ao_stat["agent"], ao_stat["oppon"]))
             agent.save(i)
-            print("model checkpoint %d" % i)
+            print("[Model] checkpoint %d saved" % i)
             opponent.refresh()
+            bw_stat = [0, 0, 0]
+            ao_stat = {"agent": 0, "oppon": 0, "the": 0}
         state = State()
-        num_updates = 0
         if i % 2 == 0:
             players = [None, agent, opponent]
         else:
@@ -193,31 +226,33 @@ def train(buff=ReplayBuffer(), start=0):
         while not state.end and len(state.history) != 225:
             x, y = players[state.player].get_action(state)
             state.move(x, y)
-            if buff.ready():
-                agent.gradient_descent(buff.sample())
-                num_updates += 1
+        if buff.ready():
+            agent.gradient_descent(buff.sample())
         buff.add(state)
+        winner = state.player if state.end else 0
         with open(path.join(path.dirname(__file__), "data", "reinforce", "%d.pkl" % i), "wb") as out:
-            pickle.dump({
-                "history": state.history,
-                "winner": state.player if state.end else 0 }, out)
-        print("%d %s [black %d white %d] [%d updates] [game saved]" % (i,
-            game_status(state), buff.black_size, buff.white_size, num_updates))
+            pickle.dump({"history": state.history, "winner": winner }, out)
+        who = "the" if winner == 0 else ("oppon" if players[winner].opponent else "agent")            
+        print("...... %d [%s %s] [black %d white %d]" % (i, who,
+            game_status(state), buff.black_size, buff.white_size))
+        bw_stat[winner] += 1
+        ao_stat[who] += 1
 
 
 def resume():
     buff = ReplayBuffer()
     root = path.join(path.dirname(__file__), "data", "reinforce")
     max_iter = 0
-    print("loading historical game data")
+    print("[Resumer] loading historical game data")
     for f in listdir(root):
-        with open(path.join(root, f), "rb") as file:
-            d = pickle.load(file)
-            moves = d["history"]
-            winner = d["winner"]
-            buff._add(moves, winner)
-            max_iter = max(max_iter, int(f.split(".")[0]))
-    print("loading complete, resume training")
+        if f.endswith(".pkl"):
+            with open(path.join(root, f), "rb") as file:
+                d = pickle.load(file)
+                moves = d["history"]
+                winner = d["winner"]
+                buff._add(moves, winner)
+                max_iter = max(max_iter, int(f.split(".")[0]))
+    print("[Resumer] loading complete, resume training")
     train(buff, max_iter+1)
 
 
