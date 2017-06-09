@@ -59,40 +59,40 @@ def format(feature):
 
 
 def diff(state, x, y):
-    features = defaultdict()
+    inc, dec = defaultdict(), defaultdict()
     for dx, dy in directions:
-        check(state, x, y, dx, dy, features)
-    return features
+        check(state, x, y, dx, dy, inc, dec)
+    return inc, dec
 
 
 def bounded(x, y):
     return 0 <= x <= 14 and 0 <= y <= 14
 
 
-def check(state, x, y, dx, dy, features):
+def check(state, x, y, dx, dy, inc, dec):
     posX, posY, negX, negY = x + dx, y + dy, x - dx, y - dy
     who = state.player
     if (not bounded(posX, posY)) and (not bounded(negX, negY)):
         return
     if not bounded(posX, posY):
-        check_only(state, x, y, -dx, -dy, features)
+        check_only(state, x, y, -dx, -dy, inc, dec)
     elif not bounded(negX, negY):
-        check_only(state, x, y, dx, dy, features)
+        check_only(state, x, y, dx, dy, inc, dec)
     elif state.board[posX, posY] == who and state.board[negX, negY] == who:
-        check_connection(state, x, y, dx, dy, features)
+        check_connection(state, x, y, dx, dy, inc, dec)
     elif state.board[posX, posY] == (-who) and state.board[negX, negY] == (-who):
-        check_disconnection(state, x, y, dx, dy, features)
+        check_disconnection(state, x, y, dx, dy, inc, dec)
     elif (state.board[posX, posY] == who and state.board[negX, negY] == (-who)) or \
          (state.board[posX, posY] == (-who) and state.board[negX, negY] == who):
-        check_only(state, x, y, dx, dy, features)
-        check_only(state, x, y, -dx, -dy, features)
+        check_only(state, x, y, dx, dy, inc, dec)
+        check_only(state, x, y, -dx, -dy, inc, dec)
     elif state.board[posX, posY] == 0 and state.board[negX, negY] == 0:
-        check_one_side(state, x, y, dx, dy, features)
+        check_one_side(state, x, y, dx, dy, inc, dec)
     else:
-        check_both_side(state, x, y, dx, dy, features)
+        check_both_side(state, x, y, dx, dy, inc, dec)
 
 
-def check_one_side(state, x, y, dx, dy, features):
+def check_one_side(state, x, y, dx, dy, inc, dec):
     who = state.player
     llx, lly, rrx, rry = x - dx - dx, y - dy - dy, x + dx + dx, y + dy + dy
     ll = state.board[llx, lly] if bounded(llx, lly) else 0
@@ -103,31 +103,31 @@ def check_one_side(state, x, y, dx, dy, features):
             if ((not bounded(llx - dx, lly - dy)) or (state.board[llx - dx, lly - dy] != who)) and \
                ((not bounded(rrx + dx, rry + dy)) or (state.board[rrx + dx, rry + dy] != who)):
                 if who > 0:
-                    features["o-o-o"] += 1
+                    inc["o-o-o"] += 1
                 else:
-                    features["x-x-x"] += 1
+                    inc["x-x-x"] += 1
             else:
                 left = left_helper(state, llx + dx, lly + dy, dx, dy)
                 right = right_helper(state, rrx - dx, rry - dy, dx, dy)
                 new = format(left + "-" + one + "-" + right)
-                features[new] += 1
+                inc[new] += 1
         else:
             left = left_helper(state, llx + dx, lly + dy, dx, dy)
             old = format(left + "-")
             new = format(left + "-" + one + "-")
-            features[old] -= 1
-            features[new] += 1
+            dec[old] += 1
+            inc[new] += 1
     elif rr == who:
         right = right_helper(state, rrx - dx, rry - dy, dx, dy)
         old = format("-" + right)
         new = format("-" + one + "-" + right)
-        features[old] -= 1
-        features[new] += 1
+        dec[old] += 1
+        inc[new] += 1
 
 
-def check_both_side(state, x, y, dx, dy, features):
+def check_both_side(state, x, y, dx, dy, inc, dec):
     if state.board[x + dx, y + dy] == 0:
-        return check_both_side(state, x, y, -dx, -dy, features)
+        return check_both_side(state, x, y, -dx, -dy, inc, dec)
     who = state.player
     one = "o" if who > 0 else "x"
     other = "x" if who > 0 else "o"
@@ -138,13 +138,13 @@ def check_both_side(state, x, y, dx, dy, features):
             left = left_helper(state, llx + dx, lly + dy, dx, dy)
             right = right_helper(state, x, y, dx, dy)
             new = format(left + "-" + one + right)
-            features[new] += 1
+            inc[new] += 1
         else:
             right = right_helper(state, x, y, dx, dy)
             old = format("-" + right)
             new = format("-" + one + right)
-            features[old] -= 1
-            features[new] += 1
+            dec[old] += 1
+            inc[new] += 1
     else:
         if ll == who:
             left = left_helper(state, llx + dx, lly + dy, dx, dy)
@@ -152,15 +152,15 @@ def check_both_side(state, x, y, dx, dy, features):
             old = format("-" + right)
             new1 = format(one + right)
             new2 = format(left + "-" + one + other)
-            features[old] -= 1
-            features[new1] += 1
-            features[new2] += 1
+            dec[old] += 1
+            inc[new1] += 1
+            inc[new2] += 1
         else:
             right = right_helper(state, x, y, dx, dy)
             old = format("-" + right)
             new = format(one + right)
-            features[old] -= 1
-            features[new] += 1
+            dec[old] += 1
+            inc[new] += 1
 
 
 def left_helper(state, x, y, dx, dy):
@@ -213,29 +213,29 @@ def right_helper(state, x, y, dx, dy):
     return feature
 
 
-def check_connection(state, x, y, dx, dy, features):
+def check_connection(state, x, y, dx, dy, inc, dec):
     left = left_helper(state, x, y, dx, dy)
     right = right_helper(state, x, y, dx, dy)
     one = "o" if state.player > 0 else "x"
     old = format(left + "-" + right)
     new = format(left + one + right)
-    features[old] -= 1
-    features[new] += 1
+    dec[old] += 1
+    inc[new] += 1
 
 
-def check_disconnection(state, x, y, dx, dy, features):
+def check_disconnection(state, x, y, dx, dy, inc, dec):
     left = left_helper(state, x, y, dx, dy)
     right = right_helper(state, x, y, dx, dy)
     one = "o" if state.player > 0 else "x"
     old = format(left + "-" + right)
-    features[old] -= 1
+    dec[old] += 1
     new_left = format(left + one)
     new_right = format(one + right)
-    features[new_left] += 1
-    features[new_right] += 1
+    inc, dec[new_left] += 1
+    inc, dec[new_right] += 1
 
 
-def check_only(state, x, y, dx, dy, features):
+def check_only(state, x, y, dx, dy, inc, dec):
     nx, ny = x + dx, y + dy
     who = state.player
     if bounded(nx, ny) and state.board[nx, ny] != 0:
@@ -261,5 +261,5 @@ def check_only(state, x, y, dx, dy, features):
             new = "ox" + right
     old = format(old)
     new = format(new)
-    features[old] -= 1
-    features[new] += 1
+    dec[old] += 1
+    inc[new] += 1

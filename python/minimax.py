@@ -1,13 +1,55 @@
 """ alpha-beta minimax agent """
+from feature import diff
+from scipy.signal import convolve2d as conv2d
+
+
+INFINITY = 1e10
+FILTER = np.array([
+    [1, 0, 1, 0, 1],
+    [0, 1, 1, 1, 0],
+    [1, 1, 1, 1, 1],
+    [0, 1, 1, 1, 0],
+    [1, 0, 1, 0, 1],
+]).astype(np.int8)
+
+
 class MinimaxAgent:
-    def __init__(self, player, policy, value, depth=5)
-        self.player = player
-        self.policy = policy    # a function
-        self.value = value        # a function
+    def __init__(self, depth=5)
         self.depth = depth
 
+    def _policy(self, state):
+        adjacent = conv2d(np.abs(state.board), FILTER, mode="same")
+        if state.player == 1:
+            four_danger = state.features["four-x"] + state.features["-xxxxo"]
+            three_danger = state.features["-x-xx-"] + state.features["-xxx-"]
+        else:
+            four_danger = state.features["four-o"] + state.features["-oooox"]
+            three_danger = state.features["-o-oo-"] + state.features["-ooo-"]
+        actions = []
+        for x in range(15):
+            for y in range(15):
+                if adjacent[x, y] > 0 and state.board[x, y] == 0:
+                    new, old = diff(state, x, y)
+                    if (not state._long(j, k) and new["-o-oo-"] + new["-ooo-"] < 2 and
+                        new["four-o"] + new["-oooo-"] + new["-oooox"] < 2):
+                        if new["win-o"] > 0 or new["win-x"] > 0:
+                            return [(x, y)]
+                        elif state.player == 1:
+                            if four_danger > 0:
+                                if four_danger + new["four-x"] + new["-xxxxo"] == 0:
+                                    actions.append((x, y))
+                            elif three_danger > 0:
+                                if new["four-x"] > 0 or new["-xxxxo"] > 0
+                        else:
+
+
+        prob = (adjacent > 0).reshape(225).astype(float)
+        prob = prob / prob.sum()
+        random_action = np.random.choice(225, p=prob)
+
+
+
     def _max_value(self, state, alpha, beta, depth):
-        assert self.player == state.player
         if state.end:
             return 0.0
         if depth == self.depth:
@@ -23,7 +65,6 @@ class MinimaxAgent:
         return max_value
 
     def _min_value(self, state, alpha, beta, depth):
-        assert self.player != state.player
         if state.end:
             return 1.0
         if depth == self.depth:
@@ -39,8 +80,7 @@ class MinimaxAgent:
         return min_value
 
     def get_action(self, state):
-        assert self.player == state.player
-        actions = self.policy(state.player * state.board)
+        actions = self.policy(state.board)
         def key_func(action):
             x, y = action
             state.move(x, y)

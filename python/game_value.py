@@ -30,7 +30,7 @@ class Application(tk.Frame):
         for i in range(15):
             for j in range(15):
                 if self.state.board[i, j] == 0:
-                    new = diff(self.state, i, j)
+                    new, old = diff(self.state, i, j)
                     if new["-o-oo-"] + new["-ooo-"] >= 2 or \
                         new["four-o"] + new["-oooo-"] >= 2 or self.state._long(i, j):
                         self.button[i * 15 + j].config(image="", text="%.2f" % -1)

@@ -59,7 +59,7 @@ class TFRunner(mp.Process):
                         three_o_count = state.features["-o-oo-"] + state.features["-ooo-"]
                         for j in range(15):
                             for k in range(15):
-                                new = diff(state, j, k)
+                                new, old = diff(state, j, k)
                                 if state.board[j, k] != 0 or new["-o-oo-"] + new["-ooo-"] >= 2 or \
                                     new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or state._long(j, k):
                                     prob[j, k] = 0
@@ -67,18 +67,20 @@ class TFRunner(mp.Process):
                                     prob[j, k] = 10000 * prob[j, k]
                                 else:
                                     if state.player == 1:
-                                        if four_x_count > 0 and four_x_count + new["four-x"] + new["-xxxxo"] <= 0:
+                                        if four_x_count > 0 and four_x_count - old["four-x"] - old["-xxxxo"] <= 0:
                                             prob[j, k] = 1000 * prob[j, k]
                                         elif new["-oooo-"] > 0:
                                             prob[j, k] = 100 * prob[j, k]
-                                        elif three_x_count > 0 and three_x_count + new["-x-xx-"] + new["-xxx-"] <= 0:
+                                        elif three_x_count > 0 and (three_x_count - old["-x-xx-"] - old["-xxx-"] <= 0 or
+                                            new["four-o"] + new["-oooox"] > 0):
                                             prob[j, k] = 10 * prob[j, k]
                                     else:
-                                        if four_o_count > 0 and four_o_count + new["four-o"] + new["-oooox"] <= 0:
+                                        if four_o_count > 0 and four_o_count - old["four-o"] - old["-oooox"] <= 0:
                                             prob[j, k] = 1000 * prob[j, k]
                                         elif new["-xxxx-"] > 0:
                                             prob[j, k] = 100 * prob[j, k]
-                                        elif three_o_count > 0 and three_o_count + new["-o-oo-"] + new["-ooo-"] <= 0:
+                                        elif three_o_count > 0 and (three_o_count - old["-o-oo-"] - old["-ooo-"] <= 0 or
+                                            new["four-x"] + new["-xxxxo"] > 0):
                                             prob[j, k] = 10 * prob[j, k]
                         prob = (prob / prob.sum()).reshape(225)
                         action = np.unravel_index(np.random.choice(225, p=prob), (15, 15))

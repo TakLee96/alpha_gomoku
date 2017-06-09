@@ -52,8 +52,9 @@ class State:
 
     def move(self, x, y):
         assert self.board[x, y] == 0 and not self.end
-        new = diff(self, x, y)
+        new, old = diff(self, x, y)
         self.features.add(new)
+        self.features.sub(old)
         self.board[x, y] = self.player
         self.history.append((x, y))
         if self._win(x, y):
@@ -69,7 +70,9 @@ class State:
         x, y = self.history.pop()
         self.board[x, y] = 0
         self.player = 1 if len(self.history) % 2 == 0 else -1
-        self.features.sub(diff(self, x, y))
+        new, old = diff(self, x, y)
+        self.features.sub(new)
+        self.features.add(old)
         self.end = False
 
     def __str__(self):

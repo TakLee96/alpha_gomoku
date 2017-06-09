@@ -60,7 +60,7 @@ class Agent(mp.Process):
                     if state.player == 1:
                         for i in range(15):
                             for j in range(15):
-                                new = diff(state, i, j)
+                                new, old = diff(state, i, j)
                                 if new["-o-oo-"] + new["-ooo-"] >= 2 or \
                                     new["four-o"] + new["-oooo-"] >= 2 or state._long(i, j):
                                     mean[i*15+j] = 0
