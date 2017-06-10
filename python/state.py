@@ -60,8 +60,8 @@ class State:
         if self._win(x, y):
             self.end = True
         else:
-            if new["-o-oo-"] + new["-ooo-"] >= 2 or \
-                new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or self._long(x, y):
+            if self.player == 1 and (new["-o-oo-"] + new["-ooo-"] >= 2 or
+                new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or self._long(x, y)):
                 self.end = True
             self.player = -self.player
         return self.end

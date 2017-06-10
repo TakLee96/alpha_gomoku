@@ -20,6 +20,12 @@ class defaultdict(dict):
         for key, val in other.items():
             self[key] -= val
 
+    def eval(self, other):
+        total = 0
+        for key, value in self.items():
+            total += self[key] * value
+        return total
+
 
 directions = [(1, 0), (0, 1), (1, 1), (-1, 1)]
 fundamental = {
@@ -231,8 +237,8 @@ def check_disconnection(state, x, y, dx, dy, inc, dec):
     dec[old] += 1
     new_left = format(left + one)
     new_right = format(one + right)
-    inc, dec[new_left] += 1
-    inc, dec[new_right] += 1
+    inc[new_left] += 1
+    inc[new_right] += 1
 
 
 def check_only(state, x, y, dx, dy, inc, dec):
