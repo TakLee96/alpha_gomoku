@@ -13,26 +13,7 @@ class State:
         self.history = list()
         self.features = defaultdict()
         self.end = False
-
-    def _count(self, x, y, dx, dy):
-        if x >= 15 or x < 0 or y >= 15 or y < 0 or self.board[x, y] != self.player:
-            return 0
-        return 1 + self._count(x + dx, y + dy, dx, dy)
-
-    def _win(self, x, y):
-        for dx, dy in DIRECTIONS:
-            count = self._count(x + dx, y + dy, dx, dy) + \
-                self._count(x - dx, y - dy, -dx, -dy)
-            if count == 4 or (count > 4 and self.player == -1):
-                return True
-        return False
-
-    def _long(self, x, y):
-        for dx, dy in DIRECTIONS:
-            if self._count(x + dx, y + dy, dx, dy) + \
-                self._count(x - dx, y - dy, -dx, -dy) > 4:
-                return True
-        return False
+        self.violate = False
 
     def _build(self, x, y, dx, dy, result):
         if 0 <= x <= 14 and 0 <= y <= 14 and self.board[x, y] == self.player:
@@ -42,13 +23,12 @@ class State:
     def highlight(self, x, y):
         assert self.end
         for dx, dy in DIRECTIONS:
-            if self._count(x + dx, y + dy, dx, dy) + \
-                self._count(x - dx, y - dy, -dx, -dy) >= 4:
-                break
-        result = [(x, y)]
-        self._build(x + dx, y + dy,  dx,  dy, result)
-        self._build(x - dx, y - dy, -dx, -dy, result)
-        return result
+            result = [(x, y)]
+            self._build(x + dx, y + dy,  dx,  dy, result)
+            self._build(x - dx, y - dy, -dx, -dy, result)
+            if len(result) >= 5:
+                return result
+        raise Exception("wrong call to highlight")
 
     def move(self, x, y):
         assert self.board[x, y] == 0 and not self.end
@@ -57,12 +37,13 @@ class State:
         self.features.sub(old)
         self.board[x, y] = self.player
         self.history.append((x, y))
-        if self._win(x, y):
+        if "win-o" in new or "win-x" in new:
             self.end = True
         else:
             if self.player == 1 and (new["-o-oo-"] + new["-ooo-"] >= 2 or
-                new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or self._long(x, y)):
+                new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or "violate" in new):
                 self.end = True
+                self.violate = True
             self.player = -self.player
         return self.end
 
@@ -74,6 +55,7 @@ class State:
         self.features.sub(new)
         self.features.add(old)
         self.end = False
+        self.violate = False
 
     def __str__(self):
         return str(self.board).replace("-1", "x").replace(" 1", "o").replace(" 0", "+")

@@ -28,7 +28,7 @@ class Application(tk.Frame):
 
     def recommend(self):
         t = time()
-        actions = self.agent.get_dist(self.state)
+        actions = self.agent.get_score(self.state)
         print("time elapsed: %f seconds" % (time() - t))
         if self.last is not None:
             for x, y, _ in self.last:

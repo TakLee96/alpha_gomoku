@@ -7,7 +7,7 @@ from itertools import count
 from minimax import MinimaxAgent
 
 
-agent = MinimaxAgent(max_depth=6, max_width=10)
+agent = MinimaxAgent(max_depth=6, max_width=8)
 names = ["draw", "black", "white"]
 for i in count():
     print("[INFO] game %d begin" % i)

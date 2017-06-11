@@ -35,16 +35,17 @@ fundamental = {
     "-x-xx-", "-xxx-", "-o-oo-", "-ooo-",
     "-xxxx-", "-xxxxo", "-oooo-", "-oooox",
 }
-black_four = re.compile(".*[x-](o-ooo|oo-oo|ooo-o)[x-].*");
-white_four = re.compile(".*[o-](x-xxx|xx-xx|xxx-x)[o-].*");
-jump_three = re.compile(".[xo][xo]-[xo].");
+violate = re.compile(".*[x-](o-ooo-o|ooo-o-ooo|oo-oo-oo)[x-].*"); 
+black_four  = re.compile(".*[x-](o-ooo|oo-oo|ooo-o)[x-].*");
+white_four  = re.compile(".*[o-](x-xxx|xx-xx|xxx-x)[o-].*");
+jump_three  = re.compile(".[xo][xo]-[xo].");
 
 
 def format(feature):
     if len(feature) < 3:
         return None
-    if "oooooo" in feature or "xxxxxx" in feature:
-        return None
+    if "oooooo" in feature or violate.match(feature):
+        return "violate"
     if "ooooo" in feature:
         return "win-o"
     if "xxxxx" in feature:

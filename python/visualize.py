@@ -25,8 +25,12 @@ class Application(tk.Frame):
         self.create_widgets()
 
     def highlight(self, x, y):
-        for i, j in self.state.highlight(x, y):
-            self.frames[i*15+j].config(padx=1, pady=1, bg="green")
+        assert self.state.end
+        if self.state.violate:
+            self.frames[x*15+y].config(padx=1, pady=1, bg="red")
+        else:
+            for i, j in self.state.highlight(x, y):
+                self.frames[i*15+j].config(padx=1, pady=1, bg="green")
 
     def click(self, e):
         if self.index < len(self.history):

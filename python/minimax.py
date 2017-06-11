@@ -82,6 +82,13 @@ class MinimaxAgent:
     def random_action(self, state):
         adjacent = conv2d(np.abs(state.board), FILTER, mode="same")
         prob = np.logical_and(state.board == 0, adjacent > 0).astype(float)
+        for x in range(15):
+            for y in range(15):
+                if prob[x, y] > 0:
+                    new, old = diff(state, x, y)
+                    if "violate" in new or new["-o-oo-"] + new["-ooo-"] >= 2 or
+                        new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2:
+                        prob[x, y] = 0
         prob = (prob / prob.sum()).reshape(225)
         return np.unravel_index(np.random.choice(225, p=prob), dims=(15, 15))
 
@@ -108,7 +115,7 @@ class MinimaxAgent:
             for y in range(15):
                 if adjacent[x, y] > 0 and state.board[x, y] == 0:
                     new, old = diff(state, x, y)
-                    if state.player == -1 or (not state._long(x, y) and
+                    if state.player == -1 or ("violate" not in new and
                         new["-o-oo-"] + new["-ooo-"] < 2 and
                         new["four-o"] + new["-oooo-"] + new["-oooox"] < 2):
                         if new["win-o"] > 0 or new["win-x"] > 0:
@@ -224,7 +231,7 @@ class MinimaxAgent:
     def get_action(self, state):
         dist = self.get_dist(state)
         prob = np.array(list(map(lambda t: t[2], dist)))
-        choice = np.random.choice(prob.shape, p=prob)
+        choice = np.random.choice(prob.shape[0], p=prob)
         x, y, _ = dist[choice]
         return x, y
 
