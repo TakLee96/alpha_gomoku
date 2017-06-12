@@ -86,8 +86,8 @@ class MinimaxAgent:
             for y in range(15):
                 if prob[x, y] > 0:
                     new, old = diff(state, x, y)
-                    if "violate" in new or new["-o-oo-"] + new["-ooo-"] >= 2 or
-                        new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2:
+                    if ("violate" in new or new["-o-oo-"] + new["-ooo-"] >= 2 or
+                        new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2):
                         prob[x, y] = 0
         prob = (prob / prob.sum()).reshape(225)
         return np.unravel_index(np.random.choice(225, p=prob), dims=(15, 15))

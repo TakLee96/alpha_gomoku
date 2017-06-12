@@ -1,15 +1,21 @@
 import pickle
-from os import path
 from time import time
 from sys import stdout
 from state import State
 from itertools import count
+from os import path, listdir
 from minimax import MinimaxAgent
+
+
+latest = -1
+for f in listdir(path.join(path.dirname(__file__), "data", "minimax")):
+    if f.endswith(".pkl"):
+        latest = max(latest, int(f.split(".")[0]))
 
 
 agent = MinimaxAgent(max_depth=6, max_width=8)
 names = ["draw", "black", "white"]
-for i in count():
+for i in count(latest + 1):
     print("[INFO] game %d begin" % i)
     begin = time()
     state = State()
