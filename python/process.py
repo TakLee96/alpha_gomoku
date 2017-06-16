@@ -70,52 +70,87 @@ def raw():
     savemat(path.join(path.dirname(__file__), "data", "formatted"), m, do_compression=True)
 
 
-def godsdknet():
-    root = path.join(path.dirname(__file__), "data", "godsdknet")
+def minimax():
+    root = path.join(path.dirname(__file__), "data", "minimax")
     black_boards = list()
-    black_scores = list()
+    black_actions = list()
+    black_feedbacks = list()
     white_boards = list()
-    white_scores = list()
+    white_actions = list()
+    white_feedbacks = list()
+    
     for f in listdir(root):
-        with open(path.join(root, f), "rb") as file:
-            d = pickle.load(file)
-            moves = d["history"]
-            winner = d["winner"]
-            state = State()
-            black_boards.append(np.copy(state.board.reshape(225)))
-            black_scores.append(0)
-            for i, (x, y) in enumerate(moves):
-                state.move(x, y)
-                if i % 2 == 0:
-                    white_boards.append(np.copy(state.board.reshape(225)))
-                    white_scores.append(winner)
-                else:
-                    black_boards.append(np.copy(state.board.reshape(225)))
-                    black_scores.append(winner)
-    black_boards = np.array(black_boards)
-    black_scores = np.array(black_scores)
-    white_boards = np.array(white_boards)
-    white_scores = np.array(white_scores)
-    n_black = len(black_scores)
-    n_white = len(white_scores)
-    black_ordering = np.random.permutation(n_black)
-    white_ordering = np.random.permutation(n_white)
-    black_boards = black_boards[black_ordering, :]
-    black_scores = black_scores[black_ordering]
-    white_boards = white_boards[white_ordering, :]
-    white_scores = white_scores[white_ordering]
-    X_b_v = black_boards[:10000, :]
-    y_b_v = black_scores[:10000]
-    X_b_t = black_boards[10000:, :]
-    y_b_t = black_scores[10000:]
-    X_w_v = white_boards[:10000, :]
-    y_w_v = white_scores[:10000]
-    X_w_t = white_boards[10000:, :]
-    y_w_t = white_scores[10000:]
-    m_b = { "X_v": X_b_v, "y_v": y_b_v, "X_t": X_b_t, "y_t": y_b_t }
-    m_w = { "X_v": X_w_v, "y_v": y_w_v, "X_t": X_w_t, "y_t": y_w_t }
-    savemat(path.join(path.dirname(__file__), "data", "black"), m_b, do_compression=True)
-    savemat(path.join(path.dirname(__file__), "data", "white"), m_w, do_compression=True)
+        if f.endswith(".pkl"):
+            with open(path.join(root, f), "rb") as file:
+                d = pickle.load(file)
+                moves = d["history"]
+                winner = d["winner"]
+                if winner != 0:
+                    for change in changes:
+                        new_moves = list(map(change, moves))
+                        state = State()
+                        for i, t in enumerate(new_moves):
+                            board = np.ndarray(shape=(15, 15, 2), dtype=bool)
+                            board[:, :, 0] = (state.board > 0)
+                            board[:, :, 1] = (state.board < 0)
+                            if i >= 2 or change((0, 1)) == (0, 1):
+                                if i % 2 == 0:
+                                    black_boards.append(board)
+                                    black_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
+                                    if winner == 1:
+                                        black_feedbacks.append(1)
+                                    else:
+                                        black_feedbacks.append(-0.1)
+                                else:
+                                    white_boards.append(board)
+                                    white_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
+                                    if winner == -1:
+                                        white_feedbacks.append(1)
+                                    else:
+                                        white_feedbacks.append(-0.1)                         
+                            state.move(*t)
+                print("processed %s" % f)
+
+    X_b = np.array(black_boards, dtype=np.uint8)
+    y_b = np.array(black_actions, dtype=np.uint8)
+    f_b = np.array(black_feedbacks, dtype=np.float32)
+    X_w = np.array(white_boards, dtype=np.uint8)
+    y_w = np.array(white_actions, dtype=np.uint8)
+    f_w = np.array(white_feedbacks, dtype=np.float32)
+
+    n_b, _, _, _ = X_b.shape
+    n_w, _, _, _ = X_w.shape
+
+    ordering_b = np.random.permutation(n_b)
+    ordering_w = np.random.permutation(n_w)
+
+    X_b = X_b[ordering_b, :, :, :]
+    y_b = y_b[ordering_b]
+    f_b = f_b[ordering_b]
+    X_w = X_w[ordering_w, :, :, :]
+    y_w = y_w[ordering_w]
+    f_w = f_w[ordering_w]
+
+    m_b = n_b // 10
+    m_w = n_w // 10
+
+    X_b_t = X_b[m_b:, :, :, :]
+    y_b_t = y_b[m_b:]
+    f_b_t = f_b[m_b:]
+    X_w_t = X_w[m_w:, :, :, :]
+    y_w_t = y_w[m_w:]
+    f_w_t = f_w[m_w:]
+    X_b_v = X_b[:m_b, :, :, :]
+    y_b_v = y_b[:m_b]
+    f_b_v = f_b[:m_b]
+    X_w_v = X_w[:m_w, :, :, :]
+    y_w_v = y_w[:m_w]
+    f_w_v = f_w[:m_w]
+
+    m_b = { "X_v": X_b_v, "y_v": y_b_v, "f_v": f_b_v, "X_t": X_b_t, "y_t": y_b_t, "f_t": f_b_t }
+    m_w = { "X_v": X_w_v, "y_v": y_w_v, "f_v": f_w_v, "X_t": X_w_t, "y_t": y_w_t, "f_t": f_w_t }
+    savemat(path.join(path.dirname(__file__), "data", "minimax_black"), m_b, do_compression=True)
+    savemat(path.join(path.dirname(__file__), "data", "minimax_white"), m_w, do_compression=True)
 
 
 def dual():
@@ -186,12 +221,12 @@ def dual():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in ("raw", "godsdknet", "dual"):
-        print("Usage: python process.py [raw/godsdknet/dual]")
+    if len(sys.argv) != 2 or sys.argv[1] not in ("raw", "minimax", "dual"):
+        print("Usage: python process.py [raw/minimax/dual]")
     else:
         if sys.argv[1] == "raw":
             raw()
-        elif sys.argv[1] == "godsdknet":
-            godsdknet()
+        elif sys.argv[1] == "minimax":
+            minimax()
         else:
             dual()

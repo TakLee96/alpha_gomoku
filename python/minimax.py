@@ -70,7 +70,7 @@ class WhiteOps:
 
 
 class MinimaxAgent:
-    def __init__(self, max_depth=6, max_width=8):
+    def __init__(self, max_depth=8, max_width=8):
         self.max_depth = max_depth
         self.max_width = max_width
         self.policy_invoked = 0

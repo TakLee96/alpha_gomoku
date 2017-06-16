@@ -49,7 +49,7 @@ class Application(tk.Frame):
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
                 if self.state.end:
-                    if self.state._win(i, j):
+                    if self.state.features["win-o"] + self.state.features["win-x"] > 0:
                         self.highlight(i, j)
                     else:
                         self.frames[np.ravel_multi_index((i, j), dims=(15, 15))].config(padx=1, pady=1, bg="red")

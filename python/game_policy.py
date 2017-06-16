@@ -53,13 +53,16 @@ class Application(tk.Frame):
             return
         self.state_queue[self.state.player].put(self.state)
         dist = self.dist_queue.get()
+        maxp = dist.max()
         for i in range(15):
             for j in range(15):
                 button = self.button[np.ravel_multi_index((i, j), dims=(15, 15))]
-                if dist[i, j] > 0.01:
-                    button.config(image="", text="%.2f" % dist[i, j])
+                if dist[i, j] == maxp:
+                    button.config(bg="red", image="", text="%.2f" % dist[i, j])
+                elif dist[i, j] > 0.01:
+                    button.config(bg="yellow", image="", text="%.2f" % dist[i, j])
                 else:
-                    button.config(image=self.image[self.state.board[i, j]])
+                    button.config(bg=None, image=self.image[self.state.board[i, j]])
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
@@ -71,7 +74,7 @@ class Application(tk.Frame):
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
                 if self.state.end:
-                    if self.state._win(i, j):
+                    if self.state.features["win-o"] + self.state.features["win-x"] > 0:
                         self.highlight(i, j)
                     else:
                         self.frames[np.ravel_multi_index((i, j), dims=(15, 15))].config(padx=1, pady=1, bg="red")
@@ -86,7 +89,7 @@ class Application(tk.Frame):
                 f.pack_propagate(0)
                 f.grid(row=i, column=j, padx=0, pady=0)
                 self.frames.append(f)
-                b = tk.Label(f, image=self.image[0], bg="yellow")
+                b = tk.Label(f, image=self.image[0])
                 b.pack(fill=tk.BOTH, expand=1)
                 b.bind("<Button-1>", self.click(i, j))
                 self.button.append(b)
@@ -103,23 +106,18 @@ class Agent(mp.Process):
         with tf.Session() as session:
             root = path.join(path.dirname(__file__), "model", "policy", self.name)
             saver = tf.train.import_meta_graph(path.join(root, self.name + ".meta"), clear_devices=True)
-            saver.restore(session, tf.train.latest_checkpoint(root))
+            checkpoint = tf.train.latest_checkpoint(root)
+            saver.restore(session, checkpoint)
+            print(checkpoint)
             while True:
                 state = self.state_queue.get()
                 if state is None:
                     return
-                y = session.run("y:0", feed_dict={
-                    "x:0": state.board.reshape((1, 225)),
-                    "y_:0": np.zeros(shape=(1, 225))}).reshape((15, 15))
-                y = np.exp(y)
-                y[state.board != 0] = 0
-                for i in range(15):
-                    for j in range(15):
-                        new, old = diff(state, i, j)
-                        if new["-o-oo-"] + new["-ooo-"] >= 2 or \
-                            new["four-o"] + new["-oooo-"] >= 2 or state._long(i, j):
-                            y[i, j] = 0
-                y = y / y.sum()
+                board = np.ndarray(shape=(1, 15, 15, 2), dtype=np.float32)
+                board[:, :, :, 0] = (state.board > 0)
+                board[:, :, :, 1] = (state.board < 0) 
+                y = session.run("prob:0", feed_dict={
+                    "y:0": np.zeros(shape=(1, 225)), "f:0": np.zeros(shape=1), "x:0": board }).reshape((15, 15))
                 self.dist_queue.put(y)
 
 
@@ -127,8 +125,8 @@ def run():
     states = [None, mp.Queue(), mp.Queue()]
     distributions = mp.Queue()
     players = [
-        Agent(states[1], distributions, "gonet-black"),
-        Agent(states[-1], distributions, "gonet-white"),
+        Agent(states[1], distributions, "kunet-black"),
+        Agent(states[-1], distributions, "kunet-white"),
     ]
     for player in players:
         player.start()

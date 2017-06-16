@@ -3,7 +3,7 @@ import tkinter as tk
 import codecs
 import pickle
 from os import path
-from sys import argv
+from sys import argv, exit
 from state import State
 
 
@@ -66,8 +66,12 @@ def get_move(string):
   return (convert(string[2]), convert(string[3]))
 
 if __name__ == "__main__":
-    if len(argv) != 3:
+    if len(argv) == 2:
+        with open(path.join(path.dirname("__file__"), "data", "%s.pkl" % argv[1]), "rb") as file:
+            moves = pickle.load(file)["history"]
+    elif len(argv) != 3:
         print("Usage: python visualize.py [folder] [number]")
+        exit()
     else:
         directory = path.join(path.dirname(__file__), "data", argv[1])
         if argv[1] == "raw":
@@ -82,12 +86,12 @@ if __name__ == "__main__":
             with open(path.join(directory, "%d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
         elif argv[1] == "minimax":
-            with open(path.join(directory, "%d.pkl" % int(argv[2])), "rb") as file:
+            with open(path.join(directory, "%.05d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
         else:
             raise Exception("raw or godsdknet or reinforce or minimax")
-        root = tk.Tk()
-        root.wm_title("Game " + argv[1])
-        root.attributes("-topmost", True)
-        app = Application(moves, root)
-        app.mainloop()
+    root = tk.Tk()
+    root.wm_title("Game " + argv[1])
+    root.attributes("-topmost", True)
+    app = Application(moves, root)
+    app.mainloop()
