@@ -5,7 +5,7 @@ from os import path
 from sys import argv
 from time import time
 from scipy.io import loadmat
-from network.policy.kunet import build_network
+from network.policy.alphanet import build_network
 
 
 """ Hyperparameters """
@@ -13,7 +13,7 @@ LR = 1e-3
 LAMBDA = 1e-8
 EPSILON = 1e-7
 MAX_STEPS = 30000
-BATCH_SIZE = 150
+BATCH_SIZE = 200
 
 
 class GomokuData():

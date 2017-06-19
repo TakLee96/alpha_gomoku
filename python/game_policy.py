@@ -113,20 +113,24 @@ class Agent(mp.Process):
                 state = self.state_queue.get()
                 if state is None:
                     return
-                board = np.ndarray(shape=(1, 15, 15, 2), dtype=np.float32)
+                board = np.ndarray(shape=(1, 15, 15, 5), dtype=np.float32)
                 board[:, :, :, 0] = (state.board > 0)
-                board[:, :, :, 1] = (state.board < 0) 
+                board[:, :, :, 1] = (state.board < 0)
+                board[:, :, :, 2] = (state.board == 0)
+                board[:, :, :, 3] = 0
+                board[:, :, :, 4] = 1
                 y = session.run("prob:0", feed_dict={
-                    "y:0": np.zeros(shape=(1, 225)), "f:0": np.zeros(shape=1), "x:0": board }).reshape((15, 15))
-                self.dist_queue.put(y)
+                    "y:0": np.zeros(shape=(1, 225)), "f:0": np.zeros(shape=1), "x:0": board
+                }).reshape((15, 15))
+                self.dist_queue.put(np.exp(y))
 
 
 def run():
     states = [None, mp.Queue(), mp.Queue()]
     distributions = mp.Queue()
     players = [
-        Agent(states[1], distributions, "kunet-black"),
-        Agent(states[-1], distributions, "kunet-white"),
+        Agent(states[1], distributions, "alphanet-5-black"),
+        Agent(states[-1], distributions, "alphanet-5-white"),
     ]
     for player in players:
         player.start()

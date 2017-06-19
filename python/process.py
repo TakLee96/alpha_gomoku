@@ -1,5 +1,6 @@
 """ data preprocessing """
 from state import State
+from feature import diff
 from os import listdir, path
 from scipy.io import savemat
 import sys
@@ -90,24 +91,31 @@ def minimax():
                         new_moves = list(map(change, moves))
                         state = State()
                         for i, t in enumerate(new_moves):
-                            board = np.ndarray(shape=(15, 15, 2), dtype=bool)
+                            board = np.ndarray(shape=(15, 15, 5), dtype=bool)
                             board[:, :, 0] = (state.board > 0)
                             board[:, :, 1] = (state.board < 0)
+                            board[:, :, 2] = (state.board == 0)
+                            board[:, :, 3] = 0
+                            board[:, :, 4] = 1
                             if i >= 2 or change((0, 1)) == (0, 1):
                                 if i % 2 == 0:
-                                    black_boards.append(board)
-                                    black_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
                                     if winner == 1:
+                                        black_boards.append(board)
+                                        black_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
                                         black_feedbacks.append(1)
-                                    else:
-                                        black_feedbacks.append(-0.1)
+                                    elif i < len(moves) - 6:
+                                        black_boards.append(board)
+                                        black_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
+                                        black_feedbacks.append(-0.5)
                                 else:
-                                    white_boards.append(board)
-                                    white_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
                                     if winner == -1:
+                                        white_boards.append(board)
+                                        white_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
                                         white_feedbacks.append(1)
-                                    else:
-                                        white_feedbacks.append(-0.1)                         
+                                    elif i < len(moves) - 6:
+                                        white_boards.append(board)
+                                        white_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
+                                        white_feedbacks.append(-0.5)                         
                             state.move(*t)
                 print("processed %s" % f)
 
