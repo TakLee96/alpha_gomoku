@@ -113,16 +113,21 @@ class Agent(mp.Process):
                 state = self.state_queue.get()
                 if state is None:
                     return
-                board = np.ndarray(shape=(1, 15, 15, 5), dtype=np.float32)
-                board[:, :, :, 0] = (state.board > 0)
-                board[:, :, :, 1] = (state.board < 0)
-                board[:, :, :, 2] = (state.board == 0)
-                board[:, :, :, 3] = 0
-                board[:, :, :, 4] = 1
-                y = session.run("prob:0", feed_dict={
+                board = np.ndarray(shape=(len(changes), 15, 15, 5), dtype=np.float32)
+                for i, change in enumerate(changes):
+                    changed = change(state.board)
+                    board[i, :, :, 0] = (changed > 0)
+                    board[i, :, :, 1] = (changed < 0)
+                    board[i, :, :, 2] = (changed == 0)
+                    board[i, :, :, 3] = 0
+                    board[i, :, :, 4] = 1
+                y = np.exp(session.run("prob:0", feed_dict={
                     "y:0": np.zeros(shape=(1, 225)), "f:0": np.zeros(shape=1), "x:0": board
-                }).reshape((15, 15))
-                self.dist_queue.put(np.exp(y))
+                }).reshape((len(changes), 15, 15)))
+                total = np.zeros(shape=(15, 15), dtype=np.float32)
+                for i, reverse in enumerate(reverses):
+                    total += reverse(y[i, :, :])
+                self.dist_queue.put(total / total.sum())
 
 
 def run():

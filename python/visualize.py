@@ -36,7 +36,11 @@ class Application(tk.Frame):
         if self.index < len(self.history):
             x, y = self.history[self.index]
             self.button[x*15+y].config(image=self.image[self.state.player])
-            self.state.move(x, y)
+            try:
+                self.state.move(x, y)
+            except AssertionError:
+                self.state.end = True
+                self.state.violate = True
             self.index += 1
             if self.state.end:
                 self.highlight(x, y)

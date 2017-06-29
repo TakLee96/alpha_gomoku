@@ -106,7 +106,7 @@ def minimax():
                                     elif i < len(moves) - 6:
                                         black_boards.append(board)
                                         black_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
-                                        black_feedbacks.append(-0.5)
+                                        black_feedbacks.append(-1)
                                 else:
                                     if winner == -1:
                                         white_boards.append(board)
@@ -115,7 +115,7 @@ def minimax():
                                     elif i < len(moves) - 6:
                                         white_boards.append(board)
                                         white_actions.append(np.ravel_multi_index(t, dims=(15, 15)))
-                                        white_feedbacks.append(-0.5)                         
+                                        white_feedbacks.append(-1)                         
                             state.move(*t)
                 print("processed %s" % f)
 

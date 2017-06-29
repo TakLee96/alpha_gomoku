@@ -63,4 +63,4 @@ def build_network(LAMBDA, EPSILON, LR):
     likelihood = tf.reduce_mean(tf.multiply(f, tf.reduce_sum(tf.multiply(prob, y), axis=1)))
     tf.exp(likelihood, name="likelihood")
     tf.train.AdamOptimizer(LR).minimize(-likelihood, name="train_step")
-    return "alphanet-5"
+    return "alphanet-1"
