@@ -41,6 +41,7 @@ class Application(tk.Frame):
             except AssertionError:
                 self.state.end = True
                 self.state.violate = True
+            print(self.state.features)
             self.index += 1
             if self.state.end:
                 self.highlight(x, y)
@@ -86,14 +87,14 @@ if __name__ == "__main__":
         elif argv[1] == "godsdknet":
             with open(path.join(directory, "%.04d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
-        elif argv[1] == "reinforce":
+        elif argv[1] == "reinforce" or argv[1] == "minimax_svm":
             with open(path.join(directory, "%d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
         elif argv[1] == "minimax":
             with open(path.join(directory, "%.05d.pkl" % int(argv[2])), "rb") as file:
                 moves = pickle.load(file)["history"]
         else:
-            raise Exception("raw or godsdknet or reinforce or minimax")
+            raise Exception("raw or godsdknet or reinforce or minimax or minimax_svm")
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)

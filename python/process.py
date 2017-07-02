@@ -228,13 +228,81 @@ def dual():
     savemat(path.join(path.dirname(__file__), "data", "policy_white"), m_w, do_compression=True)
 
 
+fundamental = {
+    "-xxo": 0, "-x-xo": 1, "-oox": 2, "-o-ox": 3,
+    "-x-x-": 4, "-xx-": 5, "-o-o-": 6, "-oo-": 7,
+    "-x-xxo": 8, "-xxxo": 9, "-o-oox": 10, "-ooox": 11,
+    "-x-xx-": 12, "-xxx-": 13, "-o-oo-": 14, "-ooo-": 15,
+    "-xxxx-": 16, "-xxxxo": 17, "-oooo-": 18, "-oooox": 19,
+    "win-o": 20, "win-x": 21, "four-o": 22, "four-x": 23,
+    "o-o-o": 24, "x-x-x": 25, "violate": 26
+}
+def translate(features, player):
+    feature = np.zeros(shape=29, dtype=int)
+    if player == 1:
+        feature[27] = 1
+    else:
+        feature[28] = 1
+    for k, v in features.items():
+        if v > 0:
+            feature[fundamental[k]] = v
+    return feature
+
+def svm():
+    root = path.join(path.dirname(__file__), "data", "minimax")
+    score = dict()
+    for f in listdir(root):
+        if f.endswith(".pkl"):
+            with open(path.join(root, f), "rb") as file:
+                d = pickle.load(file)
+                moves = d["history"]
+                winner = d["winner"]
+                state = State()
+                for x, y in moves:
+                    feature = tuple(translate(state.features, state.player))
+                    if feature in score:
+                        n, avg = score[feature]
+                        score[feature] = (n + 1, (n * avg + winner) / (n + 1))
+                    else:
+                        score[feature] = (1, winner * 1.0)
+                    state.move(x, y)
+                feature = tuple(translate(state.features, 1 if len(state.history) % 2 == 0 else -1))
+                if feature in score:
+                    n, avg = score[feature]
+                    score[feature] = (n + 1, (n * avg + winner) / (n + 1))
+                else:
+                    score[feature] = (1, winner * 1.0)
+                print("%s done" % f)
+    n = len(score)
+    X = np.zeros(shape=(n, 29), dtype=np.uint8)
+    y = np.zeros(shape=n, dtype=np.float64)
+    for i, (k, v) in enumerate(score.items()):
+        X[i, :] = list(k)
+        y[i] = v[1]
+
+    ordering = np.random.permutation(n)
+    X = X[ordering, :]
+    y = y[ordering]
+
+    m = n // 8
+    X_v = X[:m, :]
+    y_v = y[:m]
+    X_t = X[m:, :]
+    y_t = y[m:]
+
+    mat = { "X_v": X_v, "y_v": y_v, "X_t": X_t, "y_t": y_t }
+    savemat(path.join(path.dirname(__file__), "data", "svm-avg"), mat, do_compression=True)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in ("raw", "minimax", "dual"):
-        print("Usage: python process.py [raw/minimax/dual]")
+    if len(sys.argv) != 2 or sys.argv[1] not in ("raw", "minimax", "dual", "svm"):
+        print("Usage: python process.py [raw/minimax/dual/svm]")
     else:
         if sys.argv[1] == "raw":
             raw()
         elif sys.argv[1] == "minimax":
             minimax()
+        elif sys.argv[1] == "svm":
+            svm()
         else:
             dual()

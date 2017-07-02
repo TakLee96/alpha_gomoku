@@ -1,15 +1,34 @@
-""" battle between agent and human """
 import numpy as np
 import tkinter as tk
 from os import path
-from time import time
+from sys import argv
 from state import State
-from feature import diff
-from minimax_svm import MinimaxAgent
+from sklearn.externals import joblib
+
+
+fundamental = {
+    "-xxo": 0, "-x-xo": 1, "-oox": 2, "-o-ox": 3,
+    "-x-x-": 4, "-xx-": 5, "-o-o-": 6, "-oo-": 7,
+    "-x-xxo": 8, "-xxxo": 9, "-o-oox": 10, "-ooox": 11,
+    "-x-xx-": 12, "-xxx-": 13, "-o-oo-": 14, "-ooo-": 15,
+    "-xxxx-": 16, "-xxxxo": 17, "-oooo-": 18, "-oooox": 19,
+    "win-o": 20, "win-x": 21, "four-o": 22, "four-x": 23,
+    "o-o-o": 24, "x-x-x": 25, "violate": 26
+}
+def translate(features, player):
+    feature = np.zeros(shape=29, dtype=int)
+    if player == 1:
+        feature[27] = 1
+    else:
+        feature[28] = 1
+    for k, v in features.items():
+        if v > 0:
+            feature[fundamental[k]] = v
+    return feature
 
 
 class Application(tk.Frame):
-    def __init__(self, master):
+    def __init__(self, master, clf):
         tk.Frame.__init__(self, master)
         self.button = list()
         self.frames = list()
@@ -20,24 +39,10 @@ class Application(tk.Frame):
           tk.PhotoImage(file=path.join(root, "naught.gif")),
           tk.PhotoImage(file=path.join(root, "cross.gif")),
         ]
-        self.agent = MinimaxAgent()
-        self.last = None
         self.pack()
         self.create_widgets()
-        self.recommend()
-
-    def recommend(self):
-        t = time()
-        actions = self.agent.get_score(self.state)
-        print("time elapsed: %f seconds" % (time() - t))
-        if self.last is not None:
-            for x, y, _ in self.last:
-                button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-                button.config(image=self.image[self.state.board[x, y]])
-        for x, y, v in actions:
-            button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-            button.config(image="", text="%.02f" % v)
-        self.last = actions
+        self.clf = clf
+        print(self.clf.predict(translate(self.state.features, self.state.player).reshape(1, 29))[0])
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
@@ -54,7 +59,7 @@ class Application(tk.Frame):
                     else:
                         self.frames[np.ravel_multi_index((i, j), dims=(15, 15))].config(padx=1, pady=1, bg="red")
                 else:
-                    self.recommend()
+                    print(self.clf.predict(translate(self.state.features, self.state.player).reshape(1, 29))[0])
         return respond
 
     def create_widgets(self):
@@ -70,8 +75,14 @@ class Application(tk.Frame):
                 self.button.append(b)
 
 
-root = tk.Tk()
-root.wm_title("Alpha Gomoku")
-root.attributes("-topmost", True)
-app = Application(root)
-app.mainloop()
+if __name__ == "__main__":
+    if len(argv) != 4:
+        print("Usage: python game_svm.py [dataset] [kernel] [degree]")
+    else:
+        clf = joblib.load(path.join(path.dirname(__file__), "model", "value", "svm",
+            "%s-%s-%d.pkl" % (argv[1], argv[2], int(argv[3]))))
+        root = tk.Tk()
+        root.wm_title("Alpha Gomoku")
+        root.attributes("-topmost", True)
+        app = Application(root, clf)
+        app.mainloop()
