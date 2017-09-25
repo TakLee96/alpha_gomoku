@@ -28,14 +28,20 @@ class Agent():
         y_p = self.get_dist(state)
         return np.unravel_index(np.random.choice(225, p=y_p), dims=(15, 15))
 
-    def loss(self, X, Y):
-        return self.sess.run("loss:0", feed_dict={"x_b:0": X, "y_b:0": Y})
-
     def accuracy(self, X, Y):
         return self.sess.run("accuracy:0", feed_dict={"x_b:0": X, "y_b:0": Y})
 
+    def loss(self, X, Y):
+        return self.sess.run("loss:0", feed_dict={"x_b:0": X, "y_b:0": Y})
+
+    def pg_loss(self, X, Y, A):
+        return self.sess.run("pg_loss:0", feed_dict={"x_b:0": X, "y_b:0": Y, "adv_b:0": A})
+
     def step(self, X, Y):
         return self.sess.run("step", feed_dict={"x_b:0": X, "y_b:0": Y})
+
+    def pg_step(self, X, Y, A):
+        return self.sess.run("pg_step", feed_dict={"x_b:0": X, "y_b:0": Y, "adv_b:0": A})
 
     def save(self, global_step):
         self.saver.save(self.sess, self.meta_path, global_step=global_step, write_meta_graph=False)

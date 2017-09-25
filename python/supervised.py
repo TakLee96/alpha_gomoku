@@ -15,7 +15,7 @@ with tf.Session() as sess:
     matlab = loadmat("minimax")
     data = util.Data(matlab["X"], matlab["Y"])
 
-    for i in range(20000):
+    for i in range(5001):
         x_b, y_b = data.next_batch(256)
         agent.step(x_b, y_b)
         if i % 10 == 0:

@@ -12,10 +12,11 @@ def tf_conv2d(inputs, filters, kernel_size, name, activation=tf.nn.relu):
 
 def export_meta(model_folder, model_name):
     with tf.Graph().as_default():
+        """ neural network for logit computing """
         sy_x_b = tf.placeholder(tf.float32, shape=[None, 15, 15, 11], name="x_b")
         sy_y_b = tf.placeholder(tf.float32, shape=[None, 225], name="y_b")
 
-        conv_1_1 = tf_conv2d(sy_x_b  , 256, 5, "conv_1_1")
+        conv_1_1 = tf_conv2d(sy_x_b  , 256, 3, "conv_1_1")
         conv_1_2 = tf_conv2d(conv_1_1, 256, 3, "conv_1_2")
         conv_1_3 = tf_conv2d(conv_1_2, 256, 3, "conv_1_3")
 
@@ -40,9 +41,18 @@ def export_meta(model_folder, model_name):
             initializer=tf.truncated_normal_initializer(), trainable=True)
         logits = tf.add(bias, tf.reshape(conv_n_3, shape=[-1, 225]), name="logits")
         sy_y_p = tf.nn.softmax(logits, name="y_p")
-        sy_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits), name="loss")
+        
+        """ regular loss for supervised learning and dagger """
+        accuracy = tf.reduce_mean(
+            tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
+        likelihood = tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits)
+        loss = tf.reduce_mean(likelihood, name="loss")
         step = tf.train.AdamOptimizer(1e-3).minimize(loss, name="step")
+
+        """ weighted loss for policy gradient """
+        sy_adv_b = tf.placeholder(tf.float32, shape=[None], name="adv_b")
+        pg_loss = tf.reduce_mean(tf.multiply(likelihood, sy_adv_b), name="pg_loss")
+        pg_step = tf.train.AdamOptimizer(1e-3).minimize(pg_loss, name="pg_step")
 
         if not os.path.exists(model_folder):
             os.makedirs(model_folder)
