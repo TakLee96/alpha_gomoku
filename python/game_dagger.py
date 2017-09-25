@@ -2,14 +2,15 @@
 
 import numpy as np
 import tkinter as tk
+import tensorflow as tf
 from os import path
 from time import time
+from agent import Agent
 from state import State
 from feature import diff
-from minimax import MinimaxAgent
 
 class Application(tk.Frame):
-    def __init__(self, master):
+    def __init__(self, agent, master):
         tk.Frame.__init__(self, master)
         self.button = list()
         self.frames = list()
@@ -20,24 +21,22 @@ class Application(tk.Frame):
           tk.PhotoImage(file=path.join(root, "naught.gif")),
           tk.PhotoImage(file=path.join(root, "cross.gif")),
         ]
-        self.agent = MinimaxAgent(max_depth=4, max_width=5)
-        self.last = None
+        self.agent = agent
         self.pack()
         self.create_widgets()
         self.recommend()
 
     def recommend(self):
         t = time()
-        actions = self.agent.get_score(self.state)
+        dist = self.agent.get_dist(self.state).reshape((15, 15))
         print("time elapsed: %f seconds" % (time() - t))
-        if self.last is not None:
-            for x, y, _ in self.last:
+        for x in range(15):
+            for y in range(15):
                 button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-                button.config(image=self.image[self.state.board[x, y]])
-        for x, y, v in actions:
-            button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-            button.config(image="", text="%.02f" % v)
-        self.last = actions
+                if dist[x, y] > 0.01:
+                    button.config(image="", text="%.02f" % dist[x, y])
+                else:
+                    button.config(image=self.image[self.state.board[x, y]])
 
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
@@ -72,5 +71,6 @@ class Application(tk.Frame):
 root = tk.Tk()
 root.wm_title("Alpha Gomoku")
 root.attributes("-topmost", True)
-app = Application(root)
-app.mainloop()
+with tf.Session() as sess:
+    app = Application(Agent(sess, "dagger-model", "dagger"), root)
+    app.mainloop()

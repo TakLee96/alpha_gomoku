@@ -1,5 +1,4 @@
 """ battle between agent and human """
-
 import numpy as np
 import tkinter as tk
 from os import path
@@ -7,6 +6,7 @@ from time import time
 from state import State
 from feature import diff
 from minimax import MinimaxAgent
+
 
 class Application(tk.Frame):
     def __init__(self, master):
@@ -20,7 +20,7 @@ class Application(tk.Frame):
           tk.PhotoImage(file=path.join(root, "naught.gif")),
           tk.PhotoImage(file=path.join(root, "cross.gif")),
         ]
-        self.agent = MinimaxAgent(max_depth=4, max_width=5)
+        self.agent = MinimaxAgent()
         self.last = None
         self.pack()
         self.create_widgets()
@@ -68,6 +68,7 @@ class Application(tk.Frame):
                 b.pack(fill=tk.BOTH, expand=1)
                 b.bind("<Button-1>", self.click(i, j))
                 self.button.append(b)
+
 
 root = tk.Tk()
 root.wm_title("Alpha Gomoku")

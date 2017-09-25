@@ -1,13 +1,19 @@
 """ alpha-beta minimax agent """
-
 import random
 import numpy as np
 from feature import diff
 from scipy.signal import convolve2d as conv2d
 
+
 INFINITY = 1000
 DANGER = 100
 DISCOUNT = 0.99
+FILTER = np.array([
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+]).astype(np.int8)
+
 
 class BlackOps:
     @staticmethod
@@ -67,10 +73,14 @@ class MinimaxAgent:
     def __init__(self, max_depth=6, max_width=6):
         self.max_depth = max_depth
         self.max_width = max_width
+        self.policy_invoked = 0
+        self.value_invoked = 0
+        self.cache_miss = 0
+        self.cache_hit = 0
         self.ops = [None, BlackOps(), WhiteOps()]
 
     def random_action(self, state):
-        adjacent = state.adjacent()
+        adjacent = conv2d(np.abs(state.board), FILTER, mode="same")
         prob = np.logical_and(state.board == 0, adjacent > 0).astype(float)
         for x in range(15):
             for y in range(15):
@@ -90,9 +100,12 @@ class MinimaxAgent:
             ops.get_op_potential(old) * 1.0)
 
     def _policy(self, state):
+        self.policy_invoked += 1
         if len(state.history) == 0:
             return [(7, 7)]
-        adjacent = state.adjacent()
+        elif len(state.history) == 1:
+            return [(6, 7), (6, 6)]
+        adjacent = conv2d(np.abs(state.board), FILTER, mode="same")
         actions = []
         ops = self.ops[state.player]
         in_lose_danger = ops.get_op_live_four(state.features) > 0
@@ -133,6 +146,7 @@ class MinimaxAgent:
 
 
     def _value(self, state):
+        self.value_invoked += 1
         ops = self.ops[state.player]
         if ops.get_my_live_four(state.features) > 0 or ops.get_my_four(state.features) > 0:
             return state.player * INFINITY
@@ -159,7 +173,9 @@ class MinimaxAgent:
             return self._value(state)
         frozen = frozenset(hist)
         if frozen in store:
+            self.cache_hit += 1
             return store[frozen]
+        self.cache_miss += 1
         actions = self._policy(state)
         if len(actions) == 0:
             return -INFINITY
@@ -188,7 +204,9 @@ class MinimaxAgent:
             return self._value(state)
         frozen = frozenset(hist)
         if frozen in store:
+            self.cache_hit += 1
             return store[frozen]
+        self.cache_miss += 1
         actions = self._policy(state)
         if len(actions) == 0:
             return INFINITY
@@ -227,7 +245,8 @@ class MinimaxAgent:
     def get_score(self, state):
         actions = self._policy(state)
         if len(actions) == 0:
-            return [(-1, -1, 0)]
+            x, y = self.random_action(state)
+            return [(x, y, 0)]
         if len(actions) == 1:
             x, y = actions[0]
             return [(x, y, 0)]

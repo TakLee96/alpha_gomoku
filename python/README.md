@@ -1,13 +1,7 @@
-Things we can try:
+Thoughts
+========
 
-1. L2 Regularization for Deep/Wide/God SDK Net
-1. Black-White Separated Value Network + Reinforcement Learning
-1. Black-White Separated Policy Network + Reinforcement Learning
-
-100-Battle Experiments (Not Done Yet) (Black Win/White Win/Even)
-
-|Black Team \ White Team|DeepSDKNet|WideSDKNet|GodSDKNet|
-|-----------------------|----------|----------|---------|
-|DeepSDKNet             |100/100/0 |100/100/0 |100/100/0|
-|WideSDKNet             |100/100/0 |100/100/0 |100/100/0|
-|GodSDKNet              |100/100/0 |100/100/0 |100/100/0|
+1. DAgger can be improved via parallizing Minimax Labeling
+1. Implement MCTS with Dagger Agent and see if it is good
+1. Implement Policy Gradient with Dagger Agent initial value
+1. Train same network on Existing dataset and compete with Dagger Agent

@@ -71,8 +71,30 @@ def get_move(string):
   return (convert(string[2]), convert(string[3]))
 
 if __name__ == "__main__":
-    assert len(argv) == 2, "python visualize.py [dagger_iter-game_iter]"
-    moves = State.load("dagger-games/%s.pkl" % argv[1])["moves"]
+    if len(argv) == 2:
+        with open(path.join(path.dirname("__file__"), "data", "%s.pkl" % argv[1]), "rb") as file:
+            moves = pickle.load(file)["history"]
+    elif len(argv) != 3:
+        print("Usage: python visualize.py [folder] [number]")
+        exit()
+    else:
+        directory = path.join(path.dirname(__file__), "data", argv[1])
+        if argv[1] == "raw":
+            with codecs.open(path.join(directory, "%.04d.sgf" % int(argv[2])), "r", encoding='utf-8', errors='ignore') as file:
+                string = file.read().strip()
+                index = string.find(";B[")
+                moves = list(map(get_move, string[(index+1):-2].split(";")))
+        elif argv[1] == "godsdknet":
+            with open(path.join(directory, "%.04d.pkl" % int(argv[2])), "rb") as file:
+                moves = pickle.load(file)["history"]
+        elif argv[1] == "reinforce" or argv[1] == "minimax_svm":
+            with open(path.join(directory, "%d.pkl" % int(argv[2])), "rb") as file:
+                moves = pickle.load(file)["history"]
+        elif argv[1] == "minimax":
+            with open(path.join(directory, "%.05d.pkl" % int(argv[2])), "rb") as file:
+                moves = pickle.load(file)["history"]
+        else:
+            raise Exception("raw or godsdknet or reinforce or minimax or minimax_svm")
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)

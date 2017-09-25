@@ -1,6 +1,6 @@
 """ feature extractor for state """
-
 import re
+
 
 class defaultdict(dict):
     def __getitem__(self, key):
