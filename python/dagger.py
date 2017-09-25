@@ -1,43 +1,46 @@
 """ DAgger training using minimax as expert """
 
+from time import time
 from state import State
 from agent import Agent
-from resnet import export_meta
+from expert import demonstrate
 from minimax import MinimaxAgent
-import sys
+from policy_network import export_meta
 import numpy as np
 import tensorflow as tf
-import data_util as util
+
+""" hyperparameters """
+DAGGER_ITERS = 500
+GAME_ITERS = 21
+MAX_GAME_LENGTH = 30
+SGD_STEPS = 6
 
 """ begin training """
 with tf.Session() as sess:
-    agent_mini = MinimaxAgent(max_depth=4, max_width=6)
-    export_meta("dagger-model-1", "dagger")
-    agent_conv = Agent(sess, "dagger-model-1", "dagger")
+    export_meta("dagger", "dagger")
+    agent = Agent(sess, "dagger", "dagger")
+    initials = [(4, 4), (4, 7), (4, 11), (7, 4), (7, 7), (7, 11), (11, 4), (11, 7), (11, 11)]
 
-    for dagger_iter in range(500):
-        states = []
-        actions = []
-        print("\nDagger Iter #%d" % dagger_iter)
-
-        for game_iter in range(20):
-            sys.stdout.write("=")
-            sys.stdout.flush()
+    for dagger_iter in range(DAGGER_ITERS):
+        print("Dagger Iter #%d" % dagger_iter)
+        games = []
+        for game_iter in range(GAME_ITERS):
             s = State()
-            while not s.end and len(s.history) < 30:
-                dist = agent_mini.get_dist(s)
-                if len(dist) != 1 or (dist[0][0] >= 0 and dist[0][1] >= 0):
-                    states.append(s.featurize())
-                    actions.append(util.dist_to_prob(dist))
-                s.move(*agent_conv.get_action(s))
-            s.save("dagger-games/%d-%d.pkl" % (dagger_iter, game_iter))
-        print("\n  average game length: %f" % (len(states) / 20))
+            s.move(*initials[np.random.randint(len(initials))])
+            while not s.end and len(s.history) < MAX_GAME_LENGTH:
+                s.move(*agent.get_action(s))
+            games.append(s.history)
+            s.save("games/%d-%d.pkl" % (dagger_iter, game_iter))
+        
+        t = time()
+        X, Y = demonstrate(games)
+        print("\n  %d games analyzed [%.02f sec]" % (GAME_ITERS, time() - t))
+        print("  average game length: %f" % (len(X) / GAME_ITERS))
 
-        X = np.array(states)
-        Y = np.array(actions)
-        loss1 = agent_conv.loss(X, Y)
-        for _ in range(6):
-            agent_conv.step(X, Y)
-        loss2 = agent_conv.loss(X, Y)
-        agent_conv.save(dagger_iter)
-        print("  training completed and saved [loss %f -> %f]" % (loss1, loss2))
+        t = time()
+        loss1 = agent.loss(X, Y)
+        for _ in range(SGD_STEPS):
+            agent.step(X, Y)
+        loss2 = agent.loss(X, Y)
+        agent.save(dagger_iter)
+        print("  training completed and saved [loss %f -> %f]\n" % (loss1, loss2))

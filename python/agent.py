@@ -8,7 +8,10 @@ class Agent():
     
     def __init__(self, sess, model_folder, model_name):
         self.sess = sess
-        self.saver = tf.train.import_meta_graph(model_folder + "/" + model_name + ".meta")
+        self.model_folder = model_folder
+        self.model_name = model_name
+        self.meta_path = model_folder + "/" + model_name + ".meta"
+        self.saver = tf.train.import_meta_graph(self.meta_path)
         checkpoint = tf.train.latest_checkpoint(model_folder)
         if checkpoint is None:
             self.sess.run(tf.global_variables_initializer())
@@ -32,5 +35,4 @@ class Agent():
         return self.sess.run("step", feed_dict={"x_b:0": X, "y_b:0": Y})
 
     def save(self, global_step):
-        self.saver.save(self.sess, model_folder + "/" + model_name + ".meta",
-            global_step=global_step, write_meta_graph=False)
+        self.saver.save(self.sess, self.meta_path, global_step=global_step, write_meta_graph=False)

@@ -1,4 +1,5 @@
 """ visualize games from dataset """
+
 import tkinter as tk
 import codecs
 import pickle
@@ -72,7 +73,7 @@ def get_move(string):
 
 if __name__ == "__main__":
     assert len(argv) == 2, "python visualize.py [dagger_iter-game_iter]"
-    moves = State.load("dagger-games/%s.pkl" % argv[1])["moves"]
+    moves = State.load("games/%s.pkl" % argv[1])["moves"]
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)

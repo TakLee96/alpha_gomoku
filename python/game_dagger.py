@@ -72,5 +72,5 @@ root = tk.Tk()
 root.wm_title("Alpha Gomoku")
 root.attributes("-topmost", True)
 with tf.Session() as sess:
-    app = Application(Agent(sess, "dagger-model", "dagger"), root)
+    app = Application(Agent(sess, "dagger", "dagger"), root)
     app.mainloop()
