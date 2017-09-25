@@ -74,6 +74,7 @@ def get_move(string):
 if __name__ == "__main__":
     assert len(argv) == 2, "python visualize.py [dagger_iter-game_iter]"
     moves = State.load("games/%s.pkl" % argv[1])["moves"]
+    #moves = State.load("minimax/%s.pkl" % argv[1])["history"]
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)
