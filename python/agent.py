@@ -31,6 +31,9 @@ class Agent():
     def loss(self, X, Y):
         return self.sess.run("loss:0", feed_dict={"x_b:0": X, "y_b:0": Y})
 
+    def accuracy(self, X, Y):
+        return self.sess.run("accuracy:0", feed_dict={"x_b:0": X, "y_b:0": Y})
+
     def step(self, X, Y):
         return self.sess.run("step", feed_dict={"x_b:0": X, "y_b:0": Y})
 

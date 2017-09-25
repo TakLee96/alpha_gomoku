@@ -38,7 +38,7 @@ def export_meta(model_folder, model_name):
         
         bias = tf.get_variable("bias", shape=[225], dtype=tf.float32,
             initializer=tf.truncated_normal_initializer(), trainable=True)
-        logits = tf.add(bias, tf.reshape(conv_n, shape=[-1, 225]), name="logits")
+        logits = tf.add(bias, tf.reshape(conv_n_3, shape=[-1, 225]), name="logits")
         sy_y_p = tf.nn.softmax(logits, name="y_p")
         sy_accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits), name="loss")
