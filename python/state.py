@@ -6,8 +6,7 @@ from feature import diff, defaultdict
 from scipy.signal import convolve2d as conv2d
 
 DIRECTIONS = [(1, 0), (0, 1), (1, 1), (1, -1)]
-FILTER  = np.ones(shape=(3, 3), dtype=np.int8)
-FILTER2 = np.array([
+FILTER = np.array([
     [1, 0, 1, 0, 1],
     [0, 1, 1, 1, 0],
     [1, 1, 1, 1, 1],
@@ -73,9 +72,6 @@ class State:
     def adjacent(self):
         return conv2d(np.abs(self.board), FILTER, mode="same")
 
-    def adjacent2(self):
-        return conv2d(np.abs(self.board), FILTER2, mode="same")
-
     def featurize(self):
         features = np.zeros((15, 15, 11), dtype=np.float32)
         features[:, :, 0] = self.board > 0   # black
@@ -89,7 +85,7 @@ class State:
             features[:, :, 7] = 1
         else:
             features[:, :, 8] = 1
-        adjacent = self.adjacent2()
+        adjacent = self.adjacent()
         for x in range(15):
             for y in range(15):
                 if adjacent[x, y] > 0:

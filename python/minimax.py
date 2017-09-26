@@ -2,6 +2,7 @@
 
 import random
 import numpy as np
+import data_util as util
 from feature import diff
 from scipy.signal import convolve2d as conv2d
 
@@ -92,6 +93,15 @@ class MinimaxAgent:
     def _policy(self, state):
         if len(state.history) == 0:
             return [(7, 7)]
+        elif len(state.history) == 1:
+            x, y = state.history[0]
+            actions = []
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    if dx != 0 or dy != 0:
+                        if 0 <= x + dx <= 14 and 0 <= y + dy <= 14:
+                            actions.append((x + dx, y + dy))
+            return actions
         adjacent = state.adjacent()
         actions = []
         ops = self.ops[state.player]
@@ -211,18 +221,22 @@ class MinimaxAgent:
         return min_value
 
     def get_action(self, state):
-        dist = self.get_dist(state)
+        dist = self._get_dist(state)
         prob = np.array(list(map(lambda t: t[2], dist)))
         choice = np.random.choice(prob.shape[0], p=prob)
         x, y, _ = dist[choice]
         return x, y
 
-    def get_dist(self, state):
+    def _get_dist(self, state):
         score = self.get_score(state)
         prob = np.array(list(map(lambda t: state.player * t[2], score)))
         prob = np.exp(prob - prob.max())
         prob = prob / prob.sum()
         return list(map(lambda i: (score[i][0], score[i][1], prob[i]), range(len(score))))
+
+    def get_dist(self, state):
+        dist = self._get_dist(state)
+        return util.dist_to_prob(dist)
 
     def get_score(self, state):
         actions = self._policy(state)

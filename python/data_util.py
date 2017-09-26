@@ -46,5 +46,8 @@ class Data():
         self.cursor += size
         return X_b, Y_b
 
-    def text_batch(self, size):
-        #TODO
+    def test_batch(self, size):
+        which = np.random.choice(self.m, size, replace=False)
+        X_b = self.X_v[which, :]
+        Y_b = self.Y_v[which, :]
+        return X_b, Y_b

@@ -1,5 +1,6 @@
 """ battle between agent and human """
 
+import argparse
 import numpy as np
 import tkinter as tk
 import tensorflow as tf
@@ -8,6 +9,7 @@ from time import time
 from agent import Agent
 from state import State
 from feature import diff
+from minimax import MinimaxAgent
 
 class Application(tk.Frame):
     def __init__(self, agent, master):
@@ -71,6 +73,15 @@ class Application(tk.Frame):
 root = tk.Tk()
 root.wm_title("Alpha Gomoku")
 root.attributes("-topmost", True)
+
 with tf.Session() as sess:
-    app = Application(Agent(sess, "dagger", "dagger"), root)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model_name", type=str)
+    parser.add_argument("--chkpnt", "-c", type=str)
+    args = parser.parse_args()
+    if args.model_name == "minimax":
+        agent = MinimaxAgent(max_depth=6, max_width=6)
+    else:
+        agent = Agent(sess, args.model_name, chkpnt=args.chkpnt)
+    app = Application(agent, root)
     app.mainloop()

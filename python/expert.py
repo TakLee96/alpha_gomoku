@@ -14,7 +14,7 @@ def demonstrate(games, parallel=True):
         ss = []
         pp = []
         for x, y in game:
-            d = a.get_dist(s)
+            d = a._get_dist(s)
             if len(d) != 1 or (d[0][0] >= 0 and d[0][1] >= 0):
                 ss.append(s.featurize())
                 pp.append(util.dist_to_prob(d))

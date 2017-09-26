@@ -10,15 +10,18 @@ import data_util as util
 
 """ begin training """
 with tf.Session() as sess:
-    export_meta("supervised", "supervised")
-    agent = Agent(sess, "supervised", "supervised")
+    export_meta("supervised")
+    agent = Agent(sess, "supervised")
     matlab = loadmat("minimax")
+    print("processing data")
     data = util.Data(matlab["X"], matlab["Y"])
+    print("processing complete")
 
-    for i in range(5001):
+    for i in range(3001):
         x_b, y_b = data.next_batch(256)
         agent.step(x_b, y_b)
         if i % 10 == 0:
+            x_b, y_b = data.test_batch(1024)
             print("step %d loss %.04f accuracy %.04f" % (i, agent.loss(x_b, y_b), agent.accuracy(x_b, y_b)))
         if i % 100 == 0:
             agent.save(i)

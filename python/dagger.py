@@ -12,13 +12,13 @@ import tensorflow as tf
 """ hyperparameters """
 DAGGER_ITERS = 500
 GAME_ITERS = 21
-MAX_GAME_LENGTH = 30
+MAX_GAME_LENGTH = 225
 SGD_STEPS = 6
 
 """ begin training """
 with tf.Session() as sess:
-    export_meta("dagger", "dagger")
-    agent = Agent(sess, "dagger", "dagger")
+    export_meta("dagger")
+    agent = Agent(sess, "supervised", "dagger")
     initials = [(4, 4), (4, 7), (4, 11), (7, 4), (7, 7), (7, 11), (11, 4), (11, 7), (11, 11)]
 
     for dagger_iter in range(DAGGER_ITERS):
