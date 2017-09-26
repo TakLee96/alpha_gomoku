@@ -23,18 +23,28 @@ def dist_to_prob(dist):
 class Data():
     def __init__(self, X, Y):
         assert X.shape[0] == Y.shape[0]
-        self.X = X
-        self.Y = Y
-        self.n = X.shape[0]
-        self.cursor = self.n
+        n = X.shape[0]
+        ordering = np.random.permutation(n)
+        X = X[ordering, :]
+        Y = Y[ordering, :]
+        self.m = n // 10
+        self.n = n - self.m
+        self.X_t = X[self.m:, :]
+        self.Y_t = Y[self.m:, :]
+        self.X_v = X[:self.m, :]
+        self.Y_v = Y[:self.m, :]
+        self.cursor = 0
 
     def next_batch(self, size):
         if self.cursor + size > self.n:
             self.cursor = 0
             ordering = np.random.permutation(self.n)
-            self.X = self.X[ordering, :]
-            self.Y = self.Y[ordering, :]
-        X_b = self.X[self.cursor:(self.cursor + size), :]
-        Y_b = self.Y[self.cursor:(self.cursor + size), :]
+            self.X_t = self.X_t[ordering, :]
+            self.Y_t = self.Y_t[ordering, :]
+        X_b = self.X_t[self.cursor:(self.cursor + size), :]
+        Y_b = self.Y_t[self.cursor:(self.cursor + size), :]
         self.cursor += size
         return X_b, Y_b
+
+    def text_batch(self, size):
+        #TODO

@@ -39,19 +39,19 @@ def export_meta(model_folder, model_name):
         
         bias = tf.get_variable("bias", shape=[225], dtype=tf.float32,
             initializer=tf.truncated_normal_initializer(), trainable=True)
-        logits = tf.add(bias, tf.reshape(conv_n_3, shape=[-1, 225]), name="logits")
+        logits = tf.add(tf.reshape(conv_n_3, shape=[-1, 225]), bias, name="logits")
         sy_y_p = tf.nn.softmax(logits, name="y_p")
         
         """ regular loss for supervised learning and dagger """
         accuracy = tf.reduce_mean(
             tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
-        likelihood = tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits)
-        loss = tf.reduce_mean(likelihood, name="loss")
+        unlikelihood = tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits)
+        loss = tf.reduce_mean(unlikelihood, name="loss")
         step = tf.train.AdamOptimizer(1e-3).minimize(loss, name="step")
 
         """ weighted loss for policy gradient """
         sy_adv_b = tf.placeholder(tf.float32, shape=[None], name="adv_b")
-        pg_loss = tf.reduce_mean(tf.multiply(likelihood, sy_adv_b), name="pg_loss")
+        pg_loss = tf.reduce_mean(tf.multiply(unlikelihood, sy_adv_b), name="pg_loss")
         pg_step = tf.train.AdamOptimizer(1e-3).minimize(pg_loss, name="pg_step")
 
         if not os.path.exists(model_folder):
