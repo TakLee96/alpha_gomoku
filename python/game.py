@@ -12,7 +12,7 @@ from feature import diff
 from minimax import MinimaxAgent
 
 class Application(tk.Frame):
-    def __init__(self, agent, master):
+    def __init__(self, agent, master, ensemble):
         tk.Frame.__init__(self, master)
         self.button = list()
         self.frames = list()
@@ -24,13 +24,17 @@ class Application(tk.Frame):
           tk.PhotoImage(file=path.join(root, "cross.gif")),
         ]
         self.agent = agent
+        self.ensemble = ensemble
         self.pack()
         self.create_widgets()
         self.recommend()
 
     def recommend(self):
         t = time()
-        dist = self.agent.get_dist(self.state).reshape((15, 15))
+        if not self.ensemble:
+            dist = self.agent.get_dist(self.state).reshape((15, 15))
+        else:
+            dist = self.agent.get_dist_ensemble(self.state).reshape((15, 15))
         print("time elapsed: %f seconds" % (time() - t))
         for x in range(15):
             for y in range(15):
@@ -77,11 +81,12 @@ root.attributes("-topmost", True)
 with tf.Session() as sess:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_name", type=str)
-    parser.add_argument("--chkpnt", "-c", type=str)
+    parser.add_argument("--chkpnt", "-c", type=int)
+    parser.add_argument("--ensemble", "-e", action="store_true")
     args = parser.parse_args()
     if args.model_name == "minimax":
         agent = MinimaxAgent(max_depth=6, max_width=6)
     else:
         agent = Agent(sess, args.model_name, chkpnt=args.chkpnt)
-    app = Application(agent, root)
+    app = Application(agent, root, ensemble=args.ensemble)
     app.mainloop()

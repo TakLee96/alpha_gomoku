@@ -1,8 +1,9 @@
 """ visualize games from dataset """
 
-import tkinter as tk
 import codecs
 import pickle
+import argparse
+import tkinter as tk
 from os import path
 from sys import argv, exit
 from state import State
@@ -72,9 +73,11 @@ def get_move(string):
   return (convert(string[2]), convert(string[3]))
 
 if __name__ == "__main__":
-    assert len(argv) == 2, "python visualize.py [dagger_iter-game_iter]"
-    moves = State.load("games/%s.pkl" % argv[1])["moves"]
-    #moves = State.load("minimax/%s.pkl" % argv[1])["history"]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("folder", type=str)
+    parser.add_argument("number", type=str)
+    args = parser.parse_args()
+    moves = State.load("%s/%s.pkl" % (args.folder, args.number))["moves"]
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)

@@ -238,6 +238,9 @@ class MinimaxAgent:
         dist = self._get_dist(state)
         return util.dist_to_prob(dist)
 
+    def get_dist_ensemble(self, state):
+        return self.get_dist(state)
+
     def get_score(self, state):
         actions = self._policy(state)
         if len(actions) == 0:
