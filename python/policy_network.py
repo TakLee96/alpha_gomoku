@@ -52,7 +52,7 @@ def export_meta(model_name):
         """ weighted loss for policy gradient """
         sy_adv_b = tf.placeholder(tf.float32, shape=[None], name="adv_b")
         pg_loss = tf.reduce_mean(tf.multiply(unlikelihood, sy_adv_b), name="pg_loss")
-        pg_step = tf.train.AdamOptimizer(5e-4).minimize(pg_loss, name="pg_step")
+        pg_step = tf.train.AdamOptimizer(1e-4).minimize(pg_loss, name="pg_step")
 
         if not os.path.exists(model_name):
             os.makedirs(model_name)

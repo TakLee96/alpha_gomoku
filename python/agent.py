@@ -27,8 +27,10 @@ reverses = [
 
 class Agent():
     
-    def __init__(self, sess, model_name, other_name=None, chkpnt=None):
+    def __init__(self, sess, model_name,
+        other_name=None, chkpnt=None, ensemble=False, random=False):
         self.sess = sess
+        self.ensemble = ensemble
         self.model_name = model_name
         self.meta_path = model_name + "/" + model_name + ".meta"
         self.saver = tf.train.import_meta_graph(self.meta_path)
@@ -37,8 +39,12 @@ class Agent():
             self.chkpnt = chkpnt
             self.saver.restore(self.sess, model_name + "/" + model_name + ".meta-" + str(chkpnt))
         elif checkpoint is not None:
-            self.chkpnt = int(checkpoint.split("-")[-1])
-            self.saver.restore(self.sess, checkpoint)
+            splitted = checkpoint.split("-")
+            self.chkpnt = int(splitted[-1])
+            if random:
+                self.chkpnt = np.random.choice(self.chkpnt + 1)
+                splitted[-1] = str(self.chkpnt)
+            self.saver.restore(self.sess, "-".join(splitted))
         else:
             self.chkpnt = 0
             self.sess.run(tf.global_variables_initializer())
@@ -57,21 +63,27 @@ class Agent():
         dist = np.zeros(shape=225, dtype=np.float32)
         for i in range(len(reverses)):
             y_p = dists[i].reshape((15, 15))
-            y_p[state.board != 0] = 0
             dist += reverses[i](y_p / y_p.sum()).reshape(225)
+        dist[(state.board != 0).reshape(225)] = 0
+        assert dist.sum() > 0
         return dist / dist.sum()
 
     def get_dist(self, state):
         y_p = self.sess.run("y_p:0", feed_dict={"x_b:0": np.array([state.featurize()])})[0]
         y_p[(state.board != 0).reshape(225)] = 0
+        assert y_p.sum() > 0
         return y_p / y_p.sum()
 
     def get_action(self, state, deterministic=False):
-        y_p = self.get_dist(state)
+        if self.ensemble:
+            y_p = self.get_dist_ensemble(state)
+        else:
+            y_p = self.get_dist(state)
         if deterministic:
             return np.unravel_index(y_p.argmax(), dims=(15, 15))
-        x, y = np.unravel_index(np.random.choice(225, p=y_p), dims=(15, 15))
-        assert state.board[x, y] == 0, "total prob %f" % y_p.sum()
+        c = np.random.choice(225, p=y_p)
+        x, y = np.unravel_index(c, dims=(15, 15))
+        assert state.board[x, y] == 0, "total prob %f that prob %f" % (y_p.sum(), y_p[c])
         return x, y
 
     def accuracy(self, X, Y):
