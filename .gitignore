@@ -1,3 +1,7 @@
+*.log
+dualdagger
+treesup
+treesupm
 arena
 polygrad
 supervised

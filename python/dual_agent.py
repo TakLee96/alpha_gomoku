@@ -2,13 +2,14 @@ import numpy as np
 import tensorflow as tf
 from agent import Agent
 
+
 class DualAgent(Agent):
     def get_dist(self, state):
         y_p, v_p = self.sess.run(["y_p:0", "v_p:0"], feed_dict={"training:0": False, "x_b:0": np.array([state.featurize()])})
         y_p, v_p = y_p[0][:-1], v_p[0]
         y_p[(state.board != 0).reshape(225)] = 0
         assert y_p.sum() > 0, "resign"
-        print("value: %f" % v_p)
+        #print("value: %f" % v_p)
         return y_p / y_p.sum()
 
     def accuracy(self, X, Y):

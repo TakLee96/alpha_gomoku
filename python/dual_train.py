@@ -15,9 +15,10 @@ with tf.Session() as sess:
     matlab = loadmat("dual_minimax")
     print("processing data")
     data = util.TenaryData(matlab["X"], matlab["Y"], matlab["V"][0])
+    del matlab
     print("processing complete")
 
-    for i in range(3001):
+    for i in range(4001):
         x_b, y_b, v_b = data.next_batch(256)
         if i % 10 == 0:
             x_b, y_b, v_b = data.test_batch(1024)

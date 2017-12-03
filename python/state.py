@@ -23,6 +23,16 @@ class State:
         self.end = False
         self.violate = False
 
+    def copy(self):
+        cloned = State()
+        cloned.player = self.player
+        cloned.board = self.board.copy()
+        cloned.history = list(self.history)
+        cloned.features = defaultdict(self.features)
+        cloned.end = self.end
+        cloned.violate = self.violate
+        return cloned
+
     def _build(self, x, y, dx, dy, result):
         if 0 <= x <= 14 and 0 <= y <= 14 and self.board[x, y] == self.player:
             result.append((x, y))

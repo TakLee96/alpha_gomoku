@@ -9,6 +9,7 @@ from time import time
 from state import State
 from feature import diff
 from dual_agent import DualAgent
+from mcts_agent import MCTSAgent
 
 class Application(tk.Frame):
     def __init__(self, agent, master, ensemble):
@@ -38,7 +39,7 @@ class Application(tk.Frame):
         for x in range(15):
             for y in range(15):
                 button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-                if dist[x, y] > 0.01:
+                if dist[x, y] > 0:
                     button.config(image="", text="%.02f" % dist[x, y])
                 else:
                     button.config(image=self.image[self.state.board[x, y]])
@@ -52,6 +53,9 @@ class Application(tk.Frame):
             if not self.state.end and self.state.board[i, j] == 0:
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
+                if hasattr(self.agent, "update"):
+                    # self.agent.refresh()
+                    self.agent.update(self.state)
                 if self.state.end:
                     if self.state.features["win-o"] + self.state.features["win-x"] > 0:
                         self.highlight(i, j)
@@ -78,6 +82,6 @@ root.wm_title("Alpha Gomoku")
 root.attributes("-topmost", True)
 
 with tf.Session() as sess:
-    agent = DualAgent(sess, "dualsup")
+    agent = MCTSAgent(sess, "treesup")
     app = Application(agent, root, ensemble=False)
     app.mainloop()

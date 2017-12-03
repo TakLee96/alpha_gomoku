@@ -3,7 +3,8 @@
 import os
 import tensorflow as tf
 
-REGULARIZATION_SCALE = 1e-4
+VALUE_LOSS_SCALE = 4
+REGULARIZATION_SCALE = 1e-3
 
 def conv_bn(inputs, filters, kernel_size, name, training, activation=tf.nn.relu):
     conv = tf.layers.conv2d(
@@ -37,20 +38,20 @@ def export_meta(model_name):
         
         policy = conv_bn(conv, 2, 1, "conv_policy", training)
         logits = tf.layers.dense(tf.reshape(policy, shape=[-1, 450]), 226, name="fc_out_logits",
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=REGULARIZATION_SCALE))
+            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0))
         sy_y_p = tf.nn.softmax(logits, name="y_p")
         accuracy = tf.reduce_mean(
             tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
 
         value = conv_bn(conv, 1, 1, "conv_value", training)
         value = tf.layers.dense(tf.reshape(value, shape=[-1, 225]), 256, name="fc_value",
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=REGULARIZATION_SCALE))
+            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0))
         sy_v_p = tf.tanh(tf.layers.dense(value, 1, name="fc_out_value",
-            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=REGULARIZATION_SCALE)), name="v_p")
+            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0)), name="v_p")
 
         policy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits), name="policy_loss")
-        value_loss = tf.reduce_mean(tf.square(sy_v_p - sy_v_b), name="value_loss")
-        regularization_loss = tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES), name="regularization_loss")
+        value_loss = tf.multiply(tf.reduce_mean(tf.square(sy_v_p - sy_v_b)), VALUE_LOSS_SCALE, name="value_loss")
+        regularization_loss = tf.multiply(tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)), REGULARIZATION_SCALE, name="regularization_loss")
         loss = tf.add(tf.add(policy_loss, value_loss), regularization_loss, name="loss")
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

@@ -68,15 +68,15 @@ class TenaryData():
         self.X_v = X[:self.m, :]
         self.Y_v = Y[:self.m, :]
         self.V_v = V[:self.m]
-        self.cursor = 0
+        self.cursor = self.n
 
     def next_batch(self, size):
         if self.cursor + size > self.n:
             self.cursor = 0
             ordering = np.random.permutation(self.n)
-            self.X_t = self.X_t[ordering, :]
-            self.Y_t = self.Y_t[ordering, :]
-            self.V_t = self.V_t[ordering]
+            self.X_t[:] = self.X_t[ordering, :]
+            self.Y_t[:] = self.Y_t[ordering, :]
+            self.V_t[:] = self.V_t[ordering]
         X_b = self.X_t[self.cursor:(self.cursor + size), :]
         Y_b = self.Y_t[self.cursor:(self.cursor + size), :]
         V_b = self.V_t[self.cursor:(self.cursor + size)]
@@ -88,4 +88,40 @@ class TenaryData():
         X_b = self.X_v[which, :]
         Y_b = self.Y_v[which, :]
         V_b = self.V_v[which]
+        return X_b, Y_b, V_b
+
+class TenaryOnlineData():
+    def __init__(self):
+        self.X = []
+        self.Y = []
+        self.V = []
+        self.n = 0
+        self.cursor = 0
+
+    def store(self, X, Y, V):
+        self.X.extend(X)
+        self.Y.extend(Y)
+        self.V.extend(V)
+
+    def prepare_training(self):
+        self.n = len(self.V)
+        ordering = np.random.permutation(self.n)
+        self.X = np.array(self.X)[ordering]
+        self.Y = np.array(self.Y)[ordering]
+        self.V = np.array(self.V)[ordering]
+        self.cursor = 0
+
+    def next_batch(self, size):
+        if size > self.n:
+            return self.X, self.Y, self.V
+        if self.cursor + size > self.n:
+            self.cursor = 0
+            ordering = np.random.permutation(self.n)
+            self.X = np.array(self.X)[ordering]
+            self.Y = np.array(self.Y)[ordering]
+            self.V = np.array(self.V)[ordering]
+        X_b = self.X[self.cursor:(self.cursor + size)]
+        Y_b = self.Y[self.cursor:(self.cursor + size)]
+        V_b = self.V[self.cursor:(self.cursor + size)]
+        self.cursor += size
         return X_b, Y_b, V_b
