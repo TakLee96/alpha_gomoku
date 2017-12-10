@@ -3,8 +3,6 @@
 from time import time
 from state import State
 from agent import Agent
-from expert import demonstrate
-from minimax import MinimaxAgent
 from policy_network import export_meta
 import numpy as np
 import tensorflow as tf
@@ -14,6 +12,10 @@ DAGGER_ITERS = 500
 GAME_ITERS = 21
 MAX_GAME_LENGTH = 225
 SGD_STEPS = 6
+
+""" helper method """
+def demonstrate(games):
+
 
 """ begin training """
 with tf.Session() as sess:

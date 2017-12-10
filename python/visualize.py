@@ -77,7 +77,10 @@ if __name__ == "__main__":
     parser.add_argument("folder", type=str)
     parser.add_argument("number", type=str)
     args = parser.parse_args()
-    moves = State.load("%s/%s.pkl" % (args.folder, args.number))["moves"]
+    obj = State.load("%s/%s.pkl" % (args.folder, args.number))
+    moves = obj["moves"]
+    if "score" in obj:
+        print("score: %f" % obj["score"])
     root = tk.Tk()
     root.wm_title("Game " + argv[1])
     root.attributes("-topmost", True)

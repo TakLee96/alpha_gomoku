@@ -10,6 +10,8 @@ from agent import Agent
 from state import State
 from feature import diff
 from minimax import MinimaxAgent
+from minimax_network import MinimaxNetworkAgent
+from search_agent import SearchAgent
 
 class Application(tk.Frame):
     def __init__(self, agent, master, ensemble):
@@ -86,7 +88,9 @@ with tf.Session() as sess:
     args = parser.parse_args()
     if args.model_name == "minimax":
         agent = MinimaxAgent(max_depth=6, max_width=6)
+    elif args.model_name == "mininet":
+        agent = MinimaxNetworkAgent(sess, "treesup", chkpnt=args.chkpnt)
     else:
-        agent = Agent(sess, args.model_name, chkpnt=args.chkpnt)
+        agent = SearchAgent(sess, args.model_name, chkpnt=args.chkpnt)
     app = Application(agent, root, ensemble=args.ensemble)
     app.mainloop()

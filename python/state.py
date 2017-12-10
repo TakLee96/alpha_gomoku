@@ -48,6 +48,14 @@ class State:
                 return result
         raise Exception("wrong call to highlight")
 
+    def feature_move(self, x, y):
+        assert self.board[x, y] == 0
+        new, old = diff(self, x, y)
+        self.features.add(new)
+        self.features.sub(old)
+        self.board[x, y] = self.player
+        self.player = -self.player
+
     def move(self, x, y):
         assert self.board[x, y] == 0 and not self.end
         assert x >= 0 and y >= 0, "negative input, might mean resign"

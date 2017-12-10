@@ -17,7 +17,7 @@ with tf.Session() as sess:
     data = util.Data(matlab["X"], matlab["Y"])
     print("processing complete")
 
-    for i in range(3001):
+    for i in range(4001):
         x_b, y_b = data.next_batch(256)
         agent.step(x_b, y_b)
         if i % 10 == 0:

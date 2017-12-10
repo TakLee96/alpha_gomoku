@@ -25,31 +25,31 @@ class Data():
         assert X.shape[0] == Y.shape[0]
         n = X.shape[0]
         ordering = np.random.permutation(n)
-        X = X[ordering, :]
-        Y = Y[ordering, :]
+        X = X[ordering]
+        Y = Y[ordering]
         self.m = n // 10
         self.n = n - self.m
-        self.X_t = X[self.m:, :]
-        self.Y_t = Y[self.m:, :]
-        self.X_v = X[:self.m, :]
-        self.Y_v = Y[:self.m, :]
+        self.X_t = X[self.m:]
+        self.Y_t = Y[self.m:]
+        self.X_v = X[:self.m]
+        self.Y_v = Y[:self.m]
         self.cursor = 0
 
     def next_batch(self, size):
         if self.cursor + size > self.n:
             self.cursor = 0
             ordering = np.random.permutation(self.n)
-            self.X_t = self.X_t[ordering, :]
-            self.Y_t = self.Y_t[ordering, :]
-        X_b = self.X_t[self.cursor:(self.cursor + size), :]
-        Y_b = self.Y_t[self.cursor:(self.cursor + size), :]
+            self.X_t = self.X_t[ordering]
+            self.Y_t = self.Y_t[ordering]
+        X_b = self.X_t[self.cursor:(self.cursor + size)]
+        Y_b = self.Y_t[self.cursor:(self.cursor + size)]
         self.cursor += size
         return X_b, Y_b
 
     def test_batch(self, size):
         which = np.random.choice(self.m, size, replace=False)
-        X_b = self.X_v[which, :]
-        Y_b = self.Y_v[which, :]
+        X_b = self.X_v[which]
+        Y_b = self.Y_v[which]
         return X_b, Y_b
 
 class TenaryData():

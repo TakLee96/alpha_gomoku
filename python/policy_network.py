@@ -3,56 +3,51 @@
 import os
 import tensorflow as tf
 
-def tf_conv2d(inputs, filters, kernel_size, name, activation=tf.nn.relu):
-    return tf.layers.conv2d(
+REGULARIZATION_SCALE = 1e-3
+
+def conv_bn(inputs, filters, kernel_size, name, training, activation=tf.nn.relu):
+    conv = tf.layers.conv2d(
         inputs=inputs, filters=filters, kernel_size=kernel_size, strides=(1, 1),
-        padding="SAME", activation=activation, use_bias=True, name=name,
+        padding="SAME", activation=None, use_bias=True, name=name,
         bias_initializer=tf.truncated_normal_initializer(),
+        kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1e-3),
         kernel_initializer=tf.contrib.layers.xavier_initializer_conv2d())
+    conv = tf.layers.batch_normalization(conv, axis=3, training=training)
+    if activation is not None:
+        conv = activation(conv)
+    return conv
+
+def res_block(inputs, filters, kernel_size, name, training):
+    with tf.variable_scope(name):
+        conv = conv_bn(inputs, filters, kernel_size, "conv_1", training)
+        conv = conv_bn(inputs, filters, kernel_size, "conv_2", training, None)
+    return tf.nn.relu(conv + inputs)
 
 def export_meta(model_name):
     with tf.Graph().as_default():
         """ neural network for logit computing """
+        training = tf.placeholder(tf.bool, name="training")
         sy_x_b = tf.placeholder(tf.float32, shape=[None, 15, 15, 11], name="x_b")
-        sy_y_b = tf.placeholder(tf.float32, shape=[None, 225], name="y_b")
+        sy_y_b = tf.placeholder(tf.float32, shape=[None, 226], name="y_b")
 
-        conv_1_1 = tf_conv2d(sy_x_b  , 128, 3, "conv_1_1")
-        conv_1_2 = tf_conv2d(conv_1_1, 128, 3, "conv_1_2")
-        conv_1_3 = tf_conv2d(conv_1_2, 128, 3, "conv_1_3")
-
-        conv_2_1 = tf_conv2d(conv_1_3, 128, 3, "conv_2_1")
-        conv_2_2 = tf_conv2d(conv_2_1, 128, 3, "conv_2_2")
-        conv_2_3 = tf_conv2d(conv_2_2, 128, 3, "conv_2_3")
-
-        conv_3_1 = tf_conv2d(conv_2_3, 128, 3, "conv_3_1")
-        conv_3_2 = tf_conv2d(conv_3_1, 128, 3, "conv_3_2")
-        conv_3_3 = tf_conv2d(conv_3_2, 128, 3, "conv_3_3")
-
-        conv_4_1 = tf_conv2d(conv_3_3, 128, 3, "conv_4_1")
-        conv_4_2 = tf_conv2d(conv_4_1, 128, 3, "conv_4_2")
-        conv_4_3 = tf_conv2d(conv_4_2, 128, 3, "conv_4_3")
-
-        concated = tf.concat([sy_x_b, conv_1_3, conv_2_3, conv_3_3, conv_4_3], axis=3)
-        conv_n_1 = tf_conv2d(concated, 128, 3, "conv_n_1")
-        conv_n_2 = tf_conv2d(conv_n_1, 128, 3, "conv_n_2")
-        conv_n_3 = tf_conv2d(conv_n_2,   1, 3, "conv_n_3", None)
+        conv = conv_bn(sy_x_b, 192, 3, "conv_initial", training)
+        for i in range(9):
+            conv = res_block(conv, 192, 3, "res_%d" % i, training)
         
-        bias = tf.get_variable("bias", shape=[225], dtype=tf.float32,
-            initializer=tf.truncated_normal_initializer(), trainable=True)
-        logits = tf.add(tf.reshape(conv_n_3, shape=[-1, 225]), bias, name="logits")
+        policy = conv_bn(conv, 2, 1, "conv_policy", training)
+        logits = tf.layers.dense(tf.reshape(policy, shape=[-1, 450]), 226, name="fc_out_logits",
+            kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=1.0))
         sy_y_p = tf.nn.softmax(logits, name="y_p")
-        
-        """ regular loss for supervised learning and dagger """
         accuracy = tf.reduce_mean(
             tf.cast(tf.equal(tf.argmax(sy_y_p, 1), tf.argmax(sy_y_b, 1)), tf.float32), name="accuracy")
-        unlikelihood = tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits)
-        loss = tf.reduce_mean(unlikelihood, name="loss")
-        step = tf.train.AdamOptimizer(1e-3).minimize(loss, name="step")
 
-        """ weighted loss for policy gradient """
-        sy_adv_b = tf.placeholder(tf.float32, shape=[None], name="adv_b")
-        pg_loss = tf.reduce_mean(tf.multiply(unlikelihood, sy_adv_b), name="pg_loss")
-        pg_step = tf.train.AdamOptimizer(1e-4).minimize(pg_loss, name="pg_step")
+        policy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=sy_y_b, logits=logits), name="policy_loss")
+        regularization_loss = tf.multiply(tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)), REGULARIZATION_SCALE, name="regularization_loss")
+        loss = tf.add(policy_loss, regularization_loss, name="loss")
+
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            step = tf.train.AdamOptimizer(1e-3).minimize(loss, name="step")
 
         if not os.path.exists(model_name):
             os.makedirs(model_name)

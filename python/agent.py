@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import tensorflow as tf
+from feature import diff
 
 changes = [
     lambda b: b,
@@ -55,11 +56,14 @@ class Agent():
             self.meta_path = other_name + "/" + other_name + ".meta"
             self.saver.export_meta_graph(self.meta_path)
 
+    def restore(self, model_name):
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_name))
+
     def get_dist_ensemble(self, state):
         states = []
         for change in changes:
             states.append(change(state.featurize()))
-        dists = self.sess.run("y_p:0", feed_dict={"x_b:0": np.array(states)})
+        dists = self.sess.run("y_p:0", feed_dict={"x_b:0": np.array(states), "training:0": False})
         dist = np.zeros(shape=225, dtype=np.float32)
         for i in range(len(reverses)):
             y_p = dists[i].reshape((15, 15))
@@ -69,7 +73,7 @@ class Agent():
         return dist / dist.sum()
 
     def get_dist(self, state):
-        y_p = self.sess.run("y_p:0", feed_dict={"x_b:0": np.array([state.featurize()])})[0]
+        y_p = self.sess.run("y_p:0", feed_dict={"x_b:0": np.array([state.featurize()]), "training:0": False})[0][:225]
         y_p[(state.board != 0).reshape(225)] = 0
         assert y_p.sum() > 0
         return y_p / y_p.sum()
@@ -86,20 +90,32 @@ class Agent():
         assert state.board[x, y] == 0, "total prob %f that prob %f" % (y_p.sum(), y_p[c])
         return x, y
 
+    def get_safe_action(self, state):
+        y_p = self.get_dist(state)
+        c = np.random.choice(225, p=y_p)
+        x, y = np.unravel_index(c, dims=(15, 15))
+        if state.player == 1:
+            while True:
+                new, old = diff(state, x, y)
+                if (new["-o-oo-"] + new["-ooo-"] >= 2 or
+                    new["four-o"] + new["-oooo-"] + new["-oooox"] >= 2 or "violate" in new):
+                    y_p[c] = 0
+                    y_p = y_p / y_p.sum()
+                    c = np.random.choice(225, p=y_p)
+                    x, y = np.unravel_index(c, dims=(15, 15))
+                else:
+                    break
+        assert state.board[x, y] == 0, "total prob %f that prob %f" % (y_p.sum(), y_p[c])
+        return x, y
+
     def accuracy(self, X, Y):
-        return self.sess.run("accuracy:0", feed_dict={"x_b:0": X, "y_b:0": Y})
+        return self.sess.run("accuracy:0", feed_dict={"x_b:0": X, "y_b:0": Y, "training:0": False})
 
     def loss(self, X, Y):
-        return self.sess.run("loss:0", feed_dict={"x_b:0": X, "y_b:0": Y})
-
-    def pg_loss(self, X, Y, A):
-        return self.sess.run("pg_loss:0", feed_dict={"x_b:0": X, "y_b:0": Y, "adv_b:0": A})
+        return self.sess.run("loss:0", feed_dict={"x_b:0": X, "y_b:0": Y, "training:0": False})
 
     def step(self, X, Y):
-        return self.sess.run("step", feed_dict={"x_b:0": X, "y_b:0": Y})
-
-    def pg_step(self, X, Y, A):
-        return self.sess.run("pg_step", feed_dict={"x_b:0": X, "y_b:0": Y, "adv_b:0": A})
+        return self.sess.run("step", feed_dict={"x_b:0": X, "y_b:0": Y, "training:0": True})
 
     def save(self, global_step):
         self.saver.save(self.sess, self.meta_path, global_step=global_step, write_meta_graph=False)
