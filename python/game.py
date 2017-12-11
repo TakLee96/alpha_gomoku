@@ -10,8 +10,7 @@ from agent import Agent
 from state import State
 from feature import diff
 from minimax import MinimaxAgent
-from minimax_network import MinimaxNetworkAgent
-from search_agent import SearchAgent
+from mcts_minimax_agent import MCTSMinimaxAgent
 
 class Application(tk.Frame):
     def __init__(self, agent, master, ensemble):
@@ -55,6 +54,8 @@ class Application(tk.Frame):
             if not self.state.end and self.state.board[i, j] == 0:
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
+                if hasattr(self.agent, "update"):
+                    self.agent.update(self.state)
                 if self.state.end:
                     if self.state.features["win-o"] + self.state.features["win-x"] > 0:
                         self.highlight(i, j)
@@ -89,8 +90,6 @@ with tf.Session() as sess:
     if args.model_name == "minimax":
         agent = MinimaxAgent(max_depth=6, max_width=6)
     elif args.model_name == "mininet":
-        agent = MinimaxNetworkAgent(sess, "treesup", chkpnt=args.chkpnt)
-    else:
-        agent = SearchAgent(sess, args.model_name, chkpnt=args.chkpnt)
+        agent = MCTSMinimaxAgent(sess, "supervised", chkpnt=args.chkpnt)
     app = Application(agent, root, ensemble=args.ensemble)
     app.mainloop()

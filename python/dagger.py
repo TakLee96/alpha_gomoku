@@ -4,45 +4,100 @@ from time import time
 from state import State
 from agent import Agent
 from policy_network import export_meta
+from mcts_minimax_agent import MCTSMinimaxAgent
+import sys
 import numpy as np
 import tensorflow as tf
 
 """ hyperparameters """
 DAGGER_ITERS = 500
-GAME_ITERS = 21
-MAX_GAME_LENGTH = 225
-SGD_STEPS = 6
+NUM_SAMPLES = 100
+SGD_STEPS = 50
+NUM_TEST = 100
 
-""" helper method """
-def demonstrate(games):
-
+""" helper functions """
+def one_hot(x, y):
+    m = np.zeros(shape=226, dtype=np.float32)
+    if x == -1 and y == -1:
+        m[-1] = 1
+    else:
+        m[np.ravel_multi_index((x, y), dims=(15, 15))] = 1
+    return m
 
 """ begin training """
-with tf.Session() as sess:
-    export_meta("dagger")
-    agent = Agent(sess, "supervised", "dagger")
-    initials = [(4, 4), (4, 7), (4, 11), (7, 4), (7, 7), (7, 11), (11, 4), (11, 7), (11, 11)]
+export_meta("dagger")
 
-    for dagger_iter in range(DAGGER_ITERS):
-        print("Dagger Iter #%d" % dagger_iter)
-        games = []
-        for game_iter in range(GAME_ITERS):
-            s = State()
-            s.move(*initials[np.random.randint(len(initials))])
-            while not s.end and len(s.history) < MAX_GAME_LENGTH:
-                s.move(*agent.get_action(s))
-            games.append(s.history)
-            s.save("games/%d-%d.pkl" % (dagger_iter, game_iter))
-        
-        t = time()
-        X, Y = demonstrate(games)
-        print("\n  %d games analyzed [%.02f sec]" % (GAME_ITERS, time() - t))
-        print("  average game length: %f" % (len(X) / GAME_ITERS))
+current_graph = tf.Graph()
+current_sess = tf.Session(graph=current_graph)
+with current_sess.as_default():
+    with current_graph.as_default():
+        agent = MCTSMinimaxAgent(current_sess, "dagger")
+        agent.agent.save(0)
 
+t_iter = time()
+for dagger_iter in range(1, DAGGER_ITERS):
+    with current_sess.as_default():
+        print("=== Dagger Iter #%d ===" % dagger_iter)
+        s = State()
+        while not s.end and len(s.history) < NUM_SAMPLES:
+            s.move(*agent.agent.get_safe_action(s))
+        s.save("games/%d.pkl" % dagger_iter)
+        print("    sample game generated and saved, analyzing")
+
+        X = []
+        Y = []
+        h = s.history
+        s = State()
+        agent.refresh()
         t = time()
-        loss1 = agent.loss(X, Y)
-        for _ in range(SGD_STEPS):
-            agent.step(X, Y)
-        loss2 = agent.loss(X, Y)
-        agent.save(dagger_iter)
-        print("  training completed and saved [loss %f -> %f]\n" % (loss1, loss2))
+        for x, y in h:
+            X.append(s.featurize())
+            Y.append(one_hot(*agent.get_action(s)))
+            s.move(x, y)
+            agent.update(s)
+            sys.stdout.write("o")
+            sys.stdout.flush()
+        print()
+        X = np.array(X)
+        Y = np.array(Y)
+        print("    sample game %d steps analyzed [%d sec]" % (len(h), time() - t))
+        for i in range(SGD_STEPS+1):
+            before = agent.agent.loss(X, Y)
+            agent.agent.step(X, Y)
+            after = agent.agent.loss(X, Y)
+            if i % 10 == 0:
+                print("    gradient descent: loss %.04f -> %.04f" % (before, after))
+        print()
+
+    prev_graph = tf.Graph()
+    prev_sess = tf.Session(graph=prev_graph)
+    with prev_sess.as_default():
+        with prev_graph.as_default():
+            prev_agent = Agent(prev_sess, "dagger")
+    stat = np.zeros(shape=(2, 2), dtype=np.int)
+    for i in range(NUM_TEST):
+        s = State()
+        prev_is_black = (i % 2 == 0)
+        while not s.end and len(s.history) < 225:
+            if prev_is_black == (s.player > 0):
+                with prev_sess.as_default():
+                    s.move(*prev_agent.get_safe_action(s))
+            else:
+                with current_sess.as_default():
+                    s.move(*agent.agent.get_safe_action(s))
+        sys.stdout.write("x")
+        sys.stdout.flush()
+        if s.end:
+            stat[int(prev_is_black), int(s.player > 0)] += 1
+    win_rate = (stat[0, 1] + stat[1, 0]) / stat.sum()
+    print("    win_rate against old model is %.02f" % win_rate)
+    if win_rate >= .55:
+        agent.agent.save(dagger_iter)
+        print("    new model %d saved" % dagger_iter)
+    else:
+        agent.agent.restore("dagger")
+        print("    old model restored")
+    prev_sess.close()
+    del prev_sess, prev_graph
+    print("    total time: %d sec\n" % (time() - t_iter))
+    t_iter = time()
