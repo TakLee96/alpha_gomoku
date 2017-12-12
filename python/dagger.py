@@ -1,5 +1,6 @@
 """ DAgger training using minimax as expert """
 
+from os import path
 from time import time
 from state import State
 from agent import Agent
@@ -11,6 +12,7 @@ import tensorflow as tf
 
 """ hyperparameters """
 DAGGER_ITERS = 500
+NUM_GAMES = 2
 NUM_SAMPLES = 100
 SGD_STEPS = 50
 NUM_TEST = 100
@@ -25,42 +27,51 @@ def one_hot(x, y):
     return m
 
 """ begin training """
-export_meta("dagger")
+if not path.isdir("dagger"):
+    export_meta("dagger")
 
+init_iter = 0
 current_graph = tf.Graph()
 current_sess = tf.Session(graph=current_graph)
 with current_sess.as_default():
     with current_graph.as_default():
         agent = MCTSMinimaxAgent(current_sess, "dagger")
-        agent.agent.save(0)
+        init_iter = agent.agent.chkpnt
+        if init_iter == 0:
+            agent.agent.save(0)
 
 t_iter = time()
-for dagger_iter in range(1, DAGGER_ITERS):
+for dagger_iter in range(init_iter + 1, DAGGER_ITERS):
     with current_sess.as_default():
         print("=== Dagger Iter #%d ===" % dagger_iter)
-        s = State()
-        while not s.end and len(s.history) < NUM_SAMPLES:
-            s.move(*agent.agent.get_safe_action(s))
-        s.save("games/%d.pkl" % dagger_iter)
-        print("    sample game generated and saved, analyzing")
-
         X = []
         Y = []
-        h = s.history
-        s = State()
-        agent.refresh()
-        t = time()
-        for x, y in h:
-            X.append(s.featurize())
-            Y.append(one_hot(*agent.get_action(s)))
-            s.move(x, y)
-            agent.update(s)
-            sys.stdout.write("o")
-            sys.stdout.flush()
-        print()
+
+        for j in range(NUM_GAMES):
+            s = State()
+            while not s.end and len(s.history) < NUM_SAMPLES:
+                s.move(*agent.agent.get_safe_action(s))
+            s.save("games/%d.pkl" % dagger_iter)
+            print("    sample game %d generated and saved, analyzing" % j)
+
+
+            h = s.history
+            s = State()
+            agent.refresh()
+            t = time()
+            for x, y in h:
+                X.append(s.featurize())
+                Y.append(one_hot(*agent.get_action(s)))
+                s.move(x, y)
+                agent.update(s)
+                sys.stdout.write("o")
+                sys.stdout.flush()
+            print()
+            print("    sample game %d steps analyzed [%d sec]" % (len(h), time() - t))
+
         X = np.array(X)
         Y = np.array(Y)
-        print("    sample game %d steps analyzed [%d sec]" % (len(h), time() - t))
+        
         for i in range(SGD_STEPS+1):
             before = agent.agent.loss(X, Y)
             agent.agent.step(X, Y)

@@ -10,10 +10,10 @@ from agent import Agent
 from state import State
 from feature import diff
 from minimax import MinimaxAgent
-from mcts_minimax_agent import MCTSMinimaxAgent
+from value_agent import ValueAgent
 
 class Application(tk.Frame):
-    def __init__(self, agent, master, ensemble):
+    def __init__(self, agent, master):
         tk.Frame.__init__(self, master)
         self.button = list()
         self.frames = list()
@@ -25,26 +25,15 @@ class Application(tk.Frame):
           tk.PhotoImage(file=path.join(root, "cross.gif")),
         ]
         self.agent = agent
-        self.ensemble = ensemble
         self.pack()
         self.create_widgets()
         self.recommend()
 
     def recommend(self):
         t = time()
-        if not self.ensemble:
-            dist = self.agent.get_dist(self.state).reshape((15, 15))
-        else:
-            dist = self.agent.get_dist_ensemble(self.state).reshape((15, 15))
-        print("time elapsed: %f seconds" % (time() - t))
-        for x in range(15):
-            for y in range(15):
-                button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-                if dist[x, y] > 0.01:
-                    button.config(image="", text="%.02f" % dist[x, y])
-                else:
-                    button.config(image=self.image[self.state.board[x, y]])
-
+        
+        print("v: %.04f [%.02f sec]" % (self.agent.value(self.state), time() - t))
+        
     def highlight(self, x, y):
         for i, j in self.state.highlight(x, y):
             self.frames[np.ravel_multi_index((i, j), dims=(15, 15))].config(padx=1, pady=1, bg="blue")
@@ -54,15 +43,12 @@ class Application(tk.Frame):
             if not self.state.end and self.state.board[i, j] == 0:
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
-                if hasattr(self.agent, "update"):
-                    self.agent.update(self.state)
                 if self.state.end:
                     if self.state.features["win-o"] + self.state.features["win-x"] > 0:
                         self.highlight(i, j)
                     else:
                         self.frames[np.ravel_multi_index((i, j), dims=(15, 15))].config(padx=1, pady=1, bg="red")
-                else:
-                    self.recommend()
+                self.recommend()
         return respond
 
     def create_widgets(self):
@@ -85,13 +71,7 @@ with tf.Session() as sess:
     parser = argparse.ArgumentParser()
     parser.add_argument("model_name", type=str)
     parser.add_argument("--chkpnt", "-c", type=int)
-    parser.add_argument("--ensemble", "-e", action="store_true")
     args = parser.parse_args()
-    if args.model_name == "minimax":
-        agent = MinimaxAgent(max_depth=6, max_width=6)
-    elif args.model_name == "mininet":
-        agent = MCTSMinimaxAgent(sess, "supervised", chkpnt=args.chkpnt)
-    else:
-        agent = Agent(sess, args.model_name, chkpnt=args.chkpnt)
-    app = Application(agent, root, ensemble=args.ensemble)
+    agent = ValueAgent(sess, args.model_name, chkpnt=args.chkpnt)
+    app = Application(agent, root)
     app.mainloop()

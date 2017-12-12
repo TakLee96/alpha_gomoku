@@ -6,11 +6,10 @@ import tkinter as tk
 import tensorflow as tf
 from os import path
 from time import time
-from agent import Agent
 from state import State
 from feature import diff
-from minimax import MinimaxAgent
-from mcts_minimax_agent import MCTSMinimaxAgent
+from dual_agent import DualAgent
+from mcts_agent import MCTSAgent
 
 class Application(tk.Frame):
     def __init__(self, agent, master, ensemble):
@@ -40,7 +39,7 @@ class Application(tk.Frame):
         for x in range(15):
             for y in range(15):
                 button = self.button[np.ravel_multi_index((x, y), dims=(15, 15))]
-                if dist[x, y] > 0.01:
+                if dist[x, y] > 0:
                     button.config(image="", text="%.02f" % dist[x, y])
                 else:
                     button.config(image=self.image[self.state.board[x, y]])
@@ -55,6 +54,7 @@ class Application(tk.Frame):
                 self.button[np.ravel_multi_index((i, j), dims=(15, 15))].config(image=self.image[self.state.player])
                 self.state.move(i, j)
                 if hasattr(self.agent, "update"):
+                    # self.agent.refresh()
                     self.agent.update(self.state)
                 if self.state.end:
                     if self.state.features["win-o"] + self.state.features["win-x"] > 0:
@@ -82,16 +82,7 @@ root.wm_title("Alpha Gomoku")
 root.attributes("-topmost", True)
 
 with tf.Session() as sess:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("model_name", type=str)
-    parser.add_argument("--chkpnt", "-c", type=int)
-    parser.add_argument("--ensemble", "-e", action="store_true")
-    args = parser.parse_args()
-    if args.model_name == "minimax":
-        agent = MinimaxAgent(max_depth=6, max_width=6)
-    elif args.model_name == "mininet":
-        agent = MCTSMinimaxAgent(sess, "supervised", chkpnt=args.chkpnt)
-    else:
-        agent = Agent(sess, args.model_name, chkpnt=args.chkpnt)
-    app = Application(agent, root, ensemble=args.ensemble)
+    agent = MCTSAgent(sess, "treesup")
+    # agent = DualAgent(sess, "dualdagger")
+    app = Application(agent, root, ensemble=False)
     app.mainloop()

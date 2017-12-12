@@ -56,11 +56,11 @@ class WhiteOps:
         return f["-oo-"] + f["-o-o-"] + f["-o-oox"] + f["-ooox"]
 Ops = [None, BlackOps(), WhiteOps()]
 
-MAX_ITERS = 32
+MAX_ITERS = 64
 MAX_DEPTH = 10
 INFINITY  = 10
 EPSILON   = 0.05
-MULTIPLE  = 1.0
+MULTIPLE  = 0.5
 
 
 def tuple_to_int(t):
