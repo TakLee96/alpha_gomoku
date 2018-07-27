@@ -1,10 +1,10 @@
-Length 2
+Length, 2
 -oo-,   2
 -xx-,  -20
 -o-o-,  1
 -x-x-, -10
 
-Length 3
+Length, 3
 -ooo-,    200
 -xxx-,   -40000
 -o-oo-,   100
@@ -20,7 +20,7 @@ ox-xx-,  -4000
 xoo-o-,   40
 oxx-x-,  -4000
 
-Length 4
+Length, 4
 -oooo-,   400000
 -xxxx-,  -160000000
 xoooo-,   10000
@@ -33,11 +33,11 @@ oxxxx-,  -8000000
 *xx-xx*, -4000000
 
 
-Length 5
+Length, 5
 *ooooo*,  1000000000
 *xxxxx*, -1000000000
 
-Length > 5
+Length, > 5
 long-death, -160000000
 long-win, 400000
 
